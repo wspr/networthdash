@@ -9,6 +9,7 @@ class Config:
     Attributes:
         csv (str): path and filename of CSV input file
         savedir (str): path (ending in "/") to save PDF dashboards to
+        datefmt (str): the date format of dates used in the CSV file
         
         since_yr (int): year to start the dashboard (defaults to earliest year in CSV file)
         
@@ -24,6 +25,7 @@ class Config:
     
     csv: str = "net-worth.csv"
     savedir: str = "Net worth/"
+    datefmt = '%Y/%m/%d'
     
     since_yr: int = None
     born_yr: int = None

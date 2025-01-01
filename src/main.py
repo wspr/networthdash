@@ -10,13 +10,9 @@ from .config import Config
 
 ############# PARAM ##############
 
-
-
-
-
 expstart = 0
 winyr = 1
-targetnext = [1000, 1500, 2000, 3000]
+targetnext = [10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000]
 
 anon = False
 figw = 6
@@ -54,10 +50,8 @@ node_width = 0.15
 pc_font = {"color": "black", "fontsize": 10, "rotation": 90}
 pc_font5 = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-datefmt = '%Y/%m/%d'
 
-
-def networthdash(config: Config):
+def dashboard(config: Config):
 
     assert config.born_yr, "I can assume your retirement age but not when you were born. please set 'born_yr'."
 
@@ -75,7 +69,7 @@ def networthdash(config: Config):
                   marker = "None",
                   linewidth = lw/4,
                 )
-    
+
     ############# DATA
     
     alldata = pd.read_csv(config.csv,na_values=0)
@@ -93,6 +87,14 @@ def networthdash(config: Config):
     sincedate = datetime(since_yr, 1, 1)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
+
+    def dates_to_days(data,sincedate):
+        N = len(data.Date)
+        days = np.empty(N)
+        for ii,ent in enumerate(data.Date):
+            y = datetime.strptime(ent, config.datefmt)
+            days[ii] = (y-sincedate).days / 365
+        return days
 
     alldata["Days"] = dates_to_days(alldata,sincedate)
     alldata = alldata.sort_values(by="Days")
@@ -251,6 +253,10 @@ def networthdash(config: Config):
     #######%%###### EXTRAP
     
     def extrap_target(yy):
+        
+        if total.iat[-1] > 0.8*yy:
+            return
+
         reg = np.polyfit(data.Days[window_ind],total[window_ind],1)
     
         rr = (yy - reg[1])/reg[0]
@@ -636,7 +642,7 @@ def networthdash(config: Config):
     
     plt.show()
     
-    filename = config.savedir + ".wr-net-worth-"+datetime.now().strftime("%Y-%m")
+    filename = config.savedir + "net-worth-"+datetime.now().strftime("%Y-%m")
     if anon:
         filename = filename + "-anon"
     
@@ -656,13 +662,6 @@ def color_axes(ax):
     ax.tick_params(axis='y', colors=framecolor)
     ax.tick_params(labelcolor=tickcolor)
 
-def dates_to_days(data,sincedate):
-    N = len(data.Date)
-    days = np.empty(N)
-    for ii,ent in enumerate(data.Date):
-        y = datetime.strptime(ent, datefmt)
-        days[ii] = (y-sincedate).days / 365
-    return days
 
 ################################
 
