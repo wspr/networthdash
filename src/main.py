@@ -11,7 +11,6 @@ from .config import Config
 ############# PARAM ##############
 
 
-savedir = "Net worth/"
 income_major = ['Pay']
 income_minor = ['Interest', 'dVDHG', 'dVGS', 'dVAS', 'dVESG', 'Dividend']
 income_cols = [*income_major,*income_minor]
@@ -72,8 +71,7 @@ datefmt = '%Y/%m/%d'
 
 def networthdash(config: Config):
 
-    since = f"{since_yr}/01/01"
-    sincedate = datetime.strptime(since, datefmt)
+    sincedate = datetime(since_yr, 1, 1)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - born_yr
     
@@ -117,7 +115,7 @@ def networthdash(config: Config):
 
     years_uniq = {}
     for x in alldata["Year"]:
-      if x >= income_from:
+      if x >= since_yr:
         years_uniq[x] = True
     
     data = alldata[alldata.Super>0]
@@ -641,7 +639,7 @@ def networthdash(config: Config):
     
     plt.show()
     
-    filename = savedir + ".wr-net-worth-"+datetime.now().strftime("%Y-%m")
+    filename = config.savedir + ".wr-net-worth-"+datetime.now().strftime("%Y-%m")
     if anon:
         filename = filename + "-anon"
     
