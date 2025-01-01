@@ -11,23 +11,11 @@ from .config import Config
 ############# PARAM ##############
 
 
-income_major = ['Pay']
-income_minor = ['Interest', 'dVDHG', 'dVGS', 'dVAS', 'dVESG', 'Dividend']
-income_cols = [*income_major,*income_minor]
-cash_cols = ['BankSA', 'Up', '2Up', 'Saving', 'Reserve']
-shares_cols = ['Shares','sVDHG', 'sAAPL', 'sVGS', 'sVAS', 'sVESG']
-super_cols = ['Super']
 
-born_yr = 1981
-since_yr = 2020
-retire_age = 67
 
-retire_yr = min(datetime.now().year + 8,
-                born_yr + retire_age)
 
 expstart = 0
 winyr = 1
-income_from = 2021
 targetnext = [1000, 1500, 2000, 3000]
 
 anon = False
@@ -71,10 +59,11 @@ datefmt = '%Y/%m/%d'
 
 def networthdash(config: Config):
 
-    sincedate = datetime(since_yr, 1, 1)
-    years_until_retire = retire_yr - since_yr
-    age_at_retirement = retire_yr - born_yr
-    
+    assert config.born_yr, "I can assume your retirement age but not when you were born. please set 'born_yr'."
+
+    retire_yr = min(datetime.now().year + 8,
+                    config.born_yr + config.retire_age)
+
     dotstyle = keyval_to_dict(
                   marker=".",
                   markersize=ms,
@@ -96,16 +85,24 @@ def networthdash(config: Config):
     #print(allcols)
     assert "Date" in allcols, "One column must be called 'Date'."
     
+    alldata["Year"] = alldata["Date"].apply(lambda x: 
+        datetime.strptime(x, '%Y/%m/%d').year )
+        
+    since_yr = config.since_yr or min(alldata.Year)
+
+    sincedate = datetime(since_yr, 1, 1)
+    years_until_retire = retire_yr - since_yr
+    age_at_retirement = retire_yr - config.born_yr
+
     alldata["Days"] = dates_to_days(alldata,sincedate)
     alldata = alldata.sort_values(by="Days")
     alldata = alldata.reset_index(drop=True)
-    
-    alldata["Year"] = alldata["Date"].apply(lambda x: 
-        datetime.strptime(x, '%Y/%m/%d').year )
 
-    super = alldata[super_cols].sum(axis=1)
-    shares = alldata[shares_cols].sum(axis=1)
-    cash = alldata[cash_cols].sum(axis=1)
+    income_cols = [*config.income_major,*config.income_minor]
+
+    super = alldata[config.super_cols].sum(axis=1)
+    shares = alldata[config.shares_cols].sum(axis=1)
+    cash = alldata[config.cash_cols].sum(axis=1)
     total = shares + super + cash
     
     alldata["TotalSuper"] = super
@@ -127,9 +124,9 @@ def networthdash(config: Config):
     window_ind = data.Days > (data.Days.iat[-1]-winyr)
     win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1]-winyr)
     
-    super = data[super_cols].sum(axis=1)
-    shares = data[shares_cols].sum(axis=1)
-    cash = data[cash_cols].sum(axis=1)
+    super = data[config.super_cols].sum(axis=1)
+    shares = data[config.shares_cols].sum(axis=1)
+    cash = data[config.cash_cols].sum(axis=1)
     total = shares + super + cash
     
     ########### CREATE FIGURE and AXES
@@ -461,10 +458,10 @@ def networthdash(config: Config):
     def sankey_shares_makeup(data):
         total_by_yr = {}
         for yr in years_uniq.keys():
-            total_by_yr[f"f{yr}"] = shares_cols
+            total_by_yr[f"f{yr}"] = config.shares_cols
             total_by_yr[yr] = get_shares_totals(
                 data[data["Year"] == yr],
-                shares_cols
+                config.shares_cols
             ).values()
         return pd.DataFrame(total_by_yr)
     
@@ -492,7 +489,7 @@ def networthdash(config: Config):
        value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
       )
 
-    ssdata = sankey_income(alldata,income_minor)
+    ssdata = sankey_income(alldata,config.income_minor)
     sdata = ssdata.iloc[:,-2:]
     sdata = sdata.set_index(sdata.columns[0])
     ssort = sdata.to_dict(orient="dict")
