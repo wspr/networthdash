@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "networthdash"
+version = "0.1"
+
+description = "Net worth dashboard"
+readme = "README.md"
+license = {file = "LICENSE"}
+
+dependencies = [
+    "matplotlib",
+    "ausankey",
+    "numpy",
+    "pandas",
+]
+
+requires-python = ">= 3.9"
+
+authors = [
+  {name = "Will Robertson", email = "wspr81@gmail.com"},
+]
+maintainers = [
+  {name = "Will Robertson", email = "wspr81@gmail.com"},
+]
+
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 4 - Beta",
+
+  # Indicate who your project is intended for
+  # "Intended Audience :: Developers",
+  # "Topic :: Software Development :: Build Tools",
+
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/wspr/networthdash"
+Documentation = "https://wspr.github.io/networthdash/"
+Repository = "https://github.com/wspr/networthdash.git"
+Issues = "https://github.com/wspr/networthdash/issues"
+Changelog = "https://github.com/wspr/networthdash/blob/master/CHANGELOG.md"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["networthdash"]
+
+[tool.hatch.build.targets.sdist]
+ignore-vcs = true
+
+include = [
+  "/src/*.py",
+]
+exclude = [
+  "/docs/*",
+]
+
+[tool.hatch.envs.doc]
+dependencies = ["mkdocs", "mkdocstrings[python]"]
+
+[tool.hatch.envs.doc.scripts]
+ref = "mkdocs -v build"
+img = "cd docs; for f in *.py; do python $f; done"
+icp = "cd docs; cp -v *.png ../_site/; cp -v example_*.png ../_site/examples/; cp -v iface_*.png ../_site/interface/ "
+
+
+[tool.hatch.envs.test]
+dependencies = [
+    "pytest", "coverage", "coveralls",
+    "mkdocstrings","mkdocstrings-python",
+]
+
+[tool.hatch.envs.test.scripts]
+test = "python -m pytest"
+test-cov = "coverage run -m pytest"
+coverall = "coveralls --service=github"
+cov = ["test-cov", "coverall"]
+
+[tool.ruff]
+extend-exclude = [
+  "__init__.py",
+  "docs/*",
+ ]
+output-format = "github"

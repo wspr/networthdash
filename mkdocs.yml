@@ -1,0 +1,21 @@
+site_name: "The networthdash package"
+
+nav:
+  - Home: index.md
+  - Changelog: CHANGELOG.md
+
+theme:
+  name: "mkdocs"
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [networthdash]
+          options:
+            docstring_style: numpy
+
+docs_dir: "docs"
+site_dir: "_site"
