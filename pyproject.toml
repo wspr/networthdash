@@ -49,7 +49,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/wspr/networthdash"
-Documentation = "https://wspr.github.io/networthdash/"
+Documentation = "https://wspr.io/networthdash/"
 Repository = "https://github.com/wspr/networthdash.git"
 Issues = "https://github.com/wspr/networthdash/issues"
 Changelog = "https://github.com/wspr/networthdash/blob/master/CHANGELOG.md"
