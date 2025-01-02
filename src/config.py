@@ -21,6 +21,10 @@ class Config:
         shares_cols (List[str]): columns which contain shares entries
         income_major (List[str]): columns which contain "major" income entries
         income_minor (List[str]): columns which contain "minor" income entries
+        
+        linear_window (float): number of years to linearly extrapolate from
+        
+        anon (bool): if True, hides all numerical labels
     """
     
     csv: str = "net-worth.csv"
@@ -28,13 +32,18 @@ class Config:
     datefmt = '%Y/%m/%d'
     
     since_yr: int = None
+
     born_yr: int = None
     retire_age: int = 67
     
     income_minor: List[str] = ("Interest","Dividend")
     income_major: List[str] = ("Pay")
     
-    cash_cols: List[str] = ("Active","Savings")
+    cash_cols: List[str] = ("Daily","Savings")
     shares_cols: List[str] = ("Shares")
     super_cols: List[str] = ("Super")
+
+    linear_window: float = 1
+    
+    anon: bool = False
 

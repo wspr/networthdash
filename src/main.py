@@ -11,10 +11,9 @@ from .config import Config
 ############# PARAM ##############
 
 expstart = 0
-winyr = 1
+
 targetnext = [10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000]
 
-anon = False
 figw = 6
 figh = 12.5
 lw = 1
@@ -57,6 +56,9 @@ def dashboard(config: Config):
 
     retire_yr = min(datetime.now().year + 8,
                     config.born_yr + config.retire_age)
+
+    winyr = config.linear_window
+    anon = config.anon
 
     dotstyle = keyval_to_dict(
                   marker=".",
@@ -544,6 +546,7 @@ def dashboard(config: Config):
        percent_thresh = 0.2,
        percent_thresh_val = 20,
        label_values = not(anon),
+       label_thresh = 20,
        value_fn = lambda x: f"\n${x:1.1f}k" ,
       )
 
