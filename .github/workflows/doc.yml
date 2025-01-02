@@ -31,8 +31,8 @@ jobs:
       - name: Install Hatch
         run: pipx install hatch
         
-#      - name: Generate reference doc
-#        run: hatch run doc:ref 
+      - name: Generate reference doc
+        run: hatch run doc:ref 
         
 #      - name: Generate images
 #        run: hatch run doc:img
