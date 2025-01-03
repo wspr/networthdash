@@ -6,3 +6,6 @@
 
 ::: config.Config
 
+# The `Colors` class
+
+::: colors:Colors
