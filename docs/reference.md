@@ -1,8 +1,8 @@
 # The `dashboard` user function
 
-::: main.dashboard
+::: networthdash.dashboard
 
 # The `Config` class
 
-::: config.Config
+::: networthdash.Config
 
