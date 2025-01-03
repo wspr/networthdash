@@ -31,6 +31,18 @@ class Config:
         "Targets" to extrapolate to linearly to gauge time until net worth milestones.
     anon : bool
         If True, hides all numerical labels.
+    colors : Colors
+        Colors class setup for plot colours. See Colors class for defaults and options.
+    figw : float
+        Plot size, horizontal width (physical size)
+    figh : float
+        Plot size, vertical height (physical size)
+    linewidth : float
+        Linewidth of scatter plots
+    marker : str
+        Marker of scatter plots
+    markersize :
+        Markersize of scatter plots
     """
 
     born_yr: int
@@ -48,6 +60,13 @@ class Config:
     linear_targets: List[float] = (10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000)
     
     anon: bool = False
+    
+    figw: float = 6
+    figh: float = 12.5
+    
+    linewidth: float = 1.0
+    markersize: float = 4.0
+    marker: str = "."
     
     colors: Colors = Colors()
 

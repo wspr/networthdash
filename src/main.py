@@ -10,35 +10,30 @@ from .config import Config
 
 ############# PARAM ##############
 
-expstart = 0
-
-figw = 6
-figh = 12.5
-lw = 1
-ms = 4
-mm = "."
-
-main_wd = 0.75
-main_ht = 0.30
-inset_w = 0.35
-inset_h = 0.15
-sankey_w = 0.375
-sankey_h = 0.15
-
-inset_x = [0.1, 0.55]
-row_y = [0.05, 0.44, 0.79]
-row_gap = 0.03
-
-plotcols = ["#8ec6ff","#ffbf80","#5eff86","#ffa1a1","#e9a8ff"]
-
 node_alpha = 0.8
 flow_alpha = 0.5
 node_width = 0.15
 pc_font = {"color": "black", "fontsize": 10, "rotation": 90}
-pc_font5 = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
-
 
 def dashboard(config: Config):
+
+    # internal parameters 
+    # (possibly to generalise later)
+
+    expstart = 0
+    
+    main_wd = 0.75
+    main_ht = 0.30
+    inset_w = 0.35
+    inset_h = 0.15
+    sankey_w = 0.375
+    sankey_h = 0.15
+    
+    inset_x = [0.1, 0.55]
+    row_y = [0.05, 0.44, 0.79]
+    row_gap = 0.03
+
+    # process Config parameters
 
     assert config.born_yr, "I can assume your retirement age but not when you were born. please set 'born_yr'."
 
@@ -47,6 +42,7 @@ def dashboard(config: Config):
 
     winyr = config.linear_window
     anon = config.anon
+    plotcols = config.colors.lines
 
     ############# HELPERS
     
@@ -59,15 +55,15 @@ def dashboard(config: Config):
         ax.tick_params(labelcolor=config.colors.tick)
 
     dotstyle = keyval_to_dict(
-                      marker=".",
-                      markersize=ms,
+                      marker=config.marker,
+                      markersize=config.markersize,
                       linestyle="None",
                    )
     
     projstyle = keyval_to_dict(
                   linestyle = "-",
                   marker = "None",
-                  linewidth = lw/4,
+                  linewidth = config.linewidth/4,
                 )
 
     ############# HEADERS
@@ -151,7 +147,7 @@ def dashboard(config: Config):
     ########### CREATE FIGURE and AXES
     
     fig,ax0 = plt.subplots(
-        figsize = (figw,figh) ,
+        figsize = (config.figw,config.figh) ,
         facecolor = config.colors.bg ,
     )
     ax0.axis("off")
@@ -283,7 +279,7 @@ def dashboard(config: Config):
         ax.plot(
             (rr,rr,data.Days.iat[-1]),
             (0,yy,yy),
-            '-',lw = lw,
+            '-',lw = config.linewidth,
             color = config.colors.target)
         
         ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*0.99 , f"{round(rr-data.Days.iat[-1],1)} yrs" , ha="center", va="top", color = config.colors.text)
@@ -300,7 +296,7 @@ def dashboard(config: Config):
     reg = np.polyfit(data.Days[window_ind],total[window_ind],1)
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = rd*reg[0] + reg[1]
-    ax2.plot(rd,yd,"-",lw=lw,color=hp1[0].get_color())
+    ax2.plot(rd,yd,"-",lw=config.linewidth,color=hp1[0].get_color())
     ax2.plot(
         data.Days[window_ind],total[window_ind],
         **get_col(hp1[0]),**dotstyle)
@@ -308,7 +304,7 @@ def dashboard(config: Config):
     logfit = np.polyfit(data.Days[window_ind],np.log(total[window_ind]),1,w=np.sqrt(total[window_ind]))
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = np.exp(logfit[1])*np.exp(logfit[0]*rd)
-    ax2.plot(rd,yd,"--",lw=lw,color=hp11[0].get_color())
+    ax2.plot(rd,yd,"--",lw=config.linewidth,color=hp11[0].get_color())
     
     ax2.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
     yticks_k(ax2,2)
@@ -352,7 +348,9 @@ def dashboard(config: Config):
     
     ax3.plot(
         data.Days[window_ind],shares[window_ind],
-        ".",color=hp3[0].get_color(),markersize=ms)
+        config.marker,
+        color=hp3[0].get_color(),
+        markersize=config.markersize)
     ax3.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
     
     ax33 = ax3.twinx()
@@ -511,7 +509,7 @@ def dashboard(config: Config):
        title_side = "none",
        percent_loc = "center",
        percent_loc_ht = 0.05,
-       percent_font = pc_font5,
+       percent_font = {**pc_font,"va": "bottom"},
        percent_thresh = 0.2,
        colormap = "Set3",
        label_values = not(anon),
@@ -563,7 +561,7 @@ def dashboard(config: Config):
        title_side = "none",
        percent_loc = "center",
        percent_loc_ht = 0.05,
-       percent_font = pc_font5,
+       percent_font = {**pc_font,"va": "bottom"},
        percent_thresh = 0.2,
        percent_thresh_val = 20,
        label_values = not(anon),

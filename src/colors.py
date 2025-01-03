@@ -17,4 +17,5 @@ class Colors:
     frame: str = "white"
     grid: str = "#b5b5b5"
     target: str = "#b5b5b5"
+    lines = ("#8ec6ff","#ffbf80","#5eff86","#ffa1a1","#e9a8ff")
 
