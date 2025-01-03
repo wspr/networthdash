@@ -8,4 +8,4 @@
 
 # The `Colors` class
 
-::: colors:Colors
+::: colors.Colors
