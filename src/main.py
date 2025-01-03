@@ -152,8 +152,10 @@ def dashboard(config: Config):
     
     ########### CREATE FIGURE and AXES
     
-    fig,ax0 = plt.subplots(figsize=(figw,figh),
-                           facecolor=bgcolor)
+    fig,ax0 = plt.subplots(
+        figsize = (figw,figh) ,
+        facecolor = config.colors.bg ,
+    )
     ax0.axis("off")
     
     ax1 = fig.add_axes([(1-main_wd)/2, row_y[1], main_wd, main_ht])

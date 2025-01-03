@@ -2,4 +2,5 @@
 
 from .main import dashboard
 from .config import Config
+from .colors import Colors
 

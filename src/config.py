@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
+from .colors import Colors
+
 @dataclass
 class Config:
     """
@@ -14,7 +16,7 @@ class Config:
         Path (ending in "/") to save PDF dashboards.
     datefmt : str
         The date format used in the CSV file.
-    since_yr : int, optional
+    since_yr : int
         Year to start the dashboard (default is the earliest year in the CSV file).
     born_yr : int
         The year you were born.
@@ -28,18 +30,20 @@ class Config:
     anon : bool
         If True, hides all numerical labels.
     """
-    
+
+    born_yr: int
+
     csv: str = "net-worth.csv"
     savedir: str = "Net worth/"
-    datefmt = '%Y/%m/%d'
+    datefmt: str = '%Y/%m/%d'
     
     since_yr: int = None
-
-    born_yr: int = None
     retire_age: int = 67
     
     income_thresh: float = 0.8
-    linear_window: float = 1
+    linear_window: float = 1.0
     
     anon: bool = False
+    
+    colors: Colors = Colors()
 

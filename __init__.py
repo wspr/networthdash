@@ -2,4 +2,4 @@
 
 from .src.main import dashboard
 from .src.config import Config
-
+from .src.colors import Colors
