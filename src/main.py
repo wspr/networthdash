@@ -31,16 +31,6 @@ inset_x = [0.1, 0.55]
 row_y = [0.05, 0.44, 0.79]
 row_gap = 0.03
 
-bgcolor = "#272727"
-axiscolor = "#4e4e4e"
-textcolor = "white"
-lblcolor = textcolor
-titlecolor = textcolor
-tickcolor = textcolor
-dashcolor = "white"
-framecolor = "white"
-gridcolor = '#b5b5b5'
-
 plotcols = ["#8ec6ff","#ffbf80","#5eff86","#ffa1a1","#e9a8ff"]
 
 node_alpha = 0.8
@@ -60,11 +50,21 @@ def dashboard(config: Config):
     winyr = config.linear_window
     anon = config.anon
 
+    ############# HELPERS
+    
+    def color_axes(ax):
+        ax.set_facecolor(config.colors.axis)
+        for sp in ax.spines:
+            ax.spines[sp].set_color(config.colors.frame)
+        ax.tick_params(axis='x', colors=config.colors.frame)
+        ax.tick_params(axis='y', colors=config.colors.frame)
+        ax.tick_params(labelcolor=config.colors.tick)
+
     dotstyle = keyval_to_dict(
-                  marker=".",
-                  markersize=ms,
-                  linestyle="None",
-               )
+                      marker=".",
+                      markersize=ms,
+                      linestyle="None",
+                   )
     
     projstyle = keyval_to_dict(
                   linestyle = "-",
@@ -179,9 +179,9 @@ def dashboard(config: Config):
 
     ########### FITTING and PLOTTING
     
-    ax1.set_title("",color=titlecolor)
+    ax1.set_title("",color=config.colors.title)
     ax1.axvline(x=data.Days.iat[-1],
-                linestyle="--",color=dashcolor)
+                linestyle="--",color=config.colors.dashes)
     
     def extrap(d,t):
         reg = np.polyfit(d,t,1)
@@ -257,7 +257,7 @@ def dashboard(config: Config):
         color=hp1[0].get_color())
     
     ax.set_xticks(range(years_until_retire+1))
-    ax.set_xticklabels(range(since_yr,since_yr + years_until_retire+1),rotation=90,color=tickcolor)
+    ax.set_xticklabels(range(since_yr,since_yr + years_until_retire+1),rotation=90,color=config.colors.tick)
     clim = ax.get_ylim()
     ax.set_ylim(0,clim[1])
     yticks_M(ax1)
@@ -268,7 +268,7 @@ def dashboard(config: Config):
             f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a.\n\nNet worth\nat age {age_at_retirement}\n= \${retire_worth/1000:3.2f}M;\n\n3% rule\n= \${0.03*retire_worth:1.0f}k/yr",
             ha = "left",
             va = "top",
-            color = textcolor,
+            color = config.colors.text,
         )
     
     #######%%###### EXTRAP
@@ -282,10 +282,14 @@ def dashboard(config: Config):
     
         rr = (yy - reg[1])/reg[0]
         
-        ax.plot((rr,rr,data.Days.iat[-1]),(0,yy,yy),'-',lw=lw,color="#b6b6b6")
+        ax.plot(
+            (rr,rr,data.Days.iat[-1]),
+            (0,yy,yy),
+            '-',lw = lw,
+            color = config.colors.target)
         
-        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*0.99 , f"{round(rr-data.Days.iat[-1],1)} yrs" , ha="center", va="top", color = textcolor)
-        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*1.01 , f"${yy/1000}M" , ha="center", va="bottom", color = textcolor)
+        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*0.99 , f"{round(rr-data.Days.iat[-1],1)} yrs" , ha="center", va="top", color = config.colors.text)
+        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*1.01 , f"${yy/1000}M" , ha="center", va="bottom", color = config.colors.text)
         
     if not anon:
         for ii in targetnext:
@@ -308,14 +312,14 @@ def dashboard(config: Config):
     yd = np.exp(logfit[1])*np.exp(logfit[0]*rd)
     ax2.plot(rd,yd,"--",lw=lw,color=hp11[0].get_color())
     
-    ax2.set_xlabel(f"Years since {since_yr}",color=lblcolor)
+    ax2.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
     yticks_k(ax2,2)
     
     
     
     ax2.xaxis.set_minor_locator(AutoMinorLocator(3)) 
-    ax2.grid(which='major', color=gridcolor, linestyle='-', linewidth=0.5)
-    ax2.grid(which='minor', color=gridcolor, linestyle='-', linewidth=0.5)
+    ax2.grid(which='major', color=config.colors.grid, linestyle='-', linewidth=0.5)
+    ax2.grid(which='minor', color=config.colors.grid, linestyle='-', linewidth=0.5)
     
     gain = total[window_ind].iat[-1]-total[window_ind].iat[0]
     elap = data.Days[window_ind].iat[-1]-data.Days[window_ind].iat[0]
@@ -343,7 +347,7 @@ def dashboard(config: Config):
               f"Net worth\nincrease\n\${gain:3.0f}k" + peryrtext,
               color=hp1[0].get_color(),
               va = "top",
-              backgroundcolor = axiscolor)
+              backgroundcolor = config.colors.axis)
     
     
     ############## INSET 2
@@ -351,7 +355,7 @@ def dashboard(config: Config):
     ax3.plot(
         data.Days[window_ind],shares[window_ind],
         ".",color=hp3[0].get_color(),markersize=ms)
-    ax3.set_xlabel(f"Years since {since_yr}",color=lblcolor)
+    ax3.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
     
     ax33 = ax3.twinx()
     color_axes(ax33)
@@ -389,8 +393,8 @@ def dashboard(config: Config):
     ax33.tick_params(axis="y",labelcolor=hp7[0].get_color())
     
     ax3.xaxis.set_minor_locator(AutoMinorLocator(3)) 
-    ax3.grid(which='major', color='#b5b5b5', linestyle='-', linewidth=0.5)
-    ax3.grid(which='minor', color='#b5b5b5', linestyle='-', linewidth=0.5)
+    ax3.grid(which='major', color=config.colors.grid, linestyle='-', linewidth=0.5)
+    ax3.grid(which='minor', color=config.colors.grid, linestyle='-', linewidth=0.5)
     
     shares2 = pd.Series(shares[window_ind]).reset_index(drop=True)
     sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
@@ -409,7 +413,7 @@ def dashboard(config: Config):
               f"Shares\nincrease",
               color=hp3[0].get_color(),
               va = "top",
-              backgroundcolor = axiscolor)
+              backgroundcolor = config.colors.axis)
     else:
         if winyr == 1:
             peryrtext = ""
@@ -421,7 +425,7 @@ def dashboard(config: Config):
               f"Shares\nincrease\n\${gain:2.0f}k" + peryrtext,
               color=hp3[0].get_color(),
               va = "top",
-              backgroundcolor = axiscolor)
+              backgroundcolor = config.colors.axis)
     
     if anon:
         ax3.text( 
@@ -430,7 +434,7 @@ def dashboard(config: Config):
               f"Purchased =\n{pcgr:2.0f}% of growth",
               color=hp7[0].get_color(),
               ha = "right",
-              backgroundcolor = axiscolor)
+              backgroundcolor = config.colors.axis)
     else:
         ax3.text( 
               x_min+0.95*(x_max-x_min) ,
@@ -438,7 +442,7 @@ def dashboard(config: Config):
               f"Bought \${sharebuy.iat[-1] - sharebuy.iat[1]:2.0f}k\n{pcgr:2.0f}% of growth",
               color=hp7[0].get_color(),
               ha = "right",
-              backgroundcolor = axiscolor)
+              backgroundcolor = config.colors.axis)
      
 
     ############## SANKEY SETUP
@@ -502,7 +506,7 @@ def dashboard(config: Config):
        node_gap=0.00,
        node_width = node_width,
        label_loc = ["none","none","left"],
-       label_font = {"color": textcolor},
+       label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
        node_alpha = node_alpha,
        flow_alpha = flow_alpha,
@@ -530,7 +534,7 @@ def dashboard(config: Config):
        node_gap=0.00,
        node_width = node_width,
        label_loc = ["none","none","left"],
-       label_font = {"color": textcolor},
+       label_font = {"color": config.colors.text},
        label_dict = {"Dividend": "Div", "dVDHG": "VDHG"},
        value_loc = ["center","center","center"],
        node_alpha = node_alpha,
@@ -554,7 +558,7 @@ def dashboard(config: Config):
        color_dict = {"Bought": plotcols[4], "Growth": plotcols[2]},
        node_width = node_width,
        label_loc = ["none","none","left"],
-       label_font = {"color": textcolor},
+       label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
        node_alpha = node_alpha,
        flow_alpha = flow_alpha,
@@ -579,7 +583,7 @@ def dashboard(config: Config):
        label_thresh = 20,
        node_width = node_width,
        label_loc = ["none","none","left"],
-       label_font = {"color": textcolor},
+       label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
        value_fn = lambda x: f"\n${round(x)}k",
        node_alpha = node_alpha,
@@ -598,7 +602,7 @@ def dashboard(config: Config):
             ax.get_xlim()[0] + 0.02 * xrange,
             0.95*ax.get_ylim()[1],
             str,
-            color=titlecolor,
+            color=config.colors.title,
             ha="left",
             va="top",
         )
@@ -631,8 +635,8 @@ def dashboard(config: Config):
     ax5.set_yticklabels([f'${int(tick/1000)}k' for tick in ax4.get_yticks()])
     ax7.set_yticklabels([f'${int(tick)}k' for tick in ax7.get_yticks()])
     
-    #ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=tickcolor)
-    #ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=tickcolor)
+    #ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
+    #ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
     
     ax4.yaxis.set_tick_params(which='both', direction='out', right=True, left=True)
     ax5.yaxis.set_tick_params(which='both', direction='out', right=True, left=True)
@@ -657,10 +661,9 @@ def dashboard(config: Config):
         ax5.set_yticklabels([])
         ax6.set_yticklabels([])
         ax7.set_yticklabels([])
-        ax.set_ylabel("Amount",color=textcolor)
-        ax2.set_ylabel("Amount",color=textcolor)
-        ax3.set_ylabel("Amount",color=textcolor)
-    
+        ax.set_ylabel("Amount",color=config.colors.text)
+        ax2.set_ylabel("Amount",color=config.colors.text)
+        ax3.set_ylabel("Amount",color=config.colors.text)
     
     plt.show()
     
@@ -674,15 +677,6 @@ def dashboard(config: Config):
     plt.close()
 
 
-############# HELPERS
-
-def color_axes(ax):
-    ax.set_facecolor(axiscolor)
-    for sp in ax.spines:
-        ax.spines[sp].set_color(framecolor)
-    ax.tick_params(axis='x', colors=framecolor)
-    ax.tick_params(axis='y', colors=framecolor)
-    ax.tick_params(labelcolor=tickcolor)
 
 
 ################################
