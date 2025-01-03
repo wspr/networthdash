@@ -12,8 +12,6 @@ from .config import Config
 
 expstart = 0
 
-targetnext = [10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000]
-
 figw = 6
 figh = 12.5
 lw = 1
@@ -292,7 +290,7 @@ def dashboard(config: Config):
         ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*1.01 , f"${yy/1000}M" , ha="center", va="bottom", color = config.colors.text)
         
     if not anon:
-        for ii in targetnext:
+        for ii in config.linear_targets:
             if ii < 0.85*ax.get_ylim()[1]:
                 extrap_target(ii)
             

@@ -27,6 +27,8 @@ class Config:
         based on the all-time grand totals for each income column.
     linear_window : float
         Number of years to linearly extrapolate from.
+    linear_targets: List[float]
+        "Targets" to extrapolate to linearly to gauge time until net worth milestones.
     anon : bool
         If True, hides all numerical labels.
     """
@@ -42,6 +44,8 @@ class Config:
     
     income_thresh: float = 0.8
     linear_window: float = 1.0
+    
+    linear_targets: List[float] = (10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000)
     
     anon: bool = False
     
