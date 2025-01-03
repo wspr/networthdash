@@ -3,7 +3,8 @@ site_name: "The networthdash package"
 nav:
   - Home: index.md
   - Changelog: CHANGELOG.md
-
+  - Code reference: reference.md
+  
 theme:
   name: "mkdocs"
 
