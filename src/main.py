@@ -485,7 +485,6 @@ def dashboard(config: Config):
             ).values()
         return pd.DataFrame(total_by_yr)
     
-    
     ############## SANKEY
 
     pc_font = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
@@ -524,13 +523,13 @@ def dashboard(config: Config):
        sort = "bottom",
        sort_dict = sd,
        node_gap=0.00,
-       node_width = node_width,
+       node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        label_dict = {"Dividend": "Div", "dVDHG": "VDHG"},
        value_loc = ["center","center","center"],
-       node_alpha = node_alpha,
-       flow_alpha = flow_alpha,
+       node_alpha = config.node_alpha,
+       flow_alpha = config.flow_alpha,
        title_side = "none",
        percent_loc = ("none","none","center"),
        percent_loc_ht = 0.05,
@@ -549,21 +548,21 @@ def dashboard(config: Config):
        sort = "bottom" ,
        node_gap=0.00,
        color_dict = {"Bought": plotcols[4], "Growth": plotcols[2]},
-       node_width = node_width,
+       node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
-       node_alpha = node_alpha,
-       flow_alpha = flow_alpha,
+       node_alpha = config.node_alpha,
+       flow_alpha = config.flow_alpha,
        title_side = "none",
        percent_loc = "center",
        percent_loc_ht = 0.05,
-       percent_font = {**pc_font,"va": "bottom"},
+       percent_font = pc_font,
        percent_thresh = 0.2,
-       percent_thresh_val = 20,
+       percent_thresh_val = 20000,
        label_values = not(anon),
        label_thresh = 20,
-       value_fn = lambda x: f"\n${x:1.1f}k" ,
+       value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
       )
 
     sky.sankey(ax=ax7,data=sankey_shares_makeup(alldata),
@@ -573,20 +572,20 @@ def dashboard(config: Config):
        node_gap=0.00,
        label_dict = {"sVDHG": "VDHG","sAAPL": "AAPL"},
        label_values = not(anon),
-       label_thresh = 20,
-       node_width = node_width,
+       label_thresh = 20000,
+       node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
-       value_fn = lambda x: f"\n${round(x)}k",
-       node_alpha = node_alpha,
-       flow_alpha = flow_alpha,
+       value_fn = lambda x: f"\n${x/1000:1.0f}k",
+       node_alpha = config.node_alpha,
+       flow_alpha = config.flow_alpha,
        title_side = "none",
        percent_loc = "center",
-       percent_loc_ht = 0.5,
+       percent_loc_ht = 0.05,
        percent_font = pc_font,
-       percent_thresh = 0.20,
-       percent_thresh_val = 50,
+       percent_thresh = 0.2,
+       percent_thresh_val = 50000,
       )
 
     def faux_title(ax,str):
@@ -605,9 +604,9 @@ def dashboard(config: Config):
     ax6.axis("on")
     ax7.axis("on")
     
-    ymax = max(ax4.get_ylim()[1],ax5.get_ylim()[1]*1000)
+    ymax = max(ax4.get_ylim()[1],ax5.get_ylim()[1])
     ax4.set_ylim([0,ymax])
-    ax5.set_ylim([0,ymax/1000])
+    ax5.set_ylim([0,ymax])
     ax6.set_ylim([0,ax6.get_ylim()[1]])
     ax7.set_ylim([0,ax7.get_ylim()[1]])
     
@@ -615,7 +614,7 @@ def dashboard(config: Config):
     ax6.set_yticks(ax6.get_yticks())
     ax7.set_yticks(ax7.get_yticks())
     
-    ax5.set_yticks([tick/1000 for tick in ax4.get_yticks()])
+    ax5.set_yticks([tick for tick in ax4.get_yticks()])
 
     ax4.set_xticklabels(())
     ax4.set_yticklabels([f'${int(tick/1000)}k' for tick in ax4.get_yticks()])
@@ -625,7 +624,7 @@ def dashboard(config: Config):
     ax5.yaxis.tick_right()
     ax7.yaxis.tick_right()
     ax5.set_yticklabels([f'${int(tick/1000)}k' for tick in ax4.get_yticks()])
-    ax7.set_yticklabels([f'${int(tick)}k' for tick in ax7.get_yticks()])
+    ax7.set_yticklabels([f'${int(tick/1000)}k' for tick in ax7.get_yticks()])
     
     #ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     #ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
@@ -638,7 +637,7 @@ def dashboard(config: Config):
     if anon:
         faux_title(ax5,f"Annual shares increase")
     else:
-        faux_title(ax5,f"Annual shares increase\nAll-time profit = +${profitloss:1.1f}k")
+        faux_title(ax5,f"Annual shares increase\nAll-time profit = +${profitloss/1000:1.1f}k")
     faux_title(ax6,"'Other' income breakdown")
     faux_title(ax7,"Shares breakdown")
     
@@ -659,13 +658,17 @@ def dashboard(config: Config):
     
     plt.show()
     
-    filename = config.savedir + "net-worth-"+datetime.now().strftime("%Y-%m")
+    filename = config.savedir + config.saveprefix + datetime.now().strftime(config.savesuffix)
     if anon:
         filename = filename + "-anon"
     
-    fig.savefig(filename+".pdf")
-    fig.savefig(filename+".jpg")
-    
+    if config.savepdf:
+        fig.savefig(filename+".pdf")
+    if config.savejpg:
+        fig.savefig(filename+".jpg")
+    if config.savepng:
+        fig.savefig(filename+".png")
+
     plt.close()
 
 
@@ -676,13 +679,13 @@ def dashboard(config: Config):
 def yticks_M(ax,n=2):
     ax.set_yticks(ax.get_yticks())
     if n == 1:
-        ax.set_yticklabels([f'${(tick/1000):1.1f}M' for tick in ax.get_yticks()])
+        ax.set_yticklabels([f'${(tick/1000000):1.1f}M' for tick in ax.get_yticks()])
     if n == 2:
-        ax.set_yticklabels([f'${(tick/1000):1.2f}M' for tick in ax.get_yticks()])
+        ax.set_yticklabels([f'${(tick/1000000):1.2f}M' for tick in ax.get_yticks()])
 
 def yticks_k(ax,n=0):
     ax.set_yticks(ax.get_yticks())
-    ax.set_yticklabels([f'${int(tick)}k' for tick in ax.get_yticks()])
+    ax.set_yticklabels([f'${int(tick/1000)}k' for tick in ax.get_yticks()])
 
 ################################
 
