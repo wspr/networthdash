@@ -14,6 +14,16 @@ class Config:
         Path and filename of the CSV input file.
     savedir : str
         Path (ending in "/") to save PDF dashboards.
+    saveprefix : str
+        First part of filename to save.
+    savesuffix : str
+        Second part of the filename is a date stamp specified in standard datetime format (e.g., `%Y-%m-%d`). Default setting omits the day, assuming you don't need to log updates too often.
+    savepdf : bool
+        If true saves a PDF of the dashboard in the `savedir` folder.
+    savejpg : bool
+        If true saves a JPG of the dashboard in the `savedir` folder.
+    savepng : bool
+        If true saves a PNG of the dashboard in the `savedir` folder.
     datefmt : str
         The date format used in the CSV file.
     since_yr : int
@@ -34,22 +44,35 @@ class Config:
     colors : Colors
         Colors class setup for plot colours. See Colors class for defaults and options.
     figw : float
-        Plot size, horizontal width (physical size)
+        Plot size, horizontal width (physical size).
     figh : float
-        Plot size, vertical height (physical size)
+        Plot size, vertical height (physical size).
     linewidth : float
-        Linewidth of scatter plots
+        Linewidth of scatter plots.
     marker : str
-        Marker of scatter plots
-    markersize :
-        Markersize of scatter plots
+        Marker of scatter plots.
+    markersize : float
+        Markersize of scatter plots.
+    node_width : float
+        Relative width of Sankey diagram nodes (ausankey parameter).
+    node_alpha : float
+        Alpha (transparency) of Sankey diagram nodes (ausankey parameter).
+    flow_alpha : float
+        Alpha (transparency) of Sankey diagram flow transitions between nodes (ausankey parameter).
     """
 
     born_yr: int
 
     csv: str = "net-worth.csv"
-    savedir: str = "Net worth/"
     datefmt: str = '%Y/%m/%d'
+
+    savedir: str = "Net worth/"
+    saveprefix: str = "net-worth-"
+    savesuffix: str = "%Y-%m"
+
+    savepdf: bool = True
+    savejpg: bool = False
+    savepng: bool = False
     
     since_yr: int = None
     retire_age: int = 67
@@ -57,7 +80,7 @@ class Config:
     income_thresh: float = 0.8
     linear_window: float = 1.0
     
-    linear_targets: List[float] = (10,15,20,35,50,75,100,150,200,350, 500,750, 1000, 1500, 2000, 3500, 5000, 7500, 10000)
+    linear_targets: List[float] = (5, 10, 15, 20, 35, 50, 75, 100, 150, 200, 350, 500, 750, 1000, 1500, 2000, 3500, 5000, 7500, 10000)
     
     anon: bool = False
     
@@ -69,4 +92,8 @@ class Config:
     marker: str = "."
     
     colors: Colors = Colors()
+    
+    node_width: float = 0.15
+    node_alpha: float = 0.8
+    flow_alpha: float = 0.5
 

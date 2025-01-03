@@ -10,11 +10,6 @@ from .config import Config
 
 ############# PARAM ##############
 
-node_alpha = 0.8
-flow_alpha = 0.5
-node_width = 0.15
-pc_font = {"color": "black", "fontsize": 10, "rotation": 90}
-
 def dashboard(config: Config):
 
     # internal parameters 
@@ -82,8 +77,6 @@ def dashboard(config: Config):
     alldata = alldata.fillna(0)
     
     allcols = alldata.columns.tolist()
-    #print(allcols)
-    assert "Date" in allcols, "One column must be called 'Date'."
     
     alldata["Year"] = alldata["Date"].apply(lambda x: 
         datetime.strptime(x, '%Y/%m/%d').year )
@@ -492,24 +485,27 @@ def dashboard(config: Config):
             ).values()
         return pd.DataFrame(total_by_yr)
     
-    ############## SANKEY INCOME
     
+    ############## SANKEY
+
+    pc_font = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
+
     sky.sankey(ax=ax4,
        data=sankey_income(alldata,income_cols),
        titles=[(i) for i in years_uniq],
        other_thresh_val=10000,
        sort = "bottom" ,
        node_gap=0.00,
-       node_width = node_width,
+       node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
-       node_alpha = node_alpha,
-       flow_alpha = flow_alpha,
+       node_alpha = config.node_alpha,
+       flow_alpha = config.flow_alpha,
        title_side = "none",
        percent_loc = "center",
        percent_loc_ht = 0.05,
-       percent_font = {**pc_font,"va": "bottom"},
+       percent_font = pc_font,
        percent_thresh = 0.2,
        colormap = "Set3",
        label_values = not(anon),
@@ -537,6 +533,7 @@ def dashboard(config: Config):
        flow_alpha = flow_alpha,
        title_side = "none",
        percent_loc = ("none","none","center"),
+       percent_loc_ht = 0.05,
        percent_font = pc_font,
        percent_thresh = 0.2,
        percent_thresh_val = 1000,
@@ -602,7 +599,6 @@ def dashboard(config: Config):
             ha="left",
             va="top",
         )
-    
 
     ax4.axis("on")
     ax5.axis("on")
