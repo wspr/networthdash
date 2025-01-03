@@ -112,29 +112,34 @@ def dashboard(config: Config):
     alldata = alldata.sort_values(by="Days")
     alldata = alldata.reset_index(drop=True)
 
-    income_cols = [*config.income_major,*config.income_minor]
-
     super = alldata[super_cols].sum(axis=1)
     shares = alldata[shares_cols].sum(axis=1)
     cash = alldata[cash_cols].sum(axis=1)
     expend = alldata[expend_cols].sum(axis=1)
+    income = alldata[income_cols].sum(axis=1)
     total = shares + super + cash
     
     alldata["TotalSuper"] = super
     alldata["TotalShares"] = shares
     alldata["TotalCash"] = cash
     alldata["TotalExpend"] = expend
+    alldata["TotalIncome"] = income
     alldata["Total"] = total
+    
+    income_grand_tot = alldata["TotalIncome"].sum()
+    income_sum = alldata[income_cols].sum()
+    income_major = list(income_sum[income_sum >= config.income_thresh * income_grand_tot].keys())
+    income_minor = list(income_sum[income_sum < config.income_thresh * income_grand_tot].keys())
 
     years_uniq = {}
     for x in alldata["Year"]:
       if x >= since_yr:
         years_uniq[x] = True
     
-    data = alldata[alldata.Super>0]
+    data = alldata[alldata.Total > 0]
     data = data.reset_index(drop=True)
     
-    data_sp = alldata[alldata["TotalExpend"] > 0]
+    data_sp = alldata[alldata.TotalExpend > 0]
     data_sp = data_sp.reset_index(drop=True)
     
     window_ind = data.Days > (data.Days.iat[-1]-winyr)
@@ -509,7 +514,7 @@ def dashboard(config: Config):
        value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
       )
 
-    ssdata = sankey_income(alldata,config.income_minor)
+    ssdata = sankey_income(alldata,income_minor)
     sdata = ssdata.iloc[:,-2:]
     sdata = sdata.set_index(sdata.columns[0])
     ssort = sdata.to_dict(orient="dict")

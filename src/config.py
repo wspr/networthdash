@@ -8,19 +8,18 @@ class Config:
     
     Attributes:
         csv (str): path and filename of CSV input file
+
         savedir (str): path (ending in "/") to save PDF dashboards to
+
         datefmt (str): the date format of dates used in the CSV file
         
         since_yr (int): year to start the dashboard (defaults to earliest year in CSV file)
         
         born_yr (int): year you were born
+
         retire_age (int): year you expect to retire
         
-        cash_cols (List[str]): columns which contain cash entries
-        super_cols (List[str]): columns which contain super entries
-        shares_cols (List[str]): columns which contain shares entries
-        income_major (List[str]): columns which contain "major" income entries
-        income_minor (List[str]): columns which contain "minor" income entries
+        income_thresh (float): threshold between zero and one to identify "major" or "minor" income sources based on the all-time grand totals for each income column.
         
         linear_window (float): number of years to linearly extrapolate from
         
@@ -36,13 +35,7 @@ class Config:
     born_yr: int = None
     retire_age: int = 67
     
-    income_minor: List[str] = ("Interest","Dividend")
-    income_major: List[str] = ("Pay")
-    
-    cash_cols: List[str] = ("Daily","Savings")
-    shares_cols: List[str] = ("Shares")
-    super_cols: List[str] = ("Super")
-
+    income_thresh: float = 0.8
     linear_window: float = 1
     
     anon: bool = False
