@@ -72,9 +72,19 @@ def dashboard(config: Config):
                   linewidth = lw/4,
                 )
 
+    ############# HEADERS
+
+    hdr = pd.read_csv(config.csv,na_values=0,header=None,nrows=2).transpose()
+
+    super_cols = list(hdr[1][hdr[0]=="Super"])
+    shares_cols = list(hdr[1][hdr[0]=="Shares"])
+    cash_cols = list(hdr[1][hdr[0]=="Cash"])
+    expend_cols = list(hdr[1][hdr[0]=="Expend"])
+    income_cols = list(hdr[1][hdr[0]=="Income"])
+
     ############# DATA
-    
-    alldata = pd.read_csv(config.csv,na_values=0)
+
+    alldata = pd.read_csv(config.csv,na_values=0,header=1)
     alldata = alldata.fillna(0)
     
     allcols = alldata.columns.tolist()
@@ -104,14 +114,16 @@ def dashboard(config: Config):
 
     income_cols = [*config.income_major,*config.income_minor]
 
-    super = alldata[config.super_cols].sum(axis=1)
-    shares = alldata[config.shares_cols].sum(axis=1)
-    cash = alldata[config.cash_cols].sum(axis=1)
+    super = alldata[super_cols].sum(axis=1)
+    shares = alldata[shares_cols].sum(axis=1)
+    cash = alldata[cash_cols].sum(axis=1)
+    expend = alldata[expend_cols].sum(axis=1)
     total = shares + super + cash
     
     alldata["TotalSuper"] = super
     alldata["TotalShares"] = shares
     alldata["TotalCash"] = cash
+    alldata["TotalExpend"] = expend
     alldata["Total"] = total
 
     years_uniq = {}
@@ -122,15 +134,15 @@ def dashboard(config: Config):
     data = alldata[alldata.Super>0]
     data = data.reset_index(drop=True)
     
-    data_sp = alldata[alldata.ShareSpend > 0]
+    data_sp = alldata[alldata["TotalExpend"] > 0]
     data_sp = data_sp.reset_index(drop=True)
     
     window_ind = data.Days > (data.Days.iat[-1]-winyr)
     win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1]-winyr)
     
-    super = data[config.super_cols].sum(axis=1)
-    shares = data[config.shares_cols].sum(axis=1)
-    cash = data[config.cash_cols].sum(axis=1)
+    super = data[super_cols].sum(axis=1)
+    shares = data[shares_cols].sum(axis=1)
+    cash = data[cash_cols].sum(axis=1)
     total = shares + super + cash
     
     ########### CREATE FIGURE and AXES
@@ -337,7 +349,7 @@ def dashboard(config: Config):
     ax33 = ax3.twinx()
     color_axes(ax33)
 
-    sharesum = data_sp.ShareSpend.cumsum()
+    sharesum = data_sp["TotalExpend"].cumsum()
     hp7 = ax33.plot(
         data_sp.Days[win_sp_ind],sharesum[win_sp_ind],
         **dotstyle,color=plotcols[4])
@@ -459,17 +471,17 @@ def dashboard(config: Config):
             total_by_yr[f"f{yr}"] = ['Bought','Growth']
             total_by_yr[yr] = get_totals(
                 data[data["Year"] == yr],
-                "TotalShares","ShareSpend"
+                "TotalShares","TotalExpend"
             ).values()
         return pd.DataFrame(total_by_yr)
     
     def sankey_shares_makeup(data):
         total_by_yr = {}
         for yr in years_uniq.keys():
-            total_by_yr[f"f{yr}"] = config.shares_cols
+            total_by_yr[f"f{yr}"] = shares_cols
             total_by_yr[yr] = get_shares_totals(
                 data[data["Year"] == yr],
-                config.shares_cols
+                shares_cols
             ).values()
         return pd.DataFrame(total_by_yr)
     
