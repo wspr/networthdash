@@ -252,7 +252,7 @@ def dashboard(config: Config):
 
     if not anon:
         ax.text(data.Days[0],0.95*clim[1],
-            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a.\n\nNet worth\nat age {age_at_retirement}\n= \${retire_worth/1000:3.2f}M;\n\n3% rule\n= \${0.03*retire_worth:1.0f}k/yr",
+            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a.\n\nNet worth\nat age {age_at_retirement}\n= \${retire_worth/1000000:3.2f}M;\n\n3% rule\n= \${0.03*retire_worth/1000:1.0f}k/yr",
             ha = "left",
             va = "top",
             color = config.colors.text,
@@ -327,11 +327,11 @@ def dashboard(config: Config):
         if winyr == 1:
             peryrtext = ""
         else:
-            peryrtext = f"\n\${gain/elap:1.0f}k/yr"
+            peryrtext = f"\n\${gain/elap/1000:1.0f}k/yr"
         ax2.text(
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              f"Net worth\nincrease\n\${gain:3.0f}k" + peryrtext,
+              f"Net worth\nincrease\n\${gain/1000:3.0f}k" + peryrtext,
               color=hp1[0].get_color(),
               va = "top",
               backgroundcolor = config.colors.axis)
@@ -407,11 +407,11 @@ def dashboard(config: Config):
         if winyr == 1:
             peryrtext = ""
         else:
-            peryrtext = f"\n\${gain/elap:1.0f}k/yr"
+            peryrtext = f"\n\${gain/elap/1000:1.0f}k/yr"
         ax3.text( 
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              f"Shares\nincrease\n\${gain:2.0f}k" + peryrtext,
+              f"Shares\nincrease\n\${gain/1000:2.0f}k" + peryrtext,
               color=hp3[0].get_color(),
               va = "top",
               backgroundcolor = config.colors.axis)
@@ -428,7 +428,7 @@ def dashboard(config: Config):
         ax3.text( 
               x_min+0.95*(x_max-x_min) ,
               y_min+0.05*(y_max-y_min) ,
-              f"Bought \${sharebuy.iat[-1] - sharebuy.iat[1]:2.0f}k\n{pcgr:2.0f}% of growth",
+              f"Bought \${(sharebuy.iat[-1] - sharebuy.iat[1])/1000:2.0f}k\n{pcgr:2.0f}% of growth",
               color=hp7[0].get_color(),
               ha = "right",
               backgroundcolor = config.colors.axis)
@@ -561,7 +561,7 @@ def dashboard(config: Config):
        percent_thresh = 0.2,
        percent_thresh_val = 20000,
        label_values = not(anon),
-       label_thresh = 20,
+       label_thresh = 20000,
        value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
       )
 
