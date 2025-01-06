@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 import ausankey as sky
+import os
 
 from .config import Config
 
@@ -38,6 +39,9 @@ def dashboard(config: Config):
     winyr = config.linear_window
     anon = config.anon
     plotcols = config.colors.lines
+    
+    saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
+    print(f"saveprefix = {saveprefix}")
 
     ############# HELPERS
     
@@ -80,7 +84,7 @@ def dashboard(config: Config):
 
     ############# HEADERS
 
-    hdr = pd.read_csv(config.csv,na_values=0,header=None,nrows=2).transpose()
+    hdr = pd.read_csv(config.csvpath + config.csv,na_values=0,header=None,nrows=2).transpose()
 
     super_cols = list(hdr[1][hdr[0]=="Super"])
     shares_cols = list(hdr[1][hdr[0]=="Shares"])
@@ -90,7 +94,7 @@ def dashboard(config: Config):
 
     ############# DATA
 
-    alldata = pd.read_csv(config.csv,na_values=0,header=1)
+    alldata = pd.read_csv(config.csvpath + config.csv,na_values=0,header=1)
     alldata = alldata.fillna(0)
     alldata["Year"] = dates_to_years(alldata)
    
@@ -495,11 +499,11 @@ def dashboard(config: Config):
     pc_font = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     sky.sankey(ax=ax4,
-       data=sankey_income(alldata,income_cols),
-       titles=[(i) for i in years_uniq],
-       other_thresh_val=10000,
+       data = sankey_income(alldata,income_cols),
+       titles = [ (i) for i in years_uniq ],
+       other_thresh_sum = 1 - config.income_thresh ,
        sort = "bottom" ,
-       node_gap=0.00,
+       node_gap = 0.00,
        node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
@@ -663,7 +667,8 @@ def dashboard(config: Config):
     
     plt.show()
     
-    filename = config.savedir + config.saveprefix + datetime.now().strftime(config.savesuffix)
+    filename = config.savedir + saveprefix + "-" + datetime.now().strftime(config.savesuffix)
+    
     if anon:
         filename = filename + "-anon"
     

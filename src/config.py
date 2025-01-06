@@ -11,11 +11,13 @@ class Config:
     Parameters
     ----------
     csv : str
-        Path and filename of the CSV input file.
+        Filename of the CSV input file. Path information should not be included.
+    csvpath : str
+        Path to the CSV input file. Concatenated directly with the CSV filename, so should end in a "/".
     savedir : str
         Path (ending in "/") to save PDF dashboards.
     saveprefix : str
-        First part of filename to save.
+        First part of filename to save. Defaults to the CSV filename stripped of its file extension.
     savesuffix : str
         Second part of the filename is a date stamp specified in standard datetime format (e.g., `%Y-%m-%d`). Default setting omits the day, assuming you don't need to log updates too often.
     savepdf : bool
@@ -64,10 +66,11 @@ class Config:
     born_yr: int
 
     csv: str = "net-worth.csv"
+    csvpath: str = "./"
     datefmt: str = '%Y/%m/%d'
 
     savedir: str = "Net worth/"
-    saveprefix: str = "net-worth-"
+    saveprefix: str = None
     savesuffix: str = "%Y-%m"
 
     savepdf: bool = True
