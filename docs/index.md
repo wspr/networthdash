@@ -8,6 +8,10 @@ Quick links:
 * [Github repository](https://github.com/wspr/networthdash)
 * [ausankey dependency](https://aumag.github.io/ausankey/)
 
+## Example
+
+![Example of the Net Worth Dashboard.](nwd-xmpl.png)
+
 ## Sell it to me
 
 Once you start taking finances seriously, it becomes clear quickly that you need to keep track of certain things over time. The amount in your savings account from month to month. The income from share market dividends. Growth of income from year to year.

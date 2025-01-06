@@ -49,6 +49,23 @@ def dashboard(config: Config):
         ax.tick_params(axis='y', colors=config.colors.frame)
         ax.tick_params(labelcolor=config.colors.tick)
 
+    def dates_to_years(data):
+        allcols = alldata.columns.tolist()
+        assert "Date" in allcols, "One column must be called 'Date'."
+    
+        years = alldata["Date"].apply(lambda x: 
+            datetime.strptime(x, config.datefmt).year )
+            
+        return years
+
+    def dates_to_days(data,sincedate):
+        N = len(data.Date)
+        days = np.empty(N)
+        for ii,ent in enumerate(data.Date):
+            y = datetime.strptime(ent, config.datefmt)
+            days[ii] = (y-sincedate).days / 365
+        return days
+
     dotstyle = keyval_to_dict(
                       marker=config.marker,
                       markersize=config.markersize,
@@ -75,25 +92,12 @@ def dashboard(config: Config):
 
     alldata = pd.read_csv(config.csv,na_values=0,header=1)
     alldata = alldata.fillna(0)
-    
-    allcols = alldata.columns.tolist()
-    
-    alldata["Year"] = alldata["Date"].apply(lambda x: 
-        datetime.strptime(x, '%Y/%m/%d').year )
-        
+    alldata["Year"] = dates_to_years(alldata)
+   
     since_yr = config.since_yr or min(alldata.Year)
-
     sincedate = datetime(since_yr, 1, 1)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
-
-    def dates_to_days(data,sincedate):
-        N = len(data.Date)
-        days = np.empty(N)
-        for ii,ent in enumerate(data.Date):
-            y = datetime.strptime(ent, config.datefmt)
-            days[ii] = (y-sincedate).days / 365
-        return days
 
     alldata["Days"] = dates_to_days(alldata,sincedate)
     alldata = alldata.sort_values(by="Days")
@@ -168,7 +172,8 @@ def dashboard(config: Config):
     
     ax1.set_title("",color=config.colors.title)
     ax1.axvline(x=data.Days.iat[-1],
-                linestyle="--",color=config.colors.dashes)
+                linestyle="--",
+                color=config.colors.dashes)
     
     def extrap(d,t):
         reg = np.polyfit(d,t,1)
@@ -187,11 +192,11 @@ def dashboard(config: Config):
         return hp, infl
 
     rd1, yd1 = extrap(data.Days[window_ind],
-                      total[window_ind])
+                      data.Total[window_ind])
     rd2, yd2 = extrap(data.Days[window_ind],
-                      data.Super[window_ind])
+                      data.TotalSuper[window_ind])
     rd3, yd3 = extrap(data.Days[window_ind],
-                      shares[window_ind])
+                      data.TotalShares[window_ind])
     retire_worth = yd1[-1]
 
     hp1 = ax.plot(rd1,yd1,**projstyle,color=plotcols[0])
@@ -204,9 +209,9 @@ def dashboard(config: Config):
         get_col(hp1[0])
     )
 
-    ind = data.Super[expstart:-1]> 0
+    ind = data.TotalSuper[expstart:-1]> 0
     days = data.Days[expstart:-1][ind]
-    val = data.Super[expstart:-1][ind]
+    val = data.TotalSuper[expstart:-1][ind]
     hp22 = extrap_exp(ax,days,val,get_col(hp2[0]))
 
     ind = shares[expstart:-1]> 0
@@ -217,7 +222,7 @@ def dashboard(config: Config):
       **get_col(hp1[0]),**dotstyle)
     ax.plot(data.Days,shares,
       color = hp3[0].get_color(),**dotstyle)
-    ax.plot(data.Days,data.Super,
+    ax.plot(data.Days,data.TotalSuper,
       **get_col(hp2[0]),**dotstyle)
     hp4 = ax.plot(data.Days,cash,
       **dotstyle,color=plotcols[3])
@@ -235,7 +240,7 @@ def dashboard(config: Config):
     if anon:
         str = "  Total"
     else:
-        str = f"  Total\n  ${total.iat[-1]/1000:0.3f}M"
+        str = f"  Total\n  ${total.iat[-1]/1000000:0.3f}M"
     
     ax.text(
         data.Days.iat[-1],total.iat[-1],
