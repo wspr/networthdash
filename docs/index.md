@@ -10,6 +10,33 @@ Quick links:
 
 ## Example
 
+A driver file can look as simple as:
+```
+import networthdash as nwd
+cfg = nwd.Config(
+    csv = "nwd_example.csv" ,
+    datefmt = "%Y-%m-%d",
+    born_yr = 1981 ,
+    retire_age = 67 ,
+)
+nwd.dashboard(cfg)
+```
+
+With a CSV data file which looks like:
+```
+    ,Shares,  Cash,Super,  Expend,Income,Income,  Income
+Date,VDHG,DayToDay,SuperSA,BuyShares,Pay,Dividend,Interest
+2022-01-01,  2750,7500,100000,2750,8000,    ,375
+2022-02-01,  5984,6694,100889,2750,8000, 138,335
+2022-03-01,  9139,7616,101778,2750,8000,    ,381
+...
+2024-10-01,151402,2972,130223,3250,8500,    ,149
+2024-11-01,163005,3326,131167,3250,8500,7570,166
+2024-12-01,167117,3962,132111,3250,8500,    ,198
+```
+
+This produces the following:
+
 ![Example of the Net Worth Dashboard.](nwd-xmpl.png)
 
 ## Sell it to me
