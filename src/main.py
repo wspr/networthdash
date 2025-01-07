@@ -70,6 +70,38 @@ def dashboard(config: Config):
             days[ii] = (y-sincedate).days / 365
         return days
 
+    def int_to_dollars(x,plussig=0):
+        x = round(x)
+        if x < 100:
+            div = 1
+            suffix = ""
+            sig = 0
+        elif x >= 1_000 and x < 10_000:
+            div = 1_000
+            suffix = "k"
+            sig = 1
+        elif x >= 10_000 and x < 1_000_000:
+            div = 1_000
+            suffix = "k"
+            sig = 0
+        elif x >= 1_000_000 and x < 10_000_000:
+            div = 1_000_000
+            suffix = "M"
+            sig = 1
+        elif x >= 10_000_000 and x < 1_000_000_000:
+            div = 1_000_000
+            suffix = "M"
+            sig = 0
+        elif x >= 1_000_000_000 and x < 10_000_000_000:
+            div = 1_000_000
+            suffix = "M"
+            sig = 1
+        else:
+            div = 10_000_000_000
+            suffix = "B"
+            sig = 0
+        return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
+
     dotstyle = keyval_to_dict(
                       marker=config.marker,
                       markersize=config.markersize,
@@ -123,8 +155,10 @@ def dashboard(config: Config):
     
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[income_cols].sum()
-    income_major = list(income_sum[income_sum >= config.income_thresh * income_grand_tot].keys())
-    income_minor = list(income_sum[income_sum < config.income_thresh * income_grand_tot].keys())
+    income_major = list(
+        income_sum[income_sum >= config.income_thresh * income_grand_tot].keys())
+    income_minor = list(
+        income_sum[income_sum < config.income_thresh * income_grand_tot].keys())
 
     years_uniq = {}
     for x in alldata["Year"]:
@@ -260,10 +294,13 @@ def dashboard(config: Config):
     ax.set_ylim(0,clim[1])
 
     if not anon:
-        ax.text(data.Days[0],0.95*clim[1],
-            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a.\n\nNet worth\nat age {age_at_retirement}\n= \${retire_worth/1000000:3.2f}M;\n\n3% rule\n= \${0.03*retire_worth/1000:1.0f}k/yr",
-            ha = "left",
-            va = "top",
+        str = (
+            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a." + 
+            f"\n\nNet worth\nat age {age_at_retirement}\n= " + int_to_dollars(retire_worth) + 
+            f"\n\n{config.retire_ratio:.1%} rule\n= " + int_to_dollars(config.retire_ratio*retire_worth) + "/yr"
+        )
+        ax.text(data.Days[0], 0.95*clim[1], str,
+            ha = "left", va = "top",
             color = config.colors.text,
         )
     
@@ -336,11 +373,12 @@ def dashboard(config: Config):
         if winyr == 1:
             peryrtext = ""
         else:
-            peryrtext = f"\n\${gain/elap/1000:1.0f}k/yr"
+            peryrtext = f"\n" + int_to_dollars(gain/elap) + "/yr"
+        str = f"Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
         ax2.text(
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              f"Net worth\nincrease\n\${gain/1000:3.0f}k" + peryrtext,
+              str,
               color=hp1[0].get_color(),
               va = "top",
               backgroundcolor = config.colors.axis)
@@ -416,11 +454,11 @@ def dashboard(config: Config):
         if winyr == 1:
             peryrtext = ""
         else:
-            peryrtext = f"\n\${gain/elap/1000:1.0f}k/yr"
+            peryrtext = f"\n" + int_to_dollars(gain/elap) + "/yr"
         ax3.text( 
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              f"Shares\nincrease\n\${gain/1000:2.0f}k" + peryrtext,
+              f"Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
               color=hp3[0].get_color(),
               va = "top",
               backgroundcolor = config.colors.axis)
@@ -429,15 +467,17 @@ def dashboard(config: Config):
         ax3.text( 
               x_min+0.95*(x_max-x_min) ,
               y_min+0.05*(y_max-y_min) ,
-              f"Purchased =\n{pcgr:2.0f}% of growth",
+              f"Bought =\n{pcgr:2.0f}% of growth",
               color=hp7[0].get_color(),
               ha = "right",
               backgroundcolor = config.colors.axis)
     else:
+        val = sharebuy.iat[-1] - sharebuy.iat[1]
+        str = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
         ax3.text( 
               x_min+0.95*(x_max-x_min) ,
               y_min+0.05*(y_max-y_min) ,
-              f"Bought \${(sharebuy.iat[-1] - sharebuy.iat[1])/1000:2.0f}k\n{pcgr:2.0f}% of growth",
+              str,
               color=hp7[0].get_color(),
               ha = "right",
               backgroundcolor = config.colors.axis)
@@ -517,7 +557,7 @@ def dashboard(config: Config):
        percent_thresh = 0.2,
        colormap = "Set3",
        label_values = not(anon),
-       value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
+       value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
 
     ssdata = sankey_income(alldata,income_minor)
@@ -548,7 +588,7 @@ def dashboard(config: Config):
        label_thresh = 1500,
        label_values = not(anon),
        colormap="Pastel2",
-       value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
+       value_fn = lambda x: int_to_dollars(x) ,
       )
 
     sky.sankey(ax=ax5,data=sankey_shares(alldata),
@@ -571,7 +611,7 @@ def dashboard(config: Config):
        percent_thresh_val = 20000,
        label_values = not(anon),
        label_thresh = 20000,
-       value_fn = lambda x: f"\n${x/1000:1.1f}k" ,
+       value_fn = lambda x: int_to_dollars(x) ,
       )
 
     sky.sankey(ax=ax7,data=sankey_shares_makeup(alldata),
@@ -586,7 +626,7 @@ def dashboard(config: Config):
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        value_loc = ["none","none","none"],
-       value_fn = lambda x: f"\n${x/1000:1.0f}k",
+       value_fn = lambda x: "\n" + int_to_dollars(x) ,
        node_alpha = config.node_alpha,
        flow_alpha = config.flow_alpha,
        title_side = "none",
@@ -646,7 +686,7 @@ def dashboard(config: Config):
     if anon:
         faux_title(ax5,f"Annual shares increase")
     else:
-        faux_title(ax5,f"Annual shares increase\nAll-time profit = +${profitloss/1000:1.1f}k")
+        faux_title(ax5,f"Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
     faux_title(ax6,"'Other' income breakdown")
     faux_title(ax7,"Shares breakdown")
     
@@ -685,6 +725,8 @@ def dashboard(config: Config):
 
 
 ################################
+
+
 
 def yticks_M(ax,n=2):
     ax.set_yticks(ax.get_yticks())

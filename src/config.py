@@ -34,6 +34,8 @@ class Config:
         The year you were born.
     retire_age : int
         The age at which you expect to retire.
+    retire_ratio : float
+        Thw fraction of your net worth to commence drawing down from yearly in retirement (e.g., for the "4% rule" it would be 0.04).
     income_thresh : float
         Threshold (between 0 and 1) for identifying "major" or "minor" income sources 
         based on the all-time grand totals for each income column.
@@ -61,6 +63,8 @@ class Config:
         Alpha (transparency) of Sankey diagram nodes (ausankey parameter).
     flow_alpha : float
         Alpha (transparency) of Sankey diagram flow transitions between nodes (ausankey parameter).
+    currency_sign : str
+        The currency sign used to display amounts.
     """
 
     born_yr: int
@@ -79,6 +83,7 @@ class Config:
     
     since_yr: int = None
     retire_age: int = 67
+    retire_ratio: float = 0.04
     
     income_thresh: float = 0.8
     linear_window: float = 1.0
@@ -99,4 +104,6 @@ class Config:
     node_width: float = 0.15
     node_alpha: float = 0.8
     flow_alpha: float = 0.5
+    
+    currencysign = "$"
 
