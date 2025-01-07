@@ -41,7 +41,6 @@ def dashboard(config: Config):
     plotcols = config.colors.lines
     
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
-    print(f"saveprefix = {saveprefix}")
 
     ############# HELPERS
     
@@ -72,7 +71,7 @@ def dashboard(config: Config):
 
     def int_to_dollars(x,plussig=0):
         x = round(x)
-        if x < 100:
+        if x < 1_000:
             div = 1
             suffix = ""
             sig = 0
@@ -87,19 +86,19 @@ def dashboard(config: Config):
         elif x >= 1_000_000 and x < 10_000_000:
             div = 1_000_000
             suffix = "M"
-            sig = 1
+            sig = 2
         elif x >= 10_000_000 and x < 1_000_000_000:
             div = 1_000_000
             suffix = "M"
-            sig = 0
+            sig = 1
         elif x >= 1_000_000_000 and x < 10_000_000_000:
             div = 1_000_000
             suffix = "M"
-            sig = 1
+            sig = 2
         else:
             div = 10_000_000_000
             suffix = "B"
-            sig = 0
+            sig = 3
         return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
     
     def yticks_dollars(ax):
@@ -124,6 +123,19 @@ def dashboard(config: Config):
 
     hdr = pd.read_csv(config.csvpath + config.csv,na_values=0,header=None,nrows=2).transpose()
 
+    hdrnew = {}
+    for ii,hdrii in enumerate(hdr[1]):
+        if isinstance(hdr[0][ii],str):
+            prefix = hdr[0][ii]
+        else:
+            prefix = "_"
+        if hdr[1][ii] == "Date":
+            tmpstr = "Date"
+        else:
+            tmpstr = prefix + "_" + hdr[1][ii]
+        hdrnew[tmpstr] = hdr[1][ii]
+
+    hdr[1] = list(hdrnew.keys())
     super_cols = list(hdr[1][hdr[0]=="Super"])
     shares_cols = list(hdr[1][hdr[0]=="Shares"])
     cash_cols = list(hdr[1][hdr[0]=="Cash"])
@@ -134,10 +146,13 @@ def dashboard(config: Config):
 
     alldata = pd.read_csv(config.csvpath + config.csv,na_values=0,header=1)
     alldata = alldata.fillna(0)
+    alldata.columns = hdr[1]
     alldata["Year"] = dates_to_years(alldata)
    
     since_yr = config.since_yr or min(alldata.Year)
-    sincedate = datetime(since_yr, 1, 1)
+    until_yr = config.until_yr or max(alldata.Year)
+    sincedate = datetime(since_yr,  1,  1)
+    untildate = datetime(until_yr, 12, 31)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
 
@@ -168,7 +183,7 @@ def dashboard(config: Config):
 
     years_uniq = {}
     for x in alldata["Year"]:
-      if x >= since_yr:
+      if x >= since_yr and x <= until_yr:
         years_uniq[x] = True
     
     data = alldata[alldata.Total > 0]
@@ -282,13 +297,13 @@ def dashboard(config: Config):
       "  Super",color=hp2[0].get_color(),va=va)
     
     if anon:
-        str = "  Total"
+        txtstr = "  Total"
     else:
-        str = f"  Total\n  " + int_to_dollars(total.iat[-1])
+        txtstr = f"  Total\n  " + int_to_dollars(total.iat[-1])
     
     ax.text(
         data.Days.iat[-1],total.iat[-1],
-        str,
+        txtstr,
         va="center",
         color=hp1[0].get_color())
     
@@ -300,12 +315,12 @@ def dashboard(config: Config):
     ax.set_ylim(0,clim[1])
 
     if not anon:
-        str = (
+        txtstr = (
             f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a." + 
             f"\n\nNet worth\nat age {age_at_retirement}\n= " + int_to_dollars(retire_worth) + 
             f"\n\n{config.retire_ratio:.1%} rule\n= " + int_to_dollars(config.retire_ratio*retire_worth) + "/yr"
         )
-        ax.text(data.Days[0], 0.95*clim[1], str,
+        ax.text(data.Days[0], 0.95*clim[1], txtstr,
             ha = "left", va = "top",
             color = config.colors.text,
         )
@@ -390,11 +405,11 @@ def dashboard(config: Config):
             peryrtext = ""
         else:
             peryrtext = f"\n" + int_to_dollars(gain/elap) + "/yr"
-        str = f"Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
+        txtstr = f"Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
         ax2.text(
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              str,
+              txtstr,
               color=hp1[0].get_color(),
               va = "top",
               backgroundcolor = config.colors.axis)
@@ -489,11 +504,11 @@ def dashboard(config: Config):
               backgroundcolor = config.colors.axis)
     else:
         val = sharebuy.iat[-1] - sharebuy.iat[1]
-        str = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
+        txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
         ax3.text( 
               x_min+0.95*(x_max-x_min) ,
               y_min+0.05*(y_max-y_min) ,
-              str,
+              txtstr,
               color=hp7[0].get_color(),
               ha = "right",
               backgroundcolor = config.colors.axis)
@@ -563,6 +578,7 @@ def dashboard(config: Config):
        node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
+       label_dict = hdrnew,
        value_loc = ["none","none","none"],
        node_alpha = config.node_alpha,
        flow_alpha = config.flow_alpha,
@@ -591,7 +607,7 @@ def dashboard(config: Config):
        node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
-       label_dict = {"Dividend": "Div", "dVDHG": "VDHG"},
+       label_dict = hdrnew,
        value_loc = ["center","center","center"],
        node_alpha = config.node_alpha,
        flow_alpha = config.flow_alpha,
@@ -635,7 +651,7 @@ def dashboard(config: Config):
        colormap="Pastel1",
        sort = "bottom" ,
        node_gap=0.00,
-       label_dict = {"sVDHG": "VDHG","sAAPL": "AAPL"},
+       label_dict = hdrnew,
        label_values = not(anon),
        label_thresh = 20000,
        node_width = config.node_width,
@@ -653,12 +669,12 @@ def dashboard(config: Config):
        percent_thresh_val = 50000,
       )
 
-    def faux_title(ax,str):
+    def faux_title(ax,txtstr):
         xrange = np.diff(ax.get_xlim())
         ax.text(
             ax.get_xlim()[0] + 0.02 * xrange,
             0.95*ax.get_ylim()[1],
-            str,
+            txtstr,
             color=config.colors.title,
             ha="left",
             va="top",
