@@ -101,6 +101,11 @@ def dashboard(config: Config):
             suffix = "B"
             sig = 0
         return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
+    
+    def yticks_dollars(ax):
+        ticks = ax.get_yticks()
+        newticks = [ int_to_dollars(int(tick)) for tick in ticks ]
+        ax.set_yticklabels(newticks)
 
     dotstyle = keyval_to_dict(
                       marker=config.marker,
@@ -278,7 +283,7 @@ def dashboard(config: Config):
     if anon:
         str = "  Total"
     else:
-        str = f"  Total\n  ${total.iat[-1]/1000000:0.3f}M"
+        str = f"  Total\n  " + int_to_dollars(total.iat[-1])
     
     ax.text(
         data.Days.iat[-1],total.iat[-1],
@@ -290,7 +295,7 @@ def dashboard(config: Config):
     ax.set_xticklabels(range(since_yr,since_yr + years_until_retire+1),rotation=90,color=config.colors.tick)
     clim = ax.get_ylim()
     ax.set_ylim(0,clim[1])
-    yticks_M(ax1)
+    yticks_dollars(ax1)
     ax.set_ylim(0,clim[1])
 
     if not anon:
@@ -321,8 +326,18 @@ def dashboard(config: Config):
             '-',lw = config.linewidth,
             color = config.colors.target)
         
-        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*0.99 , f"{round(rr-data.Days.iat[-1],1)} yrs" , ha="center", va="top", color = config.colors.text)
-        ax.text( data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 , yy*1.01 , f"${yy/1000}M" , ha="center", va="bottom", color = config.colors.text)
+        ax.text(
+            data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 ,
+            yy*0.99 ,
+            f"{round(rr-data.Days.iat[-1],1)} yrs" ,
+            ha="center", va="top",
+            color = config.colors.text)
+        ax.text(
+            data.Days.iat[-1] + (rr-data.Days.iat[-1])/2 ,
+            yy*1.01 ,
+            int_to_dollars(yy) ,
+            ha="center", va="bottom",
+            color = config.colors.text)
         
     if not anon:
         for ii in config.linear_targets:
@@ -346,7 +361,7 @@ def dashboard(config: Config):
     ax2.plot(rd,yd,"--",lw=config.linewidth,color=hp11[0].get_color())
     
     ax2.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
-    yticks_k(ax2,2)
+    yticks_dollars(ax2,2)
     
     
     
@@ -420,8 +435,8 @@ def dashboard(config: Config):
     yticks1 = ax3.get_yticks()
     yticks2 = ax33.get_yticks()
 
-    yticks_k(ax3,2)
-    yticks_k(ax33,2)
+    yticks_dollars(ax3)
+    yticks_dollars(ax33)
 
     ax3.set_ylim(  yylim1[0], yylim1[0] + yrange )
     ax33.set_ylim( yylim2[0], yylim2[0] + yrange )
@@ -666,14 +681,14 @@ def dashboard(config: Config):
     ax5.set_yticks([tick for tick in ax4.get_yticks()])
 
     ax4.set_xticklabels(())
-    ax4.set_yticklabels([f'${int(tick/1000)}k' for tick in ax4.get_yticks()])
-    ax6.set_yticklabels([f'${int(tick/1000)}k' for tick in ax6.get_yticks()])
-
     ax5.set_xticklabels(())
     ax5.yaxis.tick_right()
     ax7.yaxis.tick_right()
-    ax5.set_yticklabels([f'${int(tick/1000)}k' for tick in ax4.get_yticks()])
-    ax7.set_yticklabels([f'${int(tick/1000)}k' for tick in ax7.get_yticks()])
+
+    yticks_dollars(ax4)
+    yticks_dollars(ax5)
+    yticks_dollars(ax6)
+    yticks_dollars(ax7)
     
     #ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     #ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
@@ -721,23 +736,6 @@ def dashboard(config: Config):
 
     plt.close()
 
-
-
-
-################################
-
-
-
-def yticks_M(ax,n=2):
-    ax.set_yticks(ax.get_yticks())
-    if n == 1:
-        ax.set_yticklabels([f'${(tick/1000000):1.1f}M' for tick in ax.get_yticks()])
-    if n == 2:
-        ax.set_yticklabels([f'${(tick/1000000):1.2f}M' for tick in ax.get_yticks()])
-
-def yticks_k(ax,n=0):
-    ax.set_yticks(ax.get_yticks())
-    ax.set_yticklabels([f'${int(tick/1000)}k' for tick in ax.get_yticks()])
 
 ################################
 
