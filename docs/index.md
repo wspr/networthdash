@@ -38,7 +38,7 @@ Date,        VDHG,Daily,SuperSA,BuyShares,   Pay, Dividend,Interest
 
 This produces the following:
 
-![Example of the Net Worth Dashboard.](nwd-xmpl.png)
+![Example of the Net Worth Dashboard.](nwd_example.png)
 
 ## Sell it to me
 

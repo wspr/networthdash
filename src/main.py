@@ -104,20 +104,21 @@ def dashboard(config: Config):
     
     def yticks_dollars(ax):
         ticks = ax.get_yticks()
+        ax.set_yticks(ticks)
         newticks = [ int_to_dollars(int(tick)) for tick in ticks ]
         ax.set_yticklabels(newticks)
 
-    dotstyle = keyval_to_dict(
-                      marker=config.marker,
-                      markersize=config.markersize,
-                      linestyle="None",
-                   )
+    dotstyle = {
+                  "marker": config.marker,
+                  "markersize": config.markersize,
+                  "linestyle": "None",
+                }
     
-    projstyle = keyval_to_dict(
-                  linestyle = "-",
-                  marker = "None",
-                  linewidth = config.linewidth/4,
-                )
+    projstyle = {
+                  "linestyle": "-",
+                  "marker": "None",
+                  "linewidth": config.linewidth/4,
+                }
 
     ############# HEADERS
 
@@ -361,7 +362,7 @@ def dashboard(config: Config):
     ax2.plot(rd,yd,"--",lw=config.linewidth,color=hp11[0].get_color())
     
     ax2.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
-    yticks_dollars(ax2,2)
+    yticks_dollars(ax2)
     
     
     
@@ -603,7 +604,7 @@ def dashboard(config: Config):
        label_thresh = 1500,
        label_values = not(anon),
        colormap="Pastel2",
-       value_fn = lambda x: int_to_dollars(x) ,
+       value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
 
     sky.sankey(ax=ax5,data=sankey_shares(alldata),
@@ -626,7 +627,7 @@ def dashboard(config: Config):
        percent_thresh_val = 20000,
        label_values = not(anon),
        label_thresh = 20000,
-       value_fn = lambda x: int_to_dollars(x) ,
+       value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
 
     sky.sankey(ax=ax7,data=sankey_shares_makeup(alldata),
@@ -699,9 +700,9 @@ def dashboard(config: Config):
     
     faux_title(ax4,"Annual income")
     if anon:
-        faux_title(ax5,f"Annual shares increase")
+        faux_title(ax5,"Annual shares increase")
     else:
-        faux_title(ax5,f"Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
+        faux_title(ax5,"Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
     faux_title(ax6,"'Other' income breakdown")
     faux_title(ax7,"Shares breakdown")
     
@@ -716,9 +717,12 @@ def dashboard(config: Config):
         ax5.set_yticklabels([])
         ax6.set_yticklabels([])
         ax7.set_yticklabels([])
-        ax.set_ylabel("Amount",color=config.colors.text)
-        ax2.set_ylabel("Amount",color=config.colors.text)
-        ax3.set_ylabel("Amount",color=config.colors.text)
+        ax.set_ylabel("Amount",
+            color=config.colors.text)
+        ax2.set_ylabel("Amount",
+            color=config.colors.text)
+        ax3.set_ylabel("Amount",
+            color=config.colors.text)
     
     plt.show()
     
@@ -738,9 +742,6 @@ def dashboard(config: Config):
 
 
 ################################
-
-def keyval_to_dict(**kwargs):
-    return kwargs
 
 def get_col(ph):
     return {"color": ph.get_color()}
