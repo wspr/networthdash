@@ -4,13 +4,14 @@
 
 ### Quick links:
 
-* [This documentation](https://wspr.io/networthdash/)
+* [This page](https://wspr.io/networthdash/)
+* [Code documentation](https://wspr.io/networthdash/reference/)
 * [Github repository](https://github.com/wspr/networthdash)
-* [ausankey dependency](https://aumag.github.io/ausankey/)
+* [ausankey package (dependency)](https://aumag.github.io/ausankey/)
 
 ### Example
 
-A driver file can look as simple as:
+A driver file can be as simple as:
 ```
 import networthdash as nwd
 cfg = nwd.Config(

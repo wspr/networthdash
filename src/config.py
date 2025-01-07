@@ -30,6 +30,8 @@ class Config:
         The date format used in the CSV file.
     since_yr : int
         Year to start the dashboard (default is the earliest year in the CSV file).
+    until_yr : int
+        Year to conclude the dashboard (default is the latest year in the CSV file).
     born_yr : int
         The year you were born.
     retire_age : int
