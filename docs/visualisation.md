@@ -1,8 +1,12 @@
 # Net worth dashboard — visualisation
 
-## 7 panel dashboard
+## Introduction
 
-At time of writing the dashboard is hard-coded to the following 7 panel view:
+At time of writing the dashboard is hard-coded to the following 7 panel view.
+
+This dashboard is intended to be viewed on a phone screen. The aspect ratio and overall sizing can be adjusted to suit your device using the parameters `figw` and `figh` (in centimeters).
+
+## 7 panel dashboard
 
 ![Annotated example of the 7 panel dashboard.](nwd_annot.png)
 

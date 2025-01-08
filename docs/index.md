@@ -58,3 +58,13 @@ I use iOS to develop and use this code. I am unaffiliated with but recommend the
 
 * [Pythonista](http://omz-software.com/pythonista/)
 * [Easy CSV Editor](https://vdt-labs.com/easy-csv-editor/)
+
+To run this package on your phone, the most transferrable approach across platforms and apps is as follows. Download or clone the repository in a standard location for the app. Both networthdash and ausankey are designed to be run directly out of their repo code. So let's say we are using Pythonista on iPhone. You might have:
+
+    iCloud Drive/Pythonista 3/
+        mynetworth.csv
+        mynetworth.py
+        ausankey/
+        networthdash/
+
+Put your financial data into `mynetworth.csv` and construct your own driver file `mynetworth.py` based on the example provided.
