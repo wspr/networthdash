@@ -177,9 +177,9 @@ def dashboard(config: Config):
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[income_cols].sum()
     income_major = list(
-        income_sum[income_sum >= config.income_thresh * income_grand_tot].keys())
+        income_sum[income_sum >= (1 - config.income_thresh) * income_grand_tot].keys())
     income_minor = list(
-        income_sum[income_sum < config.income_thresh * income_grand_tot].keys())
+        income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
 
     years_uniq = {}
     for x in alldata["Year"]:
@@ -572,7 +572,7 @@ def dashboard(config: Config):
     sky.sankey(ax=ax4,
        data = sankey_income(alldata,income_cols),
        titles = [ (i) for i in years_uniq ],
-       other_thresh_sum = 1 - config.income_thresh ,
+       other_thresh_sum = config.income_thresh ,
        sort = "bottom" ,
        node_gap = 0.00,
        node_width = config.node_width,

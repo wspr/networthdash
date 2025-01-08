@@ -88,7 +88,7 @@ class Config:
     retire_age: int = 67
     retire_ratio: float = 0.04
     
-    income_thresh: float = 0.8
+    income_thresh: float = 0.2
     linear_window: float = 1.0
     
     linear_targets: List[float] = (5000, 10000, 15000, 20000, 35000, 50000, 75000, 100000, 150000, 200000, 350000, 500000, 750000, 1000000, 1500000, 2000000, 3500000, 5000000, 7500000, 10000000, 20000000, 50000000, 100000000)

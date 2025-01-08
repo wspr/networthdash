@@ -6,6 +6,7 @@
 
 * [This page](https://wspr.io/networthdash/)
 * [Code documentation](https://wspr.io/networthdash/reference/)
+* [Visualisation guide](https://wspr.io/networthdash/visualisation/)
 * [Github repository](https://github.com/wspr/networthdash)
 * [ausankey package (dependency)](https://aumag.github.io/ausankey/)
 
