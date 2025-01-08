@@ -26,8 +26,8 @@ nwd.dashboard(cfg)
 
 With a CSV data file which looks like:
 ```
-    ,      Shares, Cash,  Super,     Expend,Income,Income,  Income
-Date,        VDHG,Daily,SuperSA,BuyShares,   Pay, Dividend,Interest
+          ,Shares, Cash,  Super,    Expend,Income,  Income,  Income
+Date      ,  VDHG,Daily,SuperSA, BuyShares,   Pay,Dividend,Interest
 2022-01-01,  2750, 7500, 100000,      2750,  8000,        ,     375
 2022-02-01,  5984, 6694, 100889,      2750,  8000,     138,     335
 2022-03-01,  9139, 7616, 101778,      2750,  8000,        ,     381
