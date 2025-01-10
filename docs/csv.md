@@ -2,7 +2,7 @@
 
 All of the data displayed on the dashboard is sourced from a single CSV file:
 
-!(CSV_screenshot.png)
+![CSV_screenshot.png]
 
 There are several features to this CSV file.
 
@@ -11,15 +11,15 @@ There are several features to this CSV file.
 There are __two rows__ of headers in this CSV file. The first row is the category of each column:
 
 * `Cash`
-  * _Liquid assets, possibly including day-to-day accounts as well as high-interest or term deposits_
+    * _Liquid assets, possibly including day-to-day accounts as well as high-interest or term deposits_
 * `Super` 
-  * _Current value of retirement fund(s)_
+    * _Current value of retirement fund(s)_
 * `Shares`
-  * _Current value of investments in shares/stocks/ETFs/etc._
+    * _Current value of investments in shares/stocks/ETFs/etc._
 * `Expend`
-  * _Once off expenditure of share investments. This allows the tracking your total profit/loss of your share portfolio_
+    * _Once off expenditure of share investments. This allows the tracking your total profit/loss of your share portfolio_
 * `Income`
-  * _Once off income (pay/rent earned/interest/dividends)_
+    * _Once off income (pay/rent earned/interest/dividends)_
 
 As these are controlled labels, they must match exactly the strings above or the column will be ignored (which can be useful to add extra "comment" columns if desired).
 These labels are called the "column category".
