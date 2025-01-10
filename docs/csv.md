@@ -2,7 +2,7 @@
 
 All of the data displayed on the dashboard is sourced from a single CSV file:
 
-![CSV_screenshot.png]
+![Screenshot of typical CSV editor.](CSV_screenshot.png)
 
 There are several features to this CSV file.
 

@@ -25,7 +25,7 @@ cfg = nwd.Config(
 nwd.dashboard(cfg)
 ```
 
-With a [CSV data file](https://wspr.io/networthdash/visualisation/) which looks like:
+With a [CSV data file](https://wspr.io/networthdash/csv/) which looks like:
 ```
           ,Shares, Cash,  Super,    Expend,Income,  Income,  Income
 Date      ,  VDHG,Daily,SuperSA, BuyShares,   Pay,Dividend,Interest
@@ -45,9 +45,9 @@ This produces the following:
 
 ## Sell it to me
 
-Once you start taking finances seriously, it becomes clear quickly that you need to keep track of certain things over time. The amount in your savings account from month to month. The income from stock market dividends. Growth of income from year to year.
+Once you start taking finances seriously, it becomes clear quickly that you need to keep track of certain things over time. The amount in your savings account from month to month; the income from stock market dividends; growth of income from year to year; and so on. Often it makes sense to compare some of these metrics against each other.
 
-If you're anything like me, you might have dabbled in a few ways to do this: a spreadsheet like Microsoft Excel, Apple Numbers, or Google Sheets; some other kind of proprietary app. For me, none of these options grabbed me. Vendor lock-in can be a long term problem, and data accessibility is important. Despite their increasing power, spreadsheets are still hard to create really top-notch dashboards in. Complex labelling and analysis is nigh impossible in a dynamic sense.
+If you're anything like me, you might have dabbled in a few ways to do this: a spreadsheet like Microsoft Excel, Apple Numbers, or Google Sheets; some other kind of online service or proprietary app. For me, none of these options grabbed me. Vendor lock-in can be a long term problem, and data accessibility is important. Despite their increasing power, spreadsheets are still hard to create really top-notch dashboards in. Complex labelling and analysis is nigh impossible in a dynamic sense.
 
 My solution is to keep all data that you want to track in a single CSV file. Yes, there are a lot of columns, but it is very easy to update and edit. Unlike a spreadsheet, there's no way to accidently break formulae by changing entries incorrectly, or adding rows/columns. The CSV data can be easily and robustly postprocessed into a dashboard, and the data remains available for other tools without need for exporting. This package uses matplotlib and ausankey to do this.
 

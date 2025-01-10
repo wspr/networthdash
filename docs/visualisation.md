@@ -18,7 +18,7 @@ A linear projection is considered “worse case scenario” but is likely to be 
 
 The timeframe for this plot is from the beginning of the entries in the CSV file (customisable with `since_yr`) until the sooner of: 10 years into the future, or your intended retirement year.
 
-![nwd_example_p1.png]
+![Panel 1.](nwd_example_p1.png)
 
 Some additional information about the net worth projection is displayed textually. With a timeframe limited by the plot axis, the linear extrapolation of net worth is shown, alongside the 4% value of drawing down your portfolio in retirement. The drawdown percentage can be customised with the parameter `retire_ratio`.
 
@@ -30,7 +30,7 @@ From the zoomed out perspective of the main panel, it can be difficult to see in
 
 Panel 2 shows the window of data used to calculate the linear trendline, by default 1.0 years (customise with `linear_window`). This panel is useful for tracking short term variations and see changes in net worth rate as they happen.
 
-![nwd_example_p23.png]
+![Panels 2 and 3.](nwd_example_p23.png)
 
 ### #3 — shares investments
 
@@ -48,7 +48,7 @@ Panel 4 highlights the relative breakdown of income from year to year. Increment
 
 For most people, their employment pay will likely be a large majority of their income. Income less than 20% of the aggregated total is combined into a single "Other" category and compared in more detail in Panel 6. This 20% threshold can be adjusted with the parameter `income_thresh`.
 
-![nwd_example_p45.png]
+![Panels 4 and 5.](nwd_example_p45.png)
 
 ### #5 — share value difference
 
@@ -62,7 +62,7 @@ The y-axis of panels 4 and 5 are forced equal to allow visual comparison between
 
 This panel is purely designed to dive into the detail of your "Other" income streams. Since for many people the majority of this income will come from shares dividends, the placement of this panel alongside panel 7 allows visual comparison of your increase in dividends as your share portfolio increases.
 
-![nwd_example_p67.png]
+![Panels 6 and 7.](nwd_example_p67.png)
 
 ### #7 — share portfolio breakdown
 
