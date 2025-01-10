@@ -579,6 +579,7 @@ def dashboard(config: Config):
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},
        label_dict = hdrnew,
+       label_thresh = 5000,
        value_loc = ["none","none","none"],
        node_alpha = config.node_alpha,
        flow_alpha = config.flow_alpha,

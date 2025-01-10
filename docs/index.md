@@ -7,6 +7,7 @@
 * [This page](https://wspr.io/networthdash/)
 * [Code documentation](https://wspr.io/networthdash/reference/)
 * [Visualisation guide](https://wspr.io/networthdash/visualisation/)
+* [CSV file description](https://wspr.io/networthdash/csv/)
 * [Github repository](https://github.com/wspr/networthdash)
 * [ausankey package (dependency)](https://aumag.github.io/ausankey/)
 
@@ -24,7 +25,7 @@ cfg = nwd.Config(
 nwd.dashboard(cfg)
 ```
 
-With a CSV data file which looks like:
+With a [CSV data file](https://wspr.io/networthdash/visualisation/) which looks like:
 ```
           ,Shares, Cash,  Super,    Expend,Income,  Income,  Income
 Date      ,  VDHG,Daily,SuperSA, BuyShares,   Pay,Dividend,Interest
@@ -52,7 +53,7 @@ My solution is to keep all data that you want to track in a single CSV file. Yes
 
 The long term intention is to provide a suite of customisations. For now much of the dashboard is hard-coded for my own needs.
 
-## Environment
+## Getting started
 
 I use iOS to develop and use this code. I am unaffiliated with but recommend the following apps for doing so:
 

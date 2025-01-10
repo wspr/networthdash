@@ -4,6 +4,7 @@ nav:
   - Home: index.md
   - Visualisation guide: visualisation.md
   - Code reference: reference.md
+  - CSV description: csv.md
   - Changelog: CHANGELOG.md
 
 theme:
