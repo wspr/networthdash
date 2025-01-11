@@ -38,7 +38,6 @@ def dashboard(config: Config):
 
     winyr = config.linear_window
     anon = config.anon
-    plotcols = config.colors.lines
     
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
 
@@ -258,9 +257,10 @@ def dashboard(config: Config):
                       data.TotalShares[window_ind])
     retire_worth = yd1[-1]
 
-    hp1 = ax.plot(rd1,yd1,**projstyle,color=plotcols[0])
-    hp2 = ax.plot(rd2,yd2,**projstyle,color=plotcols[1])
-    hp3 = ax.plot(rd3,yd3,**projstyle,color=plotcols[2])
+    hp1 = ax.plot(rd1,yd1,**projstyle,
+        color=config.colors.total)
+    hp2 = ax.plot(rd2,yd2,**projstyle,color=config.colors.super)
+    hp3 = ax.plot(rd3,yd3,**projstyle,color=config.colors.shares)
 
     hp11, tot_growth = extrap_exp(ax,
         data.Days[expstart:-1],
@@ -284,7 +284,7 @@ def dashboard(config: Config):
     ax.plot(data.Days,data.TotalSuper,
       **get_col(hp2[0]),**dotstyle)
     hp4 = ax.plot(data.Days,cash,
-      **dotstyle,color=plotcols[3])
+      **dotstyle,color=config.colors.cash)
     
     ############% LABELS
     
@@ -430,7 +430,7 @@ def dashboard(config: Config):
     sharesum = data_sp["TotalExpend"].cumsum()
     hp7 = ax33.plot(
         data_sp.Days[win_sp_ind],sharesum[win_sp_ind],
-        **dotstyle,color=plotcols[4])
+        **dotstyle,color=config.colors.expend)
     
     yticks1 = ax3.get_yticks()
     yticks2 = ax33.get_yticks()
@@ -567,7 +567,7 @@ def dashboard(config: Config):
     
     ############## SANKEY
 
-    pc_font = {"color": "black", "fontsize": 10, "rotation": 90, "va": "bottom"}
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     sky.sankey(ax=ax4,
        data = sankey_income(alldata,income_cols),
@@ -629,7 +629,7 @@ def dashboard(config: Config):
        colormap="Pastel2",
        sort = "bottom" ,
        node_gap=0.00,
-       color_dict = {"Bought": plotcols[4], "Growth": plotcols[2]},
+       color_dict = {"Bought": config.colors.expend, "Growth": config.colors.shares},
        node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},

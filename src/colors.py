@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 @dataclass
 class Colors:
@@ -14,6 +13,8 @@ class Colors:
         Background colour of the axes.
     text : str
         Colour of generic text.
+    contrast : str
+        Colour of contrast text (e.g., overlaid percentages on Sankey plots).
     label : str
         Colour of text labels.
     title : str
@@ -28,13 +29,22 @@ class Colors:
         Colour of axis grids.
     target : str
         Colour of extrapolated target intersection lines.
-    lines : List[str]
-        Colour of individual lines. Currently indexed numerically, might change to be a dict later. 
+    super : str
+        Colour of Super lines/labels.
+    total : str
+        Colour of total net worth lines/labels.
+    shares : str
+        Colour of Shares lines/labels.
+    cash : str
+        Colour of Cash lines/labels.
+    expend : str
+        Colour of lines/labels for expenditure on shares investments.
     """
 
     bg: str = "#272727"
     axis: str = "#4e4e4e"
     text: str = "white"
+    contrast: str = "black"
     label: str = "white"
     title: str = "white"
     tick: str = "white"
@@ -42,5 +52,9 @@ class Colors:
     frame: str = "white"
     grid: str = "#b5b5b5"
     target: str = "#b5b5b5"
-    lines = ("#8ec6ff","#ffbf80","#5eff86","#ffa1a1","#e9a8ff")
+    super: str = "#ffbf80"
+    total: str = "#8ec6ff"
+    shares: str = "#5eff86"
+    cash: str = "#ffa1a1"
+    expend: str = "#e9a8ff"
 
