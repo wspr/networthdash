@@ -4,7 +4,7 @@ from dataclasses import dataclass
 class Colors:
     """
     Color class for networthdash.
-    
+
     Parameters
     ----------
     bg : str
