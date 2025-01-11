@@ -7,6 +7,7 @@ from matplotlib.ticker import AutoMinorLocator
 import ausankey as sky
 import os
 
+# pylint: disable=TID252
 from .config import Config
 
 ############# PARAM ##############
@@ -51,14 +52,13 @@ def dashboard(config: Config):
         ax.tick_params(axis='y', colors=config.colors.frame)
         ax.tick_params(labelcolor=config.colors.tick)
 
-    def dates_to_years(data):
+    def dates_to_years(alldata):
         allcols = alldata.columns.tolist()
-        assert "Date" in allcols, "One column must be called 'Date'."
+        if not "Date" in allcols:
+            raise RuntimeError("One column must be called 'Date'.")
     
-        years = alldata["Date"].apply(lambda x: 
+        return alldata["Date"].apply(lambda x: 
             datetime.strptime(x, config.datefmt).year )
-            
-        return years
 
     def dates_to_days(data,sincedate):
         N = len(data.Date)
@@ -123,15 +123,9 @@ def dashboard(config: Config):
     hdr = pd.read_csv(config.csvpath + config.csv,na_values=0,header=None,nrows=2).transpose()
 
     hdrnew = {}
-    for ii,hdrii in enumerate(hdr[1]):
-        if isinstance(hdr[0][ii],str):
-            prefix = hdr[0][ii]
-        else:
-            prefix = "_"
-        if hdr[1][ii] == "Date":
-            tmpstr = "Date"
-        else:
-            tmpstr = prefix + "_" + hdr[1][ii]
+    for ii,_ in enumerate(hdr[1]):
+        prefix = hdr[0][ii] if isinstance(hdr[0][ii],str) else "_"
+        tmpstr = "Date" if hdr[1][ii] == "Date" else prefix + "_" + hdr[1][ii]
         hdrnew[tmpstr] = hdr[1][ii]
 
     hdr[1] = list(hdrnew.keys())

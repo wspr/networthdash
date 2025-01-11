@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+
+# pylint: disable=TID252
 from .colors import Colors
 
 @dataclass
