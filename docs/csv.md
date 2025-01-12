@@ -44,8 +44,14 @@ At time of writing, all amounts entered into the CSV file must be in integer dol
 
 ## Renaming column categories
 
-(Not yet implemented)
+Renaming the column categories can be performed using code such as:
 
-## Custom/linked headers
+    import networthdash as nwd
+    
+    nwd_str = nwd.Strings(
+        sharescol = “Stocks”,
+        supercol = “401k”,
+    )
+    
+    nwd.dashboard( …, strings = nwd_str )
 
-(Not yet implemented)
