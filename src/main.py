@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.ticker import AutoMinorLocator
 
-from .config import Config
+from networthdash.src.config import Config
 
 ############# PARAM ##############
 

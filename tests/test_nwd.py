@@ -1,6 +1,8 @@
 import src as nwd 
 # recall we are within the repo when running the test
 
+print(dir(nwd))
+
 def test_simple():
     cfg = nwd.Config(
         csv = "nwd_example.csv" ,
