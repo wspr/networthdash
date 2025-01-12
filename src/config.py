@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 
-# pylint: disable=TID252
-from .colors import Colors
+from networthdash.src.colors import Colors
 
 @dataclass
 class Config:

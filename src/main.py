@@ -7,8 +7,7 @@ from matplotlib.ticker import AutoMinorLocator
 import ausankey as sky
 import os
 
-# pylint: disable=TID252
-from .config import Config
+from networthdash.src.config import Config
 
 ############# PARAM ##############
 
