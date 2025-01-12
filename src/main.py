@@ -71,8 +71,8 @@ def dashboard(config: Config):
     def int_to_dollars(x,plussig=0):
         x = round(x)
         amt_k = 1_000
-        amt_M = 1_000_000
-        amt_B = 1_000_000_000
+        amt_m = 1_000_000
+        amt_b = 1_000_000_000
         if x < amt_k:
             div = 1
             suffix = ""
@@ -81,24 +81,24 @@ def dashboard(config: Config):
             div = amt_k
             suffix = "k"
             sig = 1
-        elif x >= 10*amt_k and x < amt_M:
+        elif x >= 10*amt_k and x < amt_m:
             div = amt_k
             suffix = "k"
             sig = 0
-        elif x >= amt_M and x < 10*amt_M:
-            div = amt_M
+        elif x >= amt_m and x < 10*amt_m:
+            div = amt_m
             suffix = "M"
             sig = 2
-        elif x >= 10*amt_M and x < amt_B:
-            div = amt_M
+        elif x >= 10*amt_m and x < amt_b:
+            div = amt_m
             suffix = "M"
             sig = 1
-        elif x >= amt_B and x < 10*amt_B:
-            div = amt_B
+        elif x >= amt_b and x < 10*amt_b:
+            div = amt_b
             suffix = "B"
             sig = 2
         else:
-            div = amt_B
+            div = amt_b
             suffix = "B"
             sig = 1
         return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
@@ -592,7 +592,7 @@ def dashboard(config: Config):
     sdata = ssdata.iloc[:,-2:]
     sdata = sdata.set_index(sdata.columns[0])
     ssort = sdata.to_dict(orient="dict")
-    sd = ssort[list(ssort.keys())[0]]
+    sd = ssort[next(iter(ssort))]
     sky.sankey(ax=ax6,
        data=ssdata,
        titles=[yrlbl(i) for i in years_uniq],
