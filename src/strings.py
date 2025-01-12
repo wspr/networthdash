@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Strings:
     """
@@ -12,4 +13,3 @@ class Strings:
     """
 
     datecol: str = "Date"
-

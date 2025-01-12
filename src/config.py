@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 
 from networthdash.src.colors import Colors
-#from networthdash.src.strings import Strings
+
+# from networthdash.src.strings import Strings
 
 
 @dataclass
@@ -133,7 +134,7 @@ class Config:
 
     colors: "Colors" = field(default_factory=Colors())
 
- #   strings: "Strings" = field(default_factory=Strings())
+    #   strings: "Strings" = field(default_factory=Strings())
 
     node_width: float = 0.15
     node_alpha: float = 0.8
