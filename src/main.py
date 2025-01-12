@@ -70,34 +70,37 @@ def dashboard(config: Config):
 
     def int_to_dollars(x,plussig=0):
         x = round(x)
-        if x < 1_000:
+        amt_k = 1_000
+        amt_M = 1_000_000
+        amt_B = 1_000_000_000
+        if x < amt_k:
             div = 1
             suffix = ""
             sig = 0
-        elif x >= 1_000 and x < 10_000:
-            div = 1_000
+        elif x >= amt_k and x < 10*amt_k:
+            div = amt_k
             suffix = "k"
             sig = 1
-        elif x >= 10_000 and x < 1_000_000:
-            div = 1_000
+        elif x >= 10*amt_k and x < amt_M:
+            div = amt_k
             suffix = "k"
             sig = 0
-        elif x >= 1_000_000 and x < 10_000_000:
-            div = 1_000_000
+        elif x >= amt_M and x < 10*amt_M:
+            div = amt_M
             suffix = "M"
             sig = 2
-        elif x >= 10_000_000 and x < 1_000_000_000:
-            div = 1_000_000
+        elif x >= 10*amt_M and x < amt_B:
+            div = amt_M
             suffix = "M"
             sig = 1
-        elif x >= 1_000_000_000 and x < 10_000_000_000:
-            div = 1_000_000
-            suffix = "M"
+        elif x >= amt_B and x < 10*amt_B:
+            div = amt_B
+            suffix = "B"
             sig = 2
         else:
-            div = 10_000_000_000
+            div = amt_B
             suffix = "B"
-            sig = 3
+            sig = 1
         return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
     
     def yticks_dollars(ax):
@@ -144,7 +147,7 @@ def dashboard(config: Config):
    
     since_yr = config.since_yr or min(alldata.Year)
     until_yr = config.until_yr or max(alldata.Year)
-    sincedate = datetime(since_yr, 1, 1).replace(tzinfo=timezone.utc)
+    sincedate = datetime(since_yr, 1, 1, tzinfo=timezone.utc)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
 
