@@ -154,22 +154,17 @@ def dashboard(config: Config):
     alldata = alldata.reset_index(drop=True)
 
     alldata["TotalSuper"] = alldata[super_cols].sum(axis=1)
-    shares = alldata[shares_cols].sum(axis=1)
-    cash = alldata[cash_cols].sum(axis=1)
+    alldata["TotalShares"] = alldata[shares_cols].sum(axis=1)
+    alldata["TotalCash"] = alldata[cash_cols].sum(axis=1)
     expend = alldata[expend_cols].sum(axis=1)
     income = alldata[income_cols].sum(axis=1)
-    total = shares + alldata["TotalSuper"] + cash
-    
-    alldata["TotalShares"] = shares
-    alldata["TotalCash"] = cash
+
     alldata["TotalExpend"] = expend
     alldata["TotalIncome"] = income
-    alldata["Total"] = total
+    alldata["Total"] = alldata["TotalShares"] + alldata["TotalSuper"] + alldata["TotalCash"]
     
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[income_cols].sum()
-    income_major = list(
-        income_sum[income_sum >= (1 - config.income_thresh) * income_grand_tot].keys())
     income_minor = list(
         income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
 
@@ -187,10 +182,10 @@ def dashboard(config: Config):
     window_ind = data.Days > (data.Days.iat[-1]-winyr)
     win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1]-winyr)
     
-    super = data[super_cols].sum(axis=1)
-    shares = data[shares_cols].sum(axis=1)
-    cash = data[cash_cols].sum(axis=1)
-    total = shares + super + cash
+    data["TotalSuper"] = data[super_cols].sum(axis=1)
+    data["TotalShares"] = data[shares_cols].sum(axis=1)
+    data["TotalCash"] = data[cash_cols].sum(axis=1)
+    data["Total"] = data["TotalShares"] + data["TotalSuper"] + data["TotalCash"]
     
     ########### CREATE FIGURE and AXES
     
@@ -257,26 +252,26 @@ def dashboard(config: Config):
 
     hp11, tot_growth = extrap_exp(ax,
         data.Days[expstart:-1],
-        total[expstart:-1],
+        data.Total[expstart:-1],
         get_col(hp1[0])
     )
 
     ind = data.TotalSuper[expstart:-1]> 0
     days = data.Days[expstart:-1][ind]
     val = data.TotalSuper[expstart:-1][ind]
-    hp22 = extrap_exp(ax,days,val,get_col(hp2[0]))
+    extrap_exp(ax,days,val,get_col(hp2[0]))
 
-    ind = shares[expstart:-1]> 0
+    ind = data["TotalShares"][expstart:-1]> 0
     days = data.Days[expstart:-1][ind]
-    val = shares[expstart:-1][ind]
-    hp33 = extrap_exp(ax,days,val,get_col(hp3[0]))
-    ax.plot(data.Days,total,
+    val = data["TotalShares"][expstart:-1][ind]
+    extrap_exp(ax,days,val,get_col(hp3[0]))
+    ax.plot(data.Days,data.Total,
       **get_col(hp1[0]),**dotstyle)
-    ax.plot(data.Days,shares,
+    ax.plot(data.Days,data["TotalShares"],
       color = hp3[0].get_color(),**dotstyle)
     ax.plot(data.Days,data.TotalSuper,
       **get_col(hp2[0]),**dotstyle)
-    hp4 = ax.plot(data.Days,cash,
+    hp4 = ax.plot(data.Days,data["TotalCash"],
       **dotstyle,color=config.colors.cash)
     
     ############% LABELS
@@ -289,13 +284,10 @@ def dashboard(config: Config):
     ax.text(data.Days.iat[-1],alldata["TotalSuper"].iat[-1],
       "  Super",color=hp2[0].get_color(),va=va)
     
-    if anon:
-        txtstr = "  Total"
-    else:
-        txtstr = f"  Total\n  " + int_to_dollars(total.iat[-1])
+    txtstr = "  Total" if anon else ( "  Total\n  " + int_to_dollars(data.Total.iat[-1]) )
     
     ax.text(
-        data.Days.iat[-1],total.iat[-1],
+        data.Days.iat[-1],data.Total.iat[-1],
         txtstr,
         va="center",
         color=hp1[0].get_color())
@@ -325,10 +317,10 @@ def dashboard(config: Config):
     
     def extrap_target(yy):
         
-        if total.iat[-1] > 0.8*yy:
+        if data.Total.iat[-1] > 0.8*yy:
             return
 
-        reg = np.polyfit(data.Days[window_ind],total[window_ind],1)
+        reg = np.polyfit(data.Days[window_ind],data.Total[window_ind],1)
     
         rr = (yy - reg[1])/reg[0]
         
@@ -359,15 +351,15 @@ def dashboard(config: Config):
             
     ############## INSET
     
-    reg = np.polyfit(data.Days[window_ind],total[window_ind],1)
+    reg = np.polyfit(data.Days[window_ind],data.Total[window_ind],1)
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = rd*reg[0] + reg[1]
     ax2.plot(rd,yd,"-",lw=config.linewidth,color=hp1[0].get_color())
     ax2.plot(
-        data.Days[window_ind],total[window_ind],
+        data.Days[window_ind],data.Total[window_ind],
         **get_col(hp1[0]),**dotstyle)
     
-    logfit = np.polyfit(data.Days[window_ind],np.log(total[window_ind]),1,w=np.sqrt(total[window_ind]))
+    logfit = np.polyfit(data.Days[window_ind],np.log(data.Total[window_ind]),1,w=np.sqrt(data.Total[window_ind]))
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = np.exp(logfit[1])*np.exp(logfit[0]*rd)
     ax2.plot(rd,yd,"--",lw=config.linewidth,color=hp11[0].get_color())
@@ -381,7 +373,7 @@ def dashboard(config: Config):
     ax2.grid(which='major', color=config.colors.grid, linestyle='-', linewidth=0.5)
     ax2.grid(which='minor', color=config.colors.grid, linestyle='-', linewidth=0.5)
     
-    gain = total[window_ind].iat[-1]-total[window_ind].iat[0]
+    gain = data.Total[window_ind].iat[-1]-data.Total[window_ind].iat[0]
     elap = data.Days[window_ind].iat[-1]-data.Days[window_ind].iat[0]
     
     ax2.tick_params(axis="y",labelcolor=hp1[0].get_color())
@@ -393,15 +385,14 @@ def dashboard(config: Config):
         ax2.text(
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
-              f"Net worth\nincrease",
+              "Net worth\nincrease",
               color=hp1[0].get_color(),
               va = "top")
     else:
-        if winyr == 1:
-            peryrtext = ""
-        else:
-            peryrtext = f"\n" + int_to_dollars(gain/elap) + "/yr"
-        txtstr = f"Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
+        peryrtext = "" if winyr == 1 else (
+            "\n" + int_to_dollars(gain/elap) + "/yr"
+        )
+        txtstr = "Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
         ax2.text(
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
@@ -414,7 +405,7 @@ def dashboard(config: Config):
     ############## INSET 2
     
     ax3.plot(
-        data.Days[window_ind],shares[window_ind],
+        data.Days[window_ind],data["TotalShares"][window_ind],
         config.marker,
         color=hp3[0].get_color(),
         markersize=config.markersize)
@@ -459,7 +450,7 @@ def dashboard(config: Config):
     ax3.grid(which='major', color=config.colors.grid, linestyle='-', linewidth=0.5)
     ax3.grid(which='minor', color=config.colors.grid, linestyle='-', linewidth=0.5)
     
-    shares2 = pd.Series(shares[window_ind]).reset_index(drop=True)
+    shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
     sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
     pcgr = 100*(sharebuy.iat[-1] - sharebuy.iat[1])/(shares2.iat[-1] - shares2.iat[1])
 
@@ -698,7 +689,7 @@ def dashboard(config: Config):
     ax6.set_yticks(ax6.get_yticks())
     ax7.set_yticks(ax7.get_yticks())
     
-    ax5.set_yticks([tick for tick in ax4.get_yticks()])
+    ax5.set_yticks(list(ax4.get_yticks()))
 
     ax4.set_xticklabels(())
     ax5.set_xticklabels(())
