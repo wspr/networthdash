@@ -1,4 +1,4 @@
-import src as nwd 
+import networthdash as nwd 
 # recall we are within the repo when running the test
 
 print(dir(nwd))

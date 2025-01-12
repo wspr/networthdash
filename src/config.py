@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from .colors import Colors
-from .strings import Strings
+from networthdash.colors import Colors
+from networthdash.strings import Strings
 
 @dataclass
 class Config:
