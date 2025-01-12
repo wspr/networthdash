@@ -32,8 +32,6 @@ def dashboard(config: Config):
 
     # process Config parameters
 
-    assert config.born_yr, "I can assume your retirement age but not when you were born. please set 'born_yr'."
-
     retire_yr = min(datetime.now().year + 8,
                     config.born_yr + config.retire_age)
 
@@ -43,6 +41,9 @@ def dashboard(config: Config):
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
 
     ############# HELPERS
+    
+    errors = {}
+    errors["DateColMissing"] = "One column must be called 'Date'."
     
     def color_axes(ax):
         ax.set_facecolor(config.colors.axis)
@@ -55,14 +56,13 @@ def dashboard(config: Config):
     def dates_to_years(alldata):
         allcols = alldata.columns.tolist()
         if not "Date" in allcols:
-            raise RuntimeError("One column must be called 'Date'.")
+            raise RuntimeError(errors.DateColMissing)
     
         return alldata["Date"].apply(lambda x: 
             datetime.strptime(x, config.datefmt).year )
 
     def dates_to_days(data,sincedate):
-        N = len(data.Date)
-        days = np.empty(N)
+        days = np.empty(len(data.Date))
         for ii,ent in enumerate(data.Date):
             y = datetime.strptime(ent, config.datefmt)
             days[ii] = (y-sincedate).days / 365
@@ -145,7 +145,6 @@ def dashboard(config: Config):
     since_yr = config.since_yr or min(alldata.Year)
     until_yr = config.until_yr or max(alldata.Year)
     sincedate = datetime(since_yr,  1,  1)
-    untildate = datetime(until_yr, 12, 31)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
 
@@ -284,7 +283,9 @@ def dashboard(config: Config):
     ax.text(data.Days.iat[-1],alldata["TotalSuper"].iat[-1],
       "  Super",color=hp2[0].get_color(),va=va)
     
-    txtstr = "  Total" if anon else ( "  Total\n  " + int_to_dollars(data.Total.iat[-1]) )
+    txtstr = "  Total" if anon else (
+        "  Total\n  " + int_to_dollars(data.Total.iat[-1])
+    )
     
     ax.text(
         data.Days.iat[-1],data.Total.iat[-1],
@@ -301,12 +302,12 @@ def dashboard(config: Config):
 
     if not anon:
         txtstr = (
-            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a." +
-            f"\n\nNet worth\nat age {age_at_retirement}\n= " +
-            int_to_dollars(retire_worth) +
-            f"\n\n{config.retire_ratio:.1%} rule\n= " +
-            int_to_dollars(config.retire_ratio*retire_worth) +
-            "/yr"
+            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a."
+            f"\n\nNet worth\nat age {age_at_retirement}\n= "
+            f"{int_to_dollars(retire_worth)}"
+            f"\n\n{config.retire_ratio:.1%} rule\n= "
+            f"{int_to_dollars(config.retire_ratio*retire_worth)}"
+            f"/yr"
         )
         ax.text(data.Days[0], 0.95*clim[1], txtstr,
             ha = "left", va = "top",
@@ -469,10 +470,9 @@ def dashboard(config: Config):
               va = "top",
               backgroundcolor = config.colors.axis)
     else:
-        if winyr == 1:
-            peryrtext = ""
-        else:
-            peryrtext = f"\n" + int_to_dollars(gain/elap) + "/yr"
+        peryrtext = "" if winyr == 1 else (
+            "\n" + int_to_dollars(gain/elap) + "/yr"
+        )
         ax3.text( 
               x_min+0.05*(x_max-x_min) ,
               y_min+0.95*(y_max-y_min) ,
