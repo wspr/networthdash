@@ -1,4 +1,5 @@
-import networthdash as nwd
+import src as nwd 
+# recall we are within the repo when running the test
 
 def test_simple():
     cfg = nwd.Config(
