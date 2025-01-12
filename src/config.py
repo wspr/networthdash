@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from .colors import Colors
 from .strings import Strings
 
+
 @dataclass
 class Config:
     """
