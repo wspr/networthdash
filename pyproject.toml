@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "networthdash"
-version = "0.2"
+version = "0.3"
 
 description = "Net worth dashboard"
 readme = "README.md"
