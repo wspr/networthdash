@@ -95,3 +95,4 @@ extend-exclude = [
   "docs/*",
  ]
 output-format = "github"
+ignore = ["TID252"]
