@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ def dashboard(config: Config):
 
     # process Config parameters
 
-    retire_yr = min(datetime.now().year + 8,
+    retire_yr = min(datetime.now(timezone.utc).year + 8,
                     config.born_yr + config.retire_age)
 
     winyr = config.linear_window
@@ -59,12 +59,12 @@ def dashboard(config: Config):
             raise RuntimeError(errors.DateColMissing)
     
         return alldata["Date"].apply(lambda x: 
-            datetime.strptime(x, config.datefmt).year )
+            datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year )
 
     def dates_to_days(data,sincedate):
         days = np.empty(len(data.Date))
         for ii,ent in enumerate(data.Date):
-            y = datetime.strptime(ent, config.datefmt)
+            y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
             days[ii] = (y-sincedate).days / 365
         return days
 
@@ -144,7 +144,7 @@ def dashboard(config: Config):
    
     since_yr = config.since_yr or min(alldata.Year)
     until_yr = config.until_yr or max(alldata.Year)
-    sincedate = datetime(since_yr,  1,  1)
+    sincedate = datetime(since_yr, 1, 1).replace(tzinfo=timezone.utc)
     years_until_retire = retire_yr - since_yr
     age_at_retirement = retire_yr - config.born_yr
 
@@ -736,7 +736,7 @@ def dashboard(config: Config):
     
     plt.show()
     
-    filename = config.savedir + saveprefix + "-" + datetime.now().strftime(config.savesuffix)
+    filename = config.savedir + saveprefix + "-" + datetime.now(timezone.utc).strftime(config.savesuffix)
     
     if anon:
         filename = filename + "-anon"
