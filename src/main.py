@@ -40,10 +40,12 @@ def dashboard(config: Config):
     
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
 
+    datecol = "Date" #config.strings.datecol
+
     ############# HELPERS
     
     errors = {}
-    errors["DateColMissing"] = "One column must be called 'Date'."
+    errors["DateColMissing"] = f"One column must be called '{datecol}'."
     
     def color_axes(ax):
         ax.set_facecolor(config.colors.axis)
@@ -55,15 +57,15 @@ def dashboard(config: Config):
 
     def dates_to_years(alldata):
         allcols = alldata.columns.tolist()
-        if not "Date" in allcols:
+        if not datecol in allcols:
             raise RuntimeError(errors.DateColMissing)
     
-        return alldata["Date"].apply(lambda x: 
+        return alldata[datecol].apply(lambda x: 
             datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year )
 
     def dates_to_days(data,sincedate):
-        days = np.empty(len(data.Date))
-        for ii,ent in enumerate(data.Date):
+        days = np.empty(len(data[datecol]))
+        for ii,ent in enumerate(data[datecol]):
             y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
             days[ii] = (y-sincedate).days / 365
         return days
@@ -128,7 +130,7 @@ def dashboard(config: Config):
     hdrnew = {}
     for ii,_ in enumerate(hdr[1]):
         prefix = hdr[0][ii] if isinstance(hdr[0][ii],str) else "_"
-        tmpstr = "Date" if hdr[1][ii] == "Date" else prefix + "_" + hdr[1][ii]
+        tmpstr = datecol if hdr[1][ii] == datecol else prefix + "_" + hdr[1][ii]
         hdrnew[tmpstr] = hdr[1][ii]
 
     hdr[1] = list(hdrnew.keys())
@@ -363,7 +365,7 @@ def dashboard(config: Config):
     reg = np.polyfit(data.Days[window_ind],data.Total[window_ind],1)
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = rd*reg[0] + reg[1]
-    ax2.plot(rd,yd,"-",lw=config.linewidth,color=hp1[0].get_color())
+    ax2.plot(rd,yd,"-",lw=config.linewidth/4,color=hp1[0].get_color())
     ax2.plot(
         data.Days[window_ind],data.Total[window_ind],
         **get_col(hp1[0]),**dotstyle)
@@ -371,7 +373,7 @@ def dashboard(config: Config):
     logfit = np.polyfit(data.Days[window_ind],np.log(data.Total[window_ind]),1,w=np.sqrt(data.Total[window_ind]))
     rd = np.linspace(data.Days[window_ind].iat[0],data.Days.iat[-1])
     yd = np.exp(logfit[1])*np.exp(logfit[0]*rd)
-    ax2.plot(rd,yd,"--",lw=config.linewidth,color=hp11[0].get_color())
+    ax2.plot(rd,yd,"--",lw=config.linewidth/4,color=hp11[0].get_color())
     
     ax2.set_xlabel(f"Years since {since_yr}",color=config.colors.label)
     yticks_dollars(ax2)
