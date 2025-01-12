@@ -22,10 +22,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install Hatch
       run: pipx install hatch
-    - name: Self install
-      run: |
-          export PYTHONPATH=$PYTHONPATH:${{ github.workspace }}
-          pip install -e .
     - name: Test with pytest
       run: |
-          hatch run test:test
+        echo `pwd`
+        hatch run test:test
