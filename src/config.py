@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from networthdash.src.colors import Colors
 from networthdash.src.strings import Strings
 
+
 @dataclass
 class Config:
     """
