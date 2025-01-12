@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 @dataclass
 class Strings:
     """
@@ -13,3 +12,9 @@ class Strings:
     """
 
     datecol: str = "Date"
+    supercol: str = "Super"
+    sharescol: str = "Shares"
+    cashcol: str = "Cash"
+    incomecol: str = "Income"
+    expendcol: str = "Expend"
+

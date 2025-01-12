@@ -40,7 +40,12 @@ def dashboard(config: Config):
 
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
 
-    datecol = "Date"  # config.strings.datecol
+    datecol = config.strings.datecol
+    supercol = config.strings.supercol
+    sharescol = config.strings.sharescol
+    cashcol = config.strings.cashcol
+    expendcol = config.strings.expendcol
+    incomecol = config.strings.incomecol
 
     ############# HELPERS
 
@@ -133,11 +138,11 @@ def dashboard(config: Config):
         hdrnew[tmpstr] = hdr[1][ii]
 
     hdr[1] = list(hdrnew.keys())
-    super_cols = list(hdr[1][hdr[0] == "Super"])
-    shares_cols = list(hdr[1][hdr[0] == "Shares"])
-    cash_cols = list(hdr[1][hdr[0] == "Cash"])
-    expend_cols = list(hdr[1][hdr[0] == "Expend"])
-    income_cols = list(hdr[1][hdr[0] == "Income"])
+    super_cols = list(hdr[1][hdr[0] == supercol])
+    shares_cols = list(hdr[1][hdr[0] == sharescol])
+    cash_cols = list(hdr[1][hdr[0] == cashcol])
+    expend_cols = list(hdr[1][hdr[0] == expendcol])
+    income_cols = list(hdr[1][hdr[0] == incomecol])
 
     ############# DATA
 

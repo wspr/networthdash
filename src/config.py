@@ -1,9 +1,7 @@
 from dataclasses import dataclass, field
 
 from networthdash.src.colors import Colors
-
-# from networthdash.src.strings import Strings
-
+from networthdash.src.strings import Strings
 
 @dataclass
 class Config:
@@ -52,6 +50,8 @@ class Config:
         If True, hides all numerical labels.
     colors : Colors
         Colors class setup for plot colours. See Colors class for defaults and options.
+    strings : Strings
+        Strings class setup for dashboard strings. Includes strings used in the CSV file. See Strings class for defaults and options.
     figw : float
         Plot size, horizontal width (physical size).
     figh : float
@@ -132,9 +132,9 @@ class Config:
     markersize: float = 4.0
     marker: str = "."
 
-    colors: "Colors" = field(default_factory=Colors())
+    colors: "Colors" = field(default_factory=Colors)
 
-    #   strings: "Strings" = field(default_factory=Strings())
+    strings: "Strings" = field(default_factory=Strings)
 
     node_width: float = 0.15
     node_alpha: float = 0.8
