@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Colors:
     """
@@ -57,4 +58,3 @@ class Colors:
     shares: str = "#5eff86"
     cash: str = "#ffa1a1"
     expend: str = "#e9a8ff"
-
