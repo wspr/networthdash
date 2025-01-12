@@ -153,14 +153,13 @@ def dashboard(config: Config):
     alldata = alldata.sort_values(by="Days")
     alldata = alldata.reset_index(drop=True)
 
-    super = alldata[super_cols].sum(axis=1)
+    alldata["TotalSuper"] = alldata[super_cols].sum(axis=1)
     shares = alldata[shares_cols].sum(axis=1)
     cash = alldata[cash_cols].sum(axis=1)
     expend = alldata[expend_cols].sum(axis=1)
     income = alldata[income_cols].sum(axis=1)
-    total = shares + super + cash
+    total = shares + alldata["TotalSuper"] + cash
     
-    alldata["TotalSuper"] = super
     alldata["TotalShares"] = shares
     alldata["TotalCash"] = cash
     alldata["TotalExpend"] = expend
@@ -283,11 +282,11 @@ def dashboard(config: Config):
     ############% LABELS
     
     va = "center"
-    ax.text(data.Days.iat[-1],cash.iat[-1],
+    ax.text(data.Days.iat[-1],alldata["TotalCash"].iat[-1],
       "  Cash",color=hp4[0].get_color(),va=va)
-    ax.text(data.Days.iat[-1],shares.iat[-1],
+    ax.text(data.Days.iat[-1],alldata["TotalShares"].iat[-1],
       "  Shares",color=hp3[0].get_color(),va=va)
-    ax.text(data.Days.iat[-1],super.iat[-1],
+    ax.text(data.Days.iat[-1],alldata["TotalSuper"].iat[-1],
       "  Super",color=hp2[0].get_color(),va=va)
     
     if anon:
@@ -310,9 +309,12 @@ def dashboard(config: Config):
 
     if not anon:
         txtstr = (
-            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a." + 
-            f"\n\nNet worth\nat age {age_at_retirement}\n= " + int_to_dollars(retire_worth) + 
-            f"\n\n{config.retire_ratio:.1%} rule\n= " + int_to_dollars(config.retire_ratio*retire_worth) + "/yr"
+            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a." +
+            f"\n\nNet worth\nat age {age_at_retirement}\n= " +
+            int_to_dollars(retire_worth) +
+            f"\n\n{config.retire_ratio:.1%} rule\n= " +
+            int_to_dollars(config.retire_ratio*retire_worth) +
+            "/yr"
         )
         ax.text(data.Days[0], 0.95*clim[1], txtstr,
             ha = "left", va = "top",
@@ -561,11 +563,15 @@ def dashboard(config: Config):
     
     ############## SANKEY
 
+    def yrlbl(yr):
+        yrstr = f"{yr}"
+        return "'"+yrstr[2:4]
+
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     sky.sankey(ax=ax4,
        data = sankey_income(alldata,income_cols),
-       titles = [ (i) for i in years_uniq ],
+       titles=[yrlbl(i) for i in years_uniq],
        other_thresh_ofsum = config.income_thresh ,
        sort = "bottom" ,
        node_gap = 0.00,
@@ -595,7 +601,7 @@ def dashboard(config: Config):
     sd = ssort[list(ssort.keys())[0]]
     sky.sankey(ax=ax6,
        data=ssdata,
-       titles=[(i) for i in years_uniq],
+       titles=[yrlbl(i) for i in years_uniq],
        other_thresh=100,
        sort = "bottom",
        sort_dict = sd,
@@ -619,8 +625,9 @@ def dashboard(config: Config):
        value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
 
+
     sky.sankey(ax=ax5,data=sankey_shares(alldata),
-       titles=[(i) for i in years_uniq],
+       titles=[yrlbl(i) for i in years_uniq],
        colormap="Pastel2",
        sort = "bottom" ,
        node_gap=0.00,
@@ -643,7 +650,7 @@ def dashboard(config: Config):
       )
 
     sky.sankey(ax=ax7,data=sankey_shares_makeup(alldata),
-       titles=[(i) for i in years_uniq],
+       titles=[yrlbl(i) for i in years_uniq],
        colormap="Pastel1",
        sort = "bottom" ,
        node_gap=0.00,
