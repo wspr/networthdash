@@ -31,8 +31,9 @@ def dashboard(config: Config):
 
     # process Config parameters
 
-    retire_yr = min(datetime.now(timezone.utc).year + 8,
-                    config.born_yr + config.retire_age)
+    retire_yr = config.born_yr + config.retire_age
+    ahead_yr = datetime.now(timezone.utc).year + config.future_window
+    max_yr = min(ahead_yr, retire_yr)
 
     winyr = config.linear_window
     anon = config.anon
@@ -147,8 +148,8 @@ def dashboard(config: Config):
     since_yr = config.since_yr or min(alldata.Year)
     until_yr = config.until_yr or max(alldata.Year)
     sincedate = datetime(since_yr, 1, 1, tzinfo=timezone.utc)
-    years_until_retire = retire_yr - since_yr
-    age_at_retirement = retire_yr - config.born_yr
+    years_until_retire = max_yr - since_yr
+    age_at_retirement = max_yr - config.born_yr
 
     alldata["Days"] = dates_to_days(alldata,sincedate)
     alldata = alldata.sort_values(by="Days")
@@ -221,7 +222,12 @@ def dashboard(config: Config):
     ax1.axvline(x=data.Days.iat[-1],
                 linestyle="--",
                 color=config.colors.dashes)
-    
+
+    if retire_yr == max_yr:
+        ax1.axvline(x=retire_yr - since_yr,
+                    linestyle="--",
+                    color=config.colors.dashes)
+
     def extrap(d,t):
         reg = np.polyfit(d,t,1)
         rd = np.linspace(data.Days[window_ind].iat[0],years_until_retire)
@@ -582,7 +588,7 @@ def dashboard(config: Config):
        percent_font = pc_font,
        percent_thresh = 0.2,
        percent_thresh_ofmax = 0.2,
-       colormap = "Set3",
+       colormap = config.sankey_colormaps[0],
        label_values = not(anon),
        value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
@@ -595,7 +601,7 @@ def dashboard(config: Config):
     sky.sankey(ax=ax6,
        data=ssdata,
        titles=[yrlbl(i) for i in years_uniq],
-       other_thresh=100,
+       other_thresh = 100,
        sort = "bottom",
        sort_dict = sd,
        node_gap=0.00,
@@ -614,7 +620,7 @@ def dashboard(config: Config):
        percent_thresh_ofmax = 0.2,
        label_thresh_ofmax = 0.2,
        label_values = not(anon),
-       colormap="Pastel2",
+       colormap = config.sankey_colormaps[1],
        value_fn = lambda x: "\n" + int_to_dollars(x) ,
       )
 
@@ -644,12 +650,12 @@ def dashboard(config: Config):
 
     sky.sankey(ax=ax7,data=sankey_shares_makeup(alldata),
        titles=[yrlbl(i) for i in years_uniq],
-       colormap="Pastel1",
+       colormap = config.sankey_colormaps[2],
        sort = "bottom" ,
-       node_gap=0.00,
+       node_gap = 0.00,
        label_dict = hdrnew,
        label_values = not(anon),
-       label_thresh_ofmax = 0.2,
+       label_thresh_ofmax = 0.10,
        node_width = config.node_width,
        label_loc = ["none","none","left"],
        label_font = {"color": config.colors.text},

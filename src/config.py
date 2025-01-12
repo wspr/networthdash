@@ -40,7 +40,9 @@ class Config:
     income_thresh : float
         Threshold (between 0 and 1) for identifying "major" or "minor" income sources based on the all-time grand totals for each income column.
     linear_window : float
-        Number of years to linearly extrapolate from.
+        Number of years before the current date to linearly extrapolate from.
+    future_window : float
+        The maximum number of extrapolation years to show on the graph.
     linear_targets: list[float]
         "Targets" to extrapolate to linearly to gauge time until net worth milestones.
     anon : bool
@@ -65,6 +67,8 @@ class Config:
         Alpha (transparency) of Sankey diagram flow transitions between nodes (ausankey parameter).
     currency_sign : str
         The currency sign used to display amounts.
+    sankey_colormaps : list
+        Three colormaps for the panels which are automatically coloured based on breakdown of components. (I.e., not coloured using the Colors class.)
     """
 
     born_yr: int
@@ -88,6 +92,7 @@ class Config:
     
     income_thresh: float = 0.2
     linear_window: float = 1.0
+    future_window: int = 8
     
     linear_targets: list[float] = (5000, 10000, 15000, 20000, 35000, 50000, 75000, 100000, 150000, 200000, 350000, 500000, 750000, 1000000, 1500000, 2000000, 3500000, 5000000, 7500000, 10000000, 20000000, 50000000, 100000000)
     
@@ -107,4 +112,6 @@ class Config:
     flow_alpha: float = 0.5
     
     currencysign = "$"
+    
+    sankey_colormaps: list = ("Set3","Pastel1","Pastel2")
 
