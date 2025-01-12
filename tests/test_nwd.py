@@ -4,7 +4,7 @@ import src as nwd
 def test_simple():
     cfg = nwd.Config(
         csv = "nwd_example.csv" ,
-        csvdir = "tests/" ,
+        csvpath = "tests/" ,
         saveprefix = "test_simple" ,
         datefmt = "%Y-%m-%d" ,
         born_yr = 1981 ,
