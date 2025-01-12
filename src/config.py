@@ -12,7 +12,7 @@ class Config:
     ----------
     csv : str
         Filename of the CSV input file. Path information should not be included.
-    csvpath : str
+    csvdir : str
         Path to the CSV input file. Concatenated directly with the CSV filename, so should end in a "/".
     savedir : str
         Path (ending in "/") to save PDF dashboards.
@@ -77,7 +77,7 @@ class Config:
     born_yr: int
 
     csv: str = "net-worth.csv"
-    csvpath: str = "./"
+    csvdir: str = "./"
     datefmt: str = "%Y/%m/%d"
 
     savedir: str = "Net worth/"

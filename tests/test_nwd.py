@@ -4,11 +4,14 @@ import src as nwd
 def test_simple():
     cfg = nwd.Config(
         csv = "nwd_example.csv" ,
-        csvpath = "tests/" ,
+        csvdir = "tests/" ,
         saveprefix = "test_simple" ,
+        savedir = "_site/"
         datefmt = "%Y-%m-%d" ,
         born_yr = 1981 ,
         retire_age = 67 ,
+        savepng = True ,
+        savepdf = False ,
     )
     nwd.dashboard(cfg)
 

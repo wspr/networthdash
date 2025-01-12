@@ -129,7 +129,7 @@ def dashboard(config: Config):
 
     ############# HEADERS
 
-    hdr = pd.read_csv(config.csvpath + config.csv, na_values=0, header=None, nrows=2).transpose()
+    hdr = pd.read_csv(config.csvdir + config.csv, na_values=0, header=None, nrows=2).transpose()
 
     hdrnew = {}
     for ii, _ in enumerate(hdr[1]):
@@ -146,7 +146,7 @@ def dashboard(config: Config):
 
     ############# DATA
 
-    alldata = pd.read_csv(config.csvpath + config.csv, na_values=0, header=1)
+    alldata = pd.read_csv(config.csvdir + config.csv, na_values=0, header=1)
     alldata = alldata.fillna(0)
     alldata.columns = hdr[1]
     alldata["Year"] = dates_to_years(alldata)
