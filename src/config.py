@@ -81,7 +81,7 @@ class Config:
     csvdir: str = "./"
     datefmt: str = "%Y/%m/%d"
 
-    savedir: str = "Net worth/"
+    savedir: str = "Net worth archive/"
     saveprefix: str = None
     savesuffix: str = "%Y-%m"
 

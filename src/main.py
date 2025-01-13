@@ -143,6 +143,12 @@ def dashboard(config: Config):
     cash_cols = list(hdr[1][hdr[0] == cashcol])
     expend_cols = list(hdr[1][hdr[0] == expendcol])
     income_cols = list(hdr[1][hdr[0] == incomecol])
+    
+    super_bool = len(super_cols) > 0
+    shares_bool = len(shares_cols) > 0
+    cash_bool = len(cash_cols) > 0
+    # expend_bool = len(expend_cols) > 0
+    # income_bool = len(income_cols) > 0
 
     ############# DATA
 
@@ -245,41 +251,54 @@ def dashboard(config: Config):
         ax.set_ylim(clim)
         return hp, infl
 
+    # total line
     rd1, yd1 = extrap(data.Days[window_ind], data.Total[window_ind])
-    rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
-    rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
     retire_worth = yd1[-1]
-
     hp1 = ax.plot(rd1, yd1, **projstyle, color=config.colors.total)
-    hp2 = ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
-    hp3 = ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
-
     hp11, tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], get_col(hp1[0]))
 
-    ind = data.TotalSuper[expstart:-1] > 0
-    days = data.Days[expstart:-1][ind]
-    val = data.TotalSuper[expstart:-1][ind]
-    extrap_exp(ax, days, val, get_col(hp2[0]))
-
-    ind = data["TotalShares"][expstart:-1] > 0
-    days = data.Days[expstart:-1][ind]
-    val = data["TotalShares"][expstart:-1][ind]
-    extrap_exp(ax, days, val, get_col(hp3[0]))
     ax.plot(data.Days, data.Total, **get_col(hp1[0]), **dotstyle)
-    ax.plot(data.Days, data["TotalShares"], color=hp3[0].get_color(), **dotstyle)
-    ax.plot(data.Days, data.TotalSuper, **get_col(hp2[0]), **dotstyle)
-    hp4 = ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
+
+    # super
+    if super_bool:
+        rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
+        hp2 = ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
+    
+        ind = data.TotalSuper[expstart:-1] > 0
+        days = data.Days[expstart:-1][ind]
+        val = data.TotalSuper[expstart:-1][ind]
+        extrap_exp(ax, days, val, get_col(hp2[0]))
+    
+        ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
+
+    if shares_bool:
+        rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
+        hp3 = ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
+    
+        ind = data["TotalShares"][expstart:-1] > 0
+        days = data.Days[expstart:-1][ind]
+        val = data["TotalShares"][expstart:-1][ind]
+        extrap_exp(ax, days, val, get_col(hp3[0]))
+
+        ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
+
+    if cash_bool:
+        hp4 = ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
 
     ############% LABELS
 
     va = "center"
     ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=hp4[0].get_color(), va=va)
-    ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=hp3[0].get_color(), va=va)
-    ax.text(data.Days.iat[-1], alldata["TotalSuper"].iat[-1], "  Super", color=hp2[0].get_color(), va=va)
+
+    if shares_bool:
+        ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=hp3[0].get_color(), va=va)
+    
+    if super_bool:
+        ax.text(data.Days.iat[-1], alldata["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
     txtstr = "  Total" if anon else ("  Total\n  " + int_to_dollars(data.Total.iat[-1]))
 
-    ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=hp1[0].get_color())
+    ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
 
     ax.set_xticks(range(years_until_retire + 1))
     ax.set_xticklabels(range(since_yr, since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick)
@@ -394,7 +413,7 @@ def dashboard(config: Config):
         data.Days[window_ind],
         data["TotalShares"][window_ind],
         config.marker,
-        color=hp3[0].get_color(),
+        color=config.colors.shares,
         markersize=config.markersize,
     )
     ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
@@ -430,7 +449,7 @@ def dashboard(config: Config):
 
     ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
     ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-    ax3.tick_params(axis="y", labelcolor=hp3[0].get_color())
+    ax3.tick_params(axis="y", labelcolor=config.colors.shares)
     ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
 
     ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
@@ -462,7 +481,7 @@ def dashboard(config: Config):
             x_min + 0.05 * (x_max - x_min),
             y_min + 0.95 * (y_max - y_min),
             "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
-            color=hp3[0].get_color(),
+            color=config.colors.shares,
             va="top",
             backgroundcolor=config.colors.axis,
         )
@@ -720,6 +739,9 @@ def dashboard(config: Config):
 
     if anon:
         filename = filename + "-anon"
+
+    if config.savepdf or config.savepng or config.savejpg:
+        os.makedirs(config.savedir, exist_ok=True)
 
     if config.savepdf:
         fig.savefig(filename + ".pdf")
