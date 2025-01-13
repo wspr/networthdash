@@ -283,12 +283,14 @@ def dashboard(config: Config):
         ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
 
     if cash_bool:
-        hp4 = ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
+        ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
 
     ############% LABELS
 
     va = "center"
-    ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=hp4[0].get_color(), va=va)
+    
+    if cash_bool:
+        ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
 
     if shares_bool:
         ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=hp3[0].get_color(), va=va)

@@ -21,3 +21,9 @@ def test_nosuper():
     )
     nwd.dashboard(cfg)
 
+def test_nocash():
+    cfg = nwd.Config(**std ,
+        csv = "nwd_example_nocash.csv" ,
+    )
+    nwd.dashboard(cfg)
+
