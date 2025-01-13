@@ -143,7 +143,7 @@ def dashboard(config: Config):
     cash_cols = list(hdr[1][hdr[0] == cashcol])
     expend_cols = list(hdr[1][hdr[0] == expendcol])
     income_cols = list(hdr[1][hdr[0] == incomecol])
-    
+
     super_bool = len(super_cols) > 0
     shares_bool = len(shares_cols) > 0
     cash_bool = len(cash_cols) > 0
@@ -263,18 +263,18 @@ def dashboard(config: Config):
     if super_bool:
         rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
         hp2 = ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
-    
+
         ind = data.TotalSuper[expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
         val = data.TotalSuper[expstart:-1][ind]
         extrap_exp(ax, days, val, get_col(hp2[0]))
-    
+
         ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
 
     if shares_bool:
         rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
         hp3 = ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
-    
+
         ind = data["TotalShares"][expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
         val = data["TotalShares"][expstart:-1][ind]
@@ -292,7 +292,7 @@ def dashboard(config: Config):
 
     if shares_bool:
         ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=hp3[0].get_color(), va=va)
-    
+
     if super_bool:
         ax.text(data.Days.iat[-1], alldata["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
