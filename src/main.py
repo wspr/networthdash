@@ -288,7 +288,7 @@ def dashboard(config: Config):
     ############% LABELS
 
     va = "center"
-    
+
     if cash_bool:
         ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
 
