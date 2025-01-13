@@ -411,103 +411,112 @@ def dashboard(config: Config):
 
     ############## INSET 2
 
-    ax3.plot(
-        data.Days[window_ind],
-        data["TotalShares"][window_ind],
-        config.marker,
-        color=config.colors.shares,
-        markersize=config.markersize,
-    )
-    ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
-
-    ax33 = ax3.twinx()
-    color_axes(ax33)
-
-    sharesum = data_sp["TotalExpend"].cumsum()
-    hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
-
-    yticks1 = ax3.get_yticks()
-    yticks2 = ax33.get_yticks()
-
-    dy = yticks1[1] - yticks1[0]
-    ax3.set_ylim(
-        yticks1[0] - dy, yticks1[-1]
-    )  # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
-    ax33.set_ylim(yticks2[0], yticks2[-1])
-
-    yylim1 = ax3.get_ylim()
-    yylim2 = ax33.get_ylim()
-
-    yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
-
-    ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
-    ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-
-    yticks1 = ax3.get_yticks()
-    yticks2 = ax33.get_yticks()
-
-    yticks_dollars(ax3)
-    yticks_dollars(ax33)
-
-    ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
-    ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-    ax3.tick_params(axis="y", labelcolor=config.colors.shares)
-    ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
-
-    ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
-    ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
-
-    shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
-    sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
-    pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
-
-    profitloss = shares2.iat[-1] - sharebuy.iat[-1]
-    gain = shares2.iat[-1] - shares2.iat[1]
-    elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
-
-    x_min, x_max = ax3.get_xlim()
-    y_min, y_max = ax3.get_ylim()
-    if anon:
-        ax3.text(
-            x_min + 0.05 * (x_max - x_min),
-            y_min + 0.95 * (y_max - y_min),
-            "Shares\nincrease",
-            color=hp3[0].get_color(),
-            va="top",
-            backgroundcolor=config.colors.axis,
-        )
-    else:
-        peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
-        ax3.text(
-            x_min + 0.05 * (x_max - x_min),
-            y_min + 0.95 * (y_max - y_min),
-            "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
+    def graph_shares_window(ax3):
+        ax3.plot(
+            data.Days[window_ind],
+            data["TotalShares"][window_ind],
+            config.marker,
             color=config.colors.shares,
-            va="top",
-            backgroundcolor=config.colors.axis,
+            markersize=config.markersize,
         )
+        ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
+    
+        ax33 = ax3.twinx()
+        color_axes(ax33)
+    
+        sharesum = data_sp["TotalExpend"].cumsum()
+        hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
+    
+        yticks1 = ax3.get_yticks()
+        yticks2 = ax33.get_yticks()
+    
+        dy = yticks1[1] - yticks1[0]
+        ax3.set_ylim(
+            yticks1[0] - dy, yticks1[-1]
+        )  # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
+        ax33.set_ylim(yticks2[0], yticks2[-1])
+    
+        yylim1 = ax3.get_ylim()
+        yylim2 = ax33.get_ylim()
+    
+        yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
+    
+        ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
+        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+    
+        yticks1 = ax3.get_yticks()
+        yticks2 = ax33.get_yticks()
+    
+        yticks_dollars(ax3)
+        yticks_dollars(ax33)
+    
+        ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
+        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+        ax3.tick_params(axis="y", labelcolor=config.colors.shares)
+        ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
+    
+        ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
+        ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+        ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    
+        shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
+        sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
+        pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
+    
+        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
+        gain = shares2.iat[-1] - shares2.iat[1]
+        elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
+    
+        x_min, x_max = ax3.get_xlim()
+        y_min, y_max = ax3.get_ylim()
+        if anon:
+            ax3.text(
+                x_min + 0.05 * (x_max - x_min),
+                y_min + 0.95 * (y_max - y_min),
+                "Shares\nincrease",
+                color=hp3[0].get_color(),
+                va="top",
+                backgroundcolor=config.colors.axis,
+            )
+        else:
+            peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
+            ax3.text(
+                x_min + 0.05 * (x_max - x_min),
+                y_min + 0.95 * (y_max - y_min),
+                "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
+                color=config.colors.shares,
+                va="top",
+                backgroundcolor=config.colors.axis,
+            )
+    
+        if anon:
+            ax3.text(
+                x_min + 0.95 * (x_max - x_min),
+                y_min + 0.05 * (y_max - y_min),
+                f"Bought =\n{pcgr:2.0f}% of growth",
+                color=hp7[0].get_color(),
+                ha="right",
+                backgroundcolor=config.colors.axis,
+            )
+        else:
+            val = sharebuy.iat[-1] - sharebuy.iat[1]
+            txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
+            ax3.text(
+                x_min + 0.95 * (x_max - x_min),
+                y_min + 0.05 * (y_max - y_min),
+                txtstr,
+                color=hp7[0].get_color(),
+                ha="right",
+                backgroundcolor=config.colors.axis,
+            )
 
-    if anon:
-        ax3.text(
-            x_min + 0.95 * (x_max - x_min),
-            y_min + 0.05 * (y_max - y_min),
-            f"Bought =\n{pcgr:2.0f}% of growth",
-            color=hp7[0].get_color(),
-            ha="right",
-            backgroundcolor=config.colors.axis,
-        )
+        return {"profitloss": profitloss}
+
+    if shares_bool:
+        g3 = graph_shares_window(ax3)
+        profitloss = g3["profitloss"]
     else:
-        val = sharebuy.iat[-1] - sharebuy.iat[1]
-        txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
-        ax3.text(
-            x_min + 0.95 * (x_max - x_min),
-            y_min + 0.05 * (y_max - y_min),
-            txtstr,
-            color=hp7[0].get_color(),
-            ha="right",
-            backgroundcolor=config.colors.axis,
-        )
+        profitloss = 0
 
     ############## SANKEY SETUP
 
@@ -617,55 +626,57 @@ def dashboard(config: Config):
         value_fn=lambda x: "\n" + int_to_dollars(x),
     )
 
-    sky.sankey(
-        ax=ax5,
-        data=sankey_shares(alldata),
-        titles=[yrlbl(i) for i in years_uniq],
-        colormap="Pastel2",
-        sort="bottom",
-        node_gap=0.00,
-        color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
-        node_width=config.node_width,
-        label_loc=["none", "none", "left"],
-        label_font={"color": config.colors.text},
-        value_loc=["none", "none", "none"],
-        node_alpha=config.node_alpha,
-        flow_alpha=config.flow_alpha,
-        title_side="none",
-        percent_loc="center",
-        percent_loc_ht=0.05,
-        percent_font=pc_font,
-        percent_thresh=0.2,
-        percent_thresh_val=20000,
-        label_values=not (anon),
-        label_thresh_ofmax=0.2,
-        value_fn=lambda x: "\n" + int_to_dollars(x),
-    )
+    if shares_bool:
+        sky.sankey(
+            ax=ax5,
+            data=sankey_shares(alldata),
+            titles=[yrlbl(i) for i in years_uniq],
+            colormap="Pastel2",
+            sort="bottom",
+            node_gap=0.00,
+            color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
+            node_width=config.node_width,
+            label_loc=["none", "none", "left"],
+            label_font={"color": config.colors.text},
+            value_loc=["none", "none", "none"],
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc="center",
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.2,
+            percent_thresh_val=20000,
+            label_values=not (anon),
+            label_thresh_ofmax=0.2,
+            value_fn=lambda x: "\n" + int_to_dollars(x),
+        )
 
-    sky.sankey(
-        ax=ax7,
-        data=sankey_shares_makeup(alldata),
-        titles=[yrlbl(i) for i in years_uniq],
-        colormap=config.sankey_colormaps[2],
-        sort="bottom",
-        node_gap=0.00,
-        label_dict=hdrnew,
-        label_values=not (anon),
-        label_thresh_ofmax=0.10,
-        node_width=config.node_width,
-        label_loc=["none", "none", "left"],
-        label_font={"color": config.colors.text},
-        value_loc=["none", "none", "none"],
-        value_fn=lambda x: "\n" + int_to_dollars(x),
-        node_alpha=config.node_alpha,
-        flow_alpha=config.flow_alpha,
-        title_side="none",
-        percent_loc="center",
-        percent_loc_ht=0.05,
-        percent_font=pc_font,
-        percent_thresh=0.1,
-        percent_thresh_ofmax=0.2,
-    )
+    if shares_bool:
+        sky.sankey(
+            ax=ax7,
+            data=sankey_shares_makeup(alldata),
+            titles=[yrlbl(i) for i in years_uniq],
+            colormap=config.sankey_colormaps[2],
+            sort="bottom",
+            node_gap=0.00,
+            label_dict=hdrnew,
+            label_values=not (anon),
+            label_thresh_ofmax=0.10,
+            node_width=config.node_width,
+            label_loc=["none", "none", "left"],
+            label_font={"color": config.colors.text},
+            value_loc=["none", "none", "none"],
+            value_fn=lambda x: "\n" + int_to_dollars(x),
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc="center",
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.1,
+            percent_thresh_ofmax=0.2,
+        )
 
     def faux_title(ax, txtstr):
         xrange = np.diff(ax.get_xlim())

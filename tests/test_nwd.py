@@ -27,3 +27,9 @@ def test_nocash():
     )
     nwd.dashboard(cfg)
 
+def test_noshares():
+    cfg = nwd.Config(**std ,
+        csv = "nwd_example_noshares.csv" ,
+    )
+    nwd.dashboard(cfg)
+
