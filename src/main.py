@@ -223,7 +223,7 @@ def dashboard(config: Config):
     color_axes(ax5)
     color_axes(ax6)
     color_axes(ax7)
-    
+
     if expend_bool:
         ax33 = ax3.twinx()
         color_axes(ax33)
@@ -441,7 +441,9 @@ def dashboard(config: Config):
             xx = x_min + 0.05 * (x_max - x_min)
             yy = y_min + 0.95 * (y_max - y_min)
             if anon:
-                ax3.text(xx, yy,
+                ax3.text(
+                    xx,
+                    yy,
                     "Shares\nincrease",
                     color=hp3[0].get_color(),
                     va="top",
@@ -449,7 +451,9 @@ def dashboard(config: Config):
                 )
             else:
                 peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
-                ax3.text(xx, yy,
+                ax3.text(
+                    xx,
+                    yy,
                     "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
                     color=config.colors.shares,
                     va="top",
