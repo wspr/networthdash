@@ -11,13 +11,13 @@ std = {
 }
 
 
-@pytest.mark.parameterize("csvname",[
+@pytest.mark.parametrize("csvname",[
     "nwd_example",
     "nwd_example_nosuper",
     "nwd_example_nocash",
     "nwd_example_noshares",
 ])
-@pytest.mark.parameterize("anon",[True, False])
+@pytest.mark.parametrize("anon",[True, False])
 def test_simple(csvname,anon):
     cfg = nwd.Config(**std ,
         csv = csvname + ".csv" ,
