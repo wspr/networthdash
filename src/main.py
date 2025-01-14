@@ -147,7 +147,7 @@ def dashboard(config: Config):
     super_bool = len(super_cols) > 0
     shares_bool = len(shares_cols) > 0
     cash_bool = len(cash_cols) > 0
-    # expend_bool = len(expend_cols) > 0
+    expend_bool = len(expend_cols) > 0
     # income_bool = len(income_cols) > 0
 
     ############# DATA
@@ -170,11 +170,8 @@ def dashboard(config: Config):
     alldata["TotalSuper"] = alldata[super_cols].sum(axis=1)
     alldata["TotalShares"] = alldata[shares_cols].sum(axis=1)
     alldata["TotalCash"] = alldata[cash_cols].sum(axis=1)
-    expend = alldata[expend_cols].sum(axis=1)
-    income = alldata[income_cols].sum(axis=1)
-
-    alldata["TotalExpend"] = expend
-    alldata["TotalIncome"] = income
+    alldata["TotalExpend"] = alldata[expend_cols].sum(axis=1)
+    alldata["TotalIncome"] = alldata[income_cols].sum(axis=1)
     alldata["Total"] = alldata["TotalShares"] + alldata["TotalSuper"] + alldata["TotalCash"]
 
     income_grand_tot = alldata["TotalIncome"].sum()
@@ -188,12 +185,12 @@ def dashboard(config: Config):
 
     data = alldata[alldata.Total > 0]
     data = data.reset_index(drop=True)
-
-    data_sp = alldata[alldata.TotalExpend > 0]
-    data_sp = data_sp.reset_index(drop=True)
-
     window_ind = data.Days > (data.Days.iat[-1] - winyr)
-    win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - winyr)
+
+    if expend_bool:
+        data_sp = alldata[alldata.TotalExpend > 0]
+        data_sp = data_sp.reset_index(drop=True)
+        win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - winyr)
 
     data["TotalSuper"] = data[super_cols].sum(axis=1)
     data["TotalShares"] = data[shares_cols].sum(axis=1)
@@ -219,8 +216,6 @@ def dashboard(config: Config):
     ax4 = fig.add_axes([inset_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
     ax5 = fig.add_axes([inset_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
 
-    ax33 = ax3.twinx()
-
     color_axes(ax1)
     color_axes(ax2)
     color_axes(ax3)
@@ -228,7 +223,12 @@ def dashboard(config: Config):
     color_axes(ax5)
     color_axes(ax6)
     color_axes(ax7)
-    color_axes(ax33)
+    
+    if expend_bool:
+        ax33 = ax3.twinx()
+        color_axes(ax33)
+    else:
+        ax33 = ax3
 
     ########### FITTING and PLOTTING
 
@@ -327,7 +327,7 @@ def dashboard(config: Config):
             txtstr,
             ha="left",
             va="top",
-            color=config.colors.text,
+            color=config.colors.total,
         )
 
     #######%%###### EXTRAP
@@ -424,16 +424,52 @@ def dashboard(config: Config):
         )
         ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
 
+        yticks_dollars(ax3)
+        ax3.tick_params(axis="y", labelcolor=config.colors.shares)
+
+        ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
+        ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+        ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+        shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
+        gain = shares2.iat[-1] - shares2.iat[0]
+        elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
+
+        def label_graph_shares_A(ax3):
+            x_min, x_max = ax3.get_xlim()
+            y_min, y_max = ax3.get_ylim()
+            xx = x_min + 0.05 * (x_max - x_min)
+            yy = y_min + 0.95 * (y_max - y_min)
+            if anon:
+                ax3.text(xx, yy,
+                    "Shares\nincrease",
+                    color=hp3[0].get_color(),
+                    va="top",
+                    backgroundcolor=config.colors.axis,
+                )
+            else:
+                peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
+                ax3.text(xx, yy,
+                    "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
+                    color=config.colors.shares,
+                    va="top",
+                    backgroundcolor=config.colors.axis,
+                )
+
+        if not expend_bool:
+            label_graph_shares_A(ax3)
+            return {"profitloss": 0}
+
         sharesum = data_sp["TotalExpend"].cumsum()
         hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
 
         yticks1 = ax3.get_yticks()
-        yticks2 = ax33.get_yticks()
-
         dy = yticks1[1] - yticks1[0]
         ax3.set_ylim(
             yticks1[0] - dy, yticks1[-1]
         )  # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
+
+        yticks2 = ax33.get_yticks()
         ax33.set_ylim(yticks2[0], yticks2[-1])
 
         yylim1 = ax3.get_ylim()
@@ -447,47 +483,21 @@ def dashboard(config: Config):
         yticks1 = ax3.get_yticks()
         yticks2 = ax33.get_yticks()
 
-        yticks_dollars(ax3)
-        yticks_dollars(ax33)
-
         ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
+
+        yticks_dollars(ax33)
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-        ax3.tick_params(axis="y", labelcolor=config.colors.shares)
         ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
 
         ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
         ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
         ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
-        shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
         sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
+        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
         pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
 
-        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
-        gain = shares2.iat[-1] - shares2.iat[1]
-        elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
-
-        x_min, x_max = ax3.get_xlim()
-        y_min, y_max = ax3.get_ylim()
-        if anon:
-            ax3.text(
-                x_min + 0.05 * (x_max - x_min),
-                y_min + 0.95 * (y_max - y_min),
-                "Shares\nincrease",
-                color=hp3[0].get_color(),
-                va="top",
-                backgroundcolor=config.colors.axis,
-            )
-        else:
-            peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
-            ax3.text(
-                x_min + 0.05 * (x_max - x_min),
-                y_min + 0.95 * (y_max - y_min),
-                "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
-                color=config.colors.shares,
-                va="top",
-                backgroundcolor=config.colors.axis,
-            )
+        label_graph_shares_A(ax3)
 
         if anon:
             ax3.text(
@@ -724,7 +734,7 @@ def dashboard(config: Config):
     ax7.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
     faux_title(ax4, "Annual income")
-    if anon:
+    if anon or (not expend_bool):
         faux_title(ax5, "Annual shares increase")
     else:
         faux_title(ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
