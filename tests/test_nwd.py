@@ -17,7 +17,7 @@ std = {
     "nwd_example_nocash",
     "nwd_example_noshares",
 ])
-@pytest.mark.parameterize("anon",[True False])
+@pytest.mark.parameterize("anon",[True, False])
 def test_simple(csvname,anon):
     cfg = nwd.Config(**std ,
         csv = csvname + ".csv" ,
