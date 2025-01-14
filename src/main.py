@@ -435,7 +435,7 @@ def dashboard(config: Config):
         gain = shares2.iat[-1] - shares2.iat[0]
         elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
 
-        def label_graph_shares_A(ax3):
+        def label_graph_shares_a(ax3):
             x_min, x_max = ax3.get_xlim()
             y_min, y_max = ax3.get_ylim()
             xx = x_min + 0.05 * (x_max - x_min)
@@ -457,7 +457,7 @@ def dashboard(config: Config):
                 )
 
         if not expend_bool:
-            label_graph_shares_A(ax3)
+            label_graph_shares_a(ax3)
             return {"profitloss": 0}
 
         sharesum = data_sp["TotalExpend"].cumsum()
@@ -497,7 +497,7 @@ def dashboard(config: Config):
         profitloss = shares2.iat[-1] - sharebuy.iat[-1]
         pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
 
-        label_graph_shares_A(ax3)
+        label_graph_shares_a(ax3)
 
         if anon:
             ax3.text(
