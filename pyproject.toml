@@ -84,7 +84,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test.scripts]
-test = "python -m pytest"
+test = "python -m pytest -v"
 test-cov = "coverage run -m pytest"
 coverall = "coveralls --service=github"
 cov = ["test-cov", "coverall"]
@@ -95,4 +95,4 @@ extend-exclude = [
   "docs/*",
  ]
 output-format = "github"
-ignore = ["TID252"]
+lint.ignore = ["TID252"]

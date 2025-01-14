@@ -1,3 +1,4 @@
+import pytest
 import src as nwd 
 # recall we are within the repo when running the test
 
@@ -9,27 +10,18 @@ std = {
     "savepdf": False ,
 }
 
-def test_simple():
-    cfg = nwd.Config(**std ,
-        csv = "nwd_example.csv" ,
-    )
-    nwd.dashboard(cfg)
 
-def test_nosuper():
+@pytest.mark.parameterize("csvname",[
+    "nwd_example",
+    "nwd_example_nosuper",
+    "nwd_example_nocash",
+    "nwd_example_noshares",
+])
+@pytest.mark.parameterize("anon",[True False])
+def test_simple(csvname,anon):
     cfg = nwd.Config(**std ,
-        csv = "nwd_example_nosuper.csv" ,
-    )
-    nwd.dashboard(cfg)
-
-def test_nocash():
-    cfg = nwd.Config(**std ,
-        csv = "nwd_example_nocash.csv" ,
-    )
-    nwd.dashboard(cfg)
-
-def test_noshares():
-    cfg = nwd.Config(**std ,
-        csv = "nwd_example_noshares.csv" ,
+        csv = csvname + ".csv" ,
+        anon = anon ,
     )
     nwd.dashboard(cfg)
 

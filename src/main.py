@@ -219,6 +219,8 @@ def dashboard(config: Config):
     ax4 = fig.add_axes([inset_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
     ax5 = fig.add_axes([inset_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
 
+    ax33 = ax3.twinx()
+
     color_axes(ax1)
     color_axes(ax2)
     color_axes(ax3)
@@ -226,6 +228,7 @@ def dashboard(config: Config):
     color_axes(ax5)
     color_axes(ax6)
     color_axes(ax7)
+    color_axes(ax33)
 
     ########### FITTING and PLOTTING
 
@@ -411,7 +414,7 @@ def dashboard(config: Config):
 
     ############## INSET 2
 
-    def graph_shares_window(ax3):
+    def graph_shares_window(ax3,ax33):
         ax3.plot(
             data.Days[window_ind],
             data["TotalShares"][window_ind],
@@ -420,9 +423,6 @@ def dashboard(config: Config):
             markersize=config.markersize,
         )
         ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
-    
-        ax33 = ax3.twinx()
-        color_axes(ax33)
     
         sharesum = data_sp["TotalExpend"].cumsum()
         hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
@@ -513,7 +513,7 @@ def dashboard(config: Config):
         return {"profitloss": profitloss}
 
     if shares_bool:
-        g3 = graph_shares_window(ax3)
+        g3 = graph_shares_window(ax3,ax33)
         profitloss = g3["profitloss"]
     else:
         profitloss = 0
