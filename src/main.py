@@ -414,7 +414,7 @@ def dashboard(config: Config):
 
     ############## INSET 2
 
-    def graph_shares_window(ax3,ax33):
+    def graph_shares_window(ax3, ax33):
         ax3.plot(
             data.Days[window_ind],
             data["TotalShares"][window_ind],
@@ -423,50 +423,50 @@ def dashboard(config: Config):
             markersize=config.markersize,
         )
         ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
-    
+
         sharesum = data_sp["TotalExpend"].cumsum()
         hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
-    
+
         yticks1 = ax3.get_yticks()
         yticks2 = ax33.get_yticks()
-    
+
         dy = yticks1[1] - yticks1[0]
         ax3.set_ylim(
             yticks1[0] - dy, yticks1[-1]
         )  # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
         ax33.set_ylim(yticks2[0], yticks2[-1])
-    
+
         yylim1 = ax3.get_ylim()
         yylim2 = ax33.get_ylim()
-    
+
         yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
-    
+
         ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-    
+
         yticks1 = ax3.get_yticks()
         yticks2 = ax33.get_yticks()
-    
+
         yticks_dollars(ax3)
         yticks_dollars(ax33)
-    
+
         ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
         ax3.tick_params(axis="y", labelcolor=config.colors.shares)
         ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
-    
+
         ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
         ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
         ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    
+
         shares2 = pd.Series(data["TotalShares"][window_ind]).reset_index(drop=True)
         sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
         pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
-    
+
         profitloss = shares2.iat[-1] - sharebuy.iat[-1]
         gain = shares2.iat[-1] - shares2.iat[1]
         elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
-    
+
         x_min, x_max = ax3.get_xlim()
         y_min, y_max = ax3.get_ylim()
         if anon:
@@ -488,7 +488,7 @@ def dashboard(config: Config):
                 va="top",
                 backgroundcolor=config.colors.axis,
             )
-    
+
         if anon:
             ax3.text(
                 x_min + 0.95 * (x_max - x_min),
@@ -513,7 +513,7 @@ def dashboard(config: Config):
         return {"profitloss": profitloss}
 
     if shares_bool:
-        g3 = graph_shares_window(ax3,ax33)
+        g3 = graph_shares_window(ax3, ax33)
         profitloss = g3["profitloss"]
     else:
         profitloss = 0
