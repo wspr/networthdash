@@ -148,7 +148,7 @@ def dashboard(config: Config):
     shares_bool = len(shares_cols) > 0
     cash_bool = len(cash_cols) > 0
     expend_bool = len(expend_cols) > 0
-    # income_bool = len(income_cols) > 0
+    income_bool = len(income_cols) > 0
 
     ############# DATA
 
@@ -177,6 +177,7 @@ def dashboard(config: Config):
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[income_cols].sum()
     income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
+    iminor_bool = len(income_minor) > 0
 
     years_uniq = {}
     for x in alldata["Year"]:
@@ -582,63 +583,65 @@ def dashboard(config: Config):
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-    sky.sankey(
-        ax=ax4,
-        data=sankey_income(alldata, income_cols),
-        titles=[yrlbl(i) for i in years_uniq],
-        other_thresh_ofsum=config.income_thresh,
-        sort="bottom",
-        node_gap=0.00,
-        node_width=config.node_width,
-        label_loc=["none", "none", "left"],
-        label_font={"color": config.colors.text},
-        label_dict=hdrnew,
-        label_thresh_ofmax=0.2,
-        value_loc=["none", "none", "none"],
-        node_alpha=config.node_alpha,
-        flow_alpha=config.flow_alpha,
-        title_side="none",
-        percent_loc="center",
-        percent_loc_ht=0.05,
-        percent_font=pc_font,
-        percent_thresh=0.2,
-        percent_thresh_ofmax=0.2,
-        colormap=config.sankey_colormaps[0],
-        label_values=not (anon),
-        value_fn=lambda x: "\n" + int_to_dollars(x),
-    )
-
-    ssdata = sankey_income(alldata, income_minor)
-    sdata = ssdata.iloc[:, -2:]
-    sdata = sdata.set_index(sdata.columns[0])
-    ssort = sdata.to_dict(orient="dict")
-    sd = ssort[next(iter(ssort))]
-    sky.sankey(
-        ax=ax6,
-        data=ssdata,
-        titles=[yrlbl(i) for i in years_uniq],
-        other_thresh=100,
-        sort="bottom",
-        sort_dict=sd,
-        node_gap=0.00,
-        node_width=config.node_width,
-        label_loc=["none", "none", "left"],
-        label_font={"color": config.colors.text},
-        label_dict=hdrnew,
-        value_loc=["center", "center", "center"],
-        node_alpha=config.node_alpha,
-        flow_alpha=config.flow_alpha,
-        title_side="none",
-        percent_loc=("none", "none", "center"),
-        percent_loc_ht=0.05,
-        percent_font=pc_font,
-        percent_thresh=0.2,
-        percent_thresh_ofmax=0.2,
-        label_thresh_ofmax=0.2,
-        label_values=not (anon),
-        colormap=config.sankey_colormaps[1],
-        value_fn=lambda x: "\n" + int_to_dollars(x),
-    )
+    if income_bool:
+        sky.sankey(
+            ax=ax4,
+            data=sankey_income(alldata, income_cols),
+            titles=[yrlbl(i) for i in years_uniq],
+            other_thresh_ofsum=config.income_thresh,
+            sort="bottom",
+            node_gap=0.00,
+            node_width=config.node_width,
+            label_loc=["none", "none", "left"],
+            label_font={"color": config.colors.text},
+            label_dict=hdrnew,
+            label_thresh_ofmax=0.2,
+            value_loc=["none", "none", "none"],
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc="center",
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.2,
+            percent_thresh_ofmax=0.2,
+            colormap=config.sankey_colormaps[0],
+            label_values=not (anon),
+            value_fn=lambda x: "\n" + int_to_dollars(x),
+        )
+    
+    if iminor_bool:
+        ssdata = sankey_income(alldata, income_minor)
+        sdata = ssdata.iloc[:, -2:]
+        sdata = sdata.set_index(sdata.columns[0])
+        ssort = sdata.to_dict(orient="dict")
+        sd = ssort[next(iter(ssort))]
+        sky.sankey(
+            ax=ax6,
+            data=ssdata,
+            titles=[yrlbl(i) for i in years_uniq],
+            other_thresh=100,
+            sort="bottom",
+            sort_dict=sd,
+            node_gap=0.00,
+            node_width=config.node_width,
+            label_loc=["none", "none", "left"],
+            label_font={"color": config.colors.text},
+            label_dict=hdrnew,
+            value_loc=["center", "center", "center"],
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc=("none", "none", "center"),
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.2,
+            percent_thresh_ofmax=0.2,
+            label_thresh_ofmax=0.2,
+            label_values=not (anon),
+            colormap=config.sankey_colormaps[1],
+            value_fn=lambda x: "\n" + int_to_dollars(x),
+        )
 
     if shares_bool:
         sky.sankey(
@@ -737,13 +740,21 @@ def dashboard(config: Config):
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax7.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-    faux_title(ax4, "Annual income")
+    if income_bool:
+        faux_title(ax4, "Annual income")
+    else:
+        ax4.set_yticklabels([])
     if anon or (not expend_bool):
         faux_title(ax5, "Annual shares increase")
     else:
         faux_title(ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
-    faux_title(ax6, "'Other' income breakdown")
-    faux_title(ax7, "Shares breakdown")
+    if iminor_bool:
+        faux_title(ax6, "'Other' income breakdown")
+    else:
+        ax6.set_xticklabels([])
+        ax6.set_yticklabels([])
+    if shares_bool:
+        faux_title(ax7, "Shares breakdown")
 
     ############## FINISH UP
 

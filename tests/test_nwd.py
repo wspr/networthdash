@@ -17,6 +17,7 @@ std = {
     "nwd_example_nocash",
     "nwd_example_noshares",
     "nwd_example_noexpend",
+    "nwd_example_noincome",
 ])
 @pytest.mark.parametrize("anon",[True, False])
 def test_simple(csvname,anon):
