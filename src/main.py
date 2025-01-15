@@ -436,30 +436,22 @@ def dashboard(config: Config):
         gain = shares2.iat[-1] - shares2.iat[0]
         elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
 
-        def label_graph_shares_a(ax3):
-            x_min, x_max = ax3.get_xlim()
-            y_min, y_max = ax3.get_ylim()
-            xx = x_min + 0.05 * (x_max - x_min)
-            yy = y_min + 0.95 * (y_max - y_min)
+        def label_graph_shares_a(ax):
+            x_min, x_max = ax.get_xlim()
+            y_min, y_max = ax.get_ylim()
             if anon:
-                ax3.text(
-                    xx,
-                    yy,
-                    "Shares\nincrease",
-                    color=hp3[0].get_color(),
-                    va="top",
-                    backgroundcolor=config.colors.axis,
-                )
+                txt = "Shares\nincrease"
             else:
                 peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
-                ax3.text(
-                    xx,
-                    yy,
-                    "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext,
-                    color=config.colors.shares,
-                    va="top",
-                    backgroundcolor=config.colors.axis,
-                )
+                txt = "Shares\nincrease\n" + int_to_dollars(gain) + peryrtext
+            ax.text(
+                x_min + 0.05 * (x_max - x_min),
+                y_min + 0.95 * (y_max - y_min),
+                txt,
+                color=config.colors.shares,
+                va="top",
+                backgroundcolor=config.colors.axis,
+            )
 
         if not expend_bool:
             label_graph_shares_a(ax3)
@@ -505,25 +497,20 @@ def dashboard(config: Config):
         label_graph_shares_a(ax3)
 
         if anon:
-            ax3.text(
-                x_min + 0.95 * (x_max - x_min),
-                y_min + 0.05 * (y_max - y_min),
-                f"Bought =\n{pcgr:2.0f}% of growth",
-                color=hp7[0].get_color(),
-                ha="right",
-                backgroundcolor=config.colors.axis,
-            )
+            txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
         else:
             val = sharebuy.iat[-1] - sharebuy.iat[1]
             txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
-            ax3.text(
-                x_min + 0.95 * (x_max - x_min),
-                y_min + 0.05 * (y_max - y_min),
-                txtstr,
-                color=hp7[0].get_color(),
-                ha="right",
-                backgroundcolor=config.colors.axis,
-            )
+        x_min, x_max = ax3.get_xlim()
+        y_min, y_max = ax3.get_ylim()
+        ax3.text(
+            x_min + 0.95 * (x_max - x_min),
+            y_min + 0.05 * (y_max - y_min),
+            txtstr,
+            color=hp7[0].get_color(),
+            ha="right",
+            backgroundcolor=config.colors.axis,
+        )
 
         return {"profitloss": profitloss}
 
@@ -632,7 +619,7 @@ def dashboard(config: Config):
             node_alpha=config.node_alpha,
             flow_alpha=config.flow_alpha,
             title_side="none",
-            percent_loc=("none", "none", "center"),
+            percent_loc="center",
             percent_loc_ht=0.05,
             percent_font=pc_font,
             percent_thresh=0.2,
