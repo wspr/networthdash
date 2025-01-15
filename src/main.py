@@ -499,7 +499,7 @@ def dashboard(config: Config):
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
 
         yticks_dollars(ax33)
-#        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+        #        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
         ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
 
         ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
