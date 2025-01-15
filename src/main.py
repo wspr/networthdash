@@ -260,9 +260,9 @@ def dashboard(config: Config):
     rd1, yd1 = extrap(data.Days[window_ind], data.Total[window_ind])
     retire_worth = yd1[-1]
     hp1 = ax.plot(rd1, yd1, **projstyle, color=config.colors.total)
-    hp11, tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], get_col(hp1[0]))
+    hp11, tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], {"color": config.colors.total})
 
-    ax.plot(data.Days, data.Total, **get_col(hp1[0]), **dotstyle)
+    ax.plot(data.Days, data.Total, color=config.colors.total, **dotstyle)
 
     # super
     if super_bool:
@@ -272,7 +272,7 @@ def dashboard(config: Config):
         ind = data.TotalSuper[expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
         val = data.TotalSuper[expstart:-1][ind]
-        extrap_exp(ax, days, val, get_col(hp2[0]))
+        extrap_exp(ax, days, val, {"color": config.colors.super})
 
         ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
 
@@ -283,7 +283,7 @@ def dashboard(config: Config):
         ind = data["TotalShares"][expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
         val = data["TotalShares"][expstart:-1][ind]
-        extrap_exp(ax, days, val, get_col(hp3[0]))
+        extrap_exp(ax, days, val, {"color": config.colors.shares})
 
         ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
 
@@ -298,7 +298,7 @@ def dashboard(config: Config):
         ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
 
     if shares_bool:
-        ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=hp3[0].get_color(), va=va)
+        ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
 
     if super_bool:
         ax.text(data.Days.iat[-1], alldata["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
@@ -371,13 +371,13 @@ def dashboard(config: Config):
     reg = np.polyfit(data.Days[window_ind], data.Total[window_ind], 1)
     rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
     yd = rd * reg[0] + reg[1]
-    ax2.plot(rd, yd, "-", lw=config.linewidth / 4, color=hp1[0].get_color())
-    ax2.plot(data.Days[window_ind], data.Total[window_ind], **get_col(hp1[0]), **dotstyle)
+    ax2.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors.total)
+    ax2.plot(data.Days[window_ind], data.Total[window_ind], color=config.colors.total, **dotstyle)
 
     logfit = np.polyfit(data.Days[window_ind], np.log(data.Total[window_ind]), 1, w=np.sqrt(data.Total[window_ind]))
     rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
     yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
-    ax2.plot(rd, yd, "--", lw=config.linewidth / 4, color=hp11[0].get_color())
+    ax2.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
 
     ax2.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
     yticks_dollars(ax2)
@@ -389,7 +389,7 @@ def dashboard(config: Config):
     gain = data.Total[window_ind].iat[-1] - data.Total[window_ind].iat[0]
     elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
 
-    ax2.tick_params(axis="y", labelcolor=hp1[0].get_color())
+    ax2.tick_params(axis="y", labelcolor=config.colors.total)
 
     x_min, x_max = ax2.get_xlim()
     y_min, y_max = ax2.get_ylim()
@@ -399,7 +399,7 @@ def dashboard(config: Config):
             x_min + 0.05 * (x_max - x_min),
             y_min + 0.95 * (y_max - y_min),
             "Net worth\nincrease",
-            color=hp1[0].get_color(),
+            color=config.colors.total,
             va="top",
         )
     else:
@@ -409,7 +409,7 @@ def dashboard(config: Config):
             x_min + 0.05 * (x_max - x_min),
             y_min + 0.95 * (y_max - y_min),
             txtstr,
-            color=hp1[0].get_color(),
+            color=config.colors.total,
             va="top",
             backgroundcolor=config.colors.axis,
         )
@@ -466,7 +466,7 @@ def dashboard(config: Config):
                 x_min + 0.95 * (x_max - x_min),
                 y_min + 0.05 * (y_max - y_min),
                 txtstr,
-                color=hp7[0].get_color(),
+                color=config.colors.expend,
                 ha="right",
                 backgroundcolor=config.colors.axis,
             )
@@ -776,13 +776,6 @@ def dashboard(config: Config):
         fig.savefig(filename + ".png")
 
     plt.close()
-
-
-################################
-
-
-def get_col(ph):
-    return {"color": ph.get_color()}
 
 
 ################################
