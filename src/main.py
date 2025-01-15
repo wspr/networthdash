@@ -453,11 +453,32 @@ def dashboard(config: Config):
                 backgroundcolor=config.colors.axis,
             )
 
+        def label_graph_shares_b(ax):
+            if anon:
+                txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
+            else:
+                val = sharebuy.iat[-1] - sharebuy.iat[1]
+                txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
+            x_min, x_max = ax.get_xlim()
+            y_min, y_max = ax.get_ylim()
+            ax.text(
+                x_min + 0.95 * (x_max - x_min),
+                y_min + 0.05 * (y_max - y_min),
+                txtstr,
+                color=hp7[0].get_color(),
+                ha="right",
+                backgroundcolor=config.colors.axis,
+            )
+
         if not expend_bool:
             label_graph_shares_a(ax3)
             return {"profitloss": 0}
 
         sharesum = data_sp["TotalExpend"].cumsum()
+        sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
+        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
+        pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
+
         hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
 
         yticks1 = ax3.get_yticks()
@@ -477,40 +498,16 @@ def dashboard(config: Config):
         ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
 
-        yticks1 = ax3.get_yticks()
-        yticks2 = ax33.get_yticks()
-
-        ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
-
         yticks_dollars(ax33)
-        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+#        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
         ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
 
         ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
         ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
         ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
-        sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
-        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
-        pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
-
         label_graph_shares_a(ax3)
-
-        if anon:
-            txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
-        else:
-            val = sharebuy.iat[-1] - sharebuy.iat[1]
-            txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
-        x_min, x_max = ax3.get_xlim()
-        y_min, y_max = ax3.get_ylim()
-        ax3.text(
-            x_min + 0.95 * (x_max - x_min),
-            y_min + 0.05 * (y_max - y_min),
-            txtstr,
-            color=hp7[0].get_color(),
-            ha="right",
-            backgroundcolor=config.colors.axis,
-        )
+        label_graph_shares_b(ax3)
 
         return {"profitloss": profitloss}
 
