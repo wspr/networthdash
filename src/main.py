@@ -489,14 +489,14 @@ def dashboard(config: Config):
         ax3.set_yticks(yytickx)
         ax3.set_ylim(yytickx[0] - dy, yytickx[-1])
         # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
-        #ax3.set_yticks()
+        # ax3.set_yticks()
         yylim1 = ax3.get_ylim()
 
         yticks2 = ax33.get_yticks()
         ax33.set_ylim(yticks2[0], yticks2[-1])
-        yytickx = np.arange(yticks2[0],yticks2[-1] + dy,dy)
+        yytickx = np.arange(yticks2[0], yticks2[-1] + dy, dy)
         ax33.set_yticks(yytickx)
-        ax33.set_ylim(yytickx[0],yytickx[-1])
+        ax33.set_ylim(yytickx[0], yytickx[-1])
         yylim2 = ax33.get_ylim()
 
         yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
