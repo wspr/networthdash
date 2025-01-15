@@ -94,7 +94,7 @@ class Config:
     retire_age: int = 67
     retire_ratio: float = 0.04
 
-    income_thresh: float = 0.2
+    income_thresh: float = 0.6
     linear_window: float = 1.0
     future_window: int = 8
 
