@@ -609,7 +609,7 @@ def dashboard(config: Config):
             label_values=not (anon),
             value_fn=lambda x: "\n" + int_to_dollars(x),
         )
-    
+
     if iminor_bool:
         ssdata = sankey_income(alldata, income_minor)
         sdata = ssdata.iloc[:, -2:]
