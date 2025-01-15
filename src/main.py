@@ -228,6 +228,7 @@ def dashboard(config: Config):
     if expend_bool:
         ax33 = ax3.twinx()
         color_axes(ax33)
+        ax33.tick_params(axis="y", labelcolor=config.colors.expend)
     else:
         ax33 = ax3
 
@@ -457,7 +458,7 @@ def dashboard(config: Config):
             if anon:
                 txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
             else:
-                val = sharebuy.iat[-1] - sharebuy.iat[1]
+                val = sharebuy.iat[-1] - sharebuy.iat[0]
                 txtstr = "Bought " + int_to_dollars(val) + f"\n{pcgr:2.0f}% of growth"
             x_min, x_max = ax.get_xlim()
             y_min, y_max = ax.get_ylim()
@@ -476,36 +477,38 @@ def dashboard(config: Config):
 
         sharesum = data_sp["TotalExpend"].cumsum()
         sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
+        bought = sharebuy.iat[-1] - sharebuy.iat[0]
         profitloss = shares2.iat[-1] - sharebuy.iat[-1]
-        pcgr = 100 * (sharebuy.iat[-1] - sharebuy.iat[1]) / (shares2.iat[-1] - shares2.iat[1])
+        pcgr = 100 * bought / gain
 
         hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
 
         yticks1 = ax3.get_yticks()
         dy = yticks1[1] - yticks1[0]
-        ax3.set_ylim(
-            yticks1[0] - dy, yticks1[-1]
-        )  # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
+        yytickx = np.arange(yticks1[0], yticks1[-1] + dy, dy)
+        ax3.set_yticks(yytickx)
+        ax3.set_ylim(yytickx[0] - dy, yytickx[-1])
+        # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
+        #ax3.set_yticks()
+        yylim1 = ax3.get_ylim()
 
         yticks2 = ax33.get_yticks()
         ax33.set_ylim(yticks2[0], yticks2[-1])
-
-        yylim1 = ax3.get_ylim()
+        yytickx = np.arange(yticks2[0],yticks2[-1] + dy,dy)
+        ax33.set_yticks(yytickx)
+        ax33.set_ylim(yytickx[0],yytickx[-1])
         yylim2 = ax33.get_ylim()
 
         yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
         ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
         ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+        yylim1 = ax3.get_ylim()
+        yylim2 = ax33.get_ylim()
+        yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
+        yticks_dollars(ax3)
         yticks_dollars(ax33)
-        #        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-        ax33.tick_params(axis="y", labelcolor=hp7[0].get_color())
-
-        ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
-        ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-        ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
-
         label_graph_shares_a(ax3)
         label_graph_shares_b(ax3)
 
