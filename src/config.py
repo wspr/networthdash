@@ -98,6 +98,27 @@ class Config:
     linear_window: float = 1.0
     future_window: int = 8
 
+    anon: bool = False
+
+    figw: float = 6
+    figh: float = 12.5
+
+    linewidth: float = 1.0
+    markersize: float = 4.0
+    marker: str = "."
+
+    colors: "Colors" = field(default_factory=Colors)
+
+    strings: "Strings" = field(default_factory=Strings)
+
+    node_width: float = 0.15
+    node_alpha: float = 0.8
+    flow_alpha: float = 0.5
+
+    currencysign = "$"
+
+    sankey_colormaps: list = ("Set3", "Pastel1", "Pastel2")
+
     linear_targets: list[float] = (
         5000,
         10000,
@@ -123,24 +144,3 @@ class Config:
         50000000,
         100000000,
     )
-
-    anon: bool = False
-
-    figw: float = 6
-    figh: float = 12.5
-
-    linewidth: float = 1.0
-    markersize: float = 4.0
-    marker: str = "."
-
-    colors: "Colors" = field(default_factory=Colors)
-
-    strings: "Strings" = field(default_factory=Strings)
-
-    node_width: float = 0.15
-    node_alpha: float = 0.8
-    flow_alpha: float = 0.5
-
-    currencysign = "$"
-
-    sankey_colormaps: list = ("Set3", "Pastel1", "Pastel2")
