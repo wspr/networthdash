@@ -366,53 +366,60 @@ def dashboard(config: Config):
             if ii < 0.85 * ax.get_ylim()[1]:
                 extrap_target(ii)
 
-    ############## INSET
 
-    reg = np.polyfit(data.Days[window_ind], data.Total[window_ind], 1)
-    rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
-    yd = rd * reg[0] + reg[1]
-    ax2.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors.total)
-    ax2.plot(data.Days[window_ind], data.Total[window_ind], color=config.colors.total, **dotstyle)
 
-    logfit = np.polyfit(data.Days[window_ind], np.log(data.Total[window_ind]), 1, w=np.sqrt(data.Total[window_ind]))
-    rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
-    yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
-    ax2.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
+    ############## PANEL 2: Total Window
 
-    ax2.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
-    yticks_dollars(ax2)
+    def graph_total_window(ax):
+        reg = np.polyfit(data.Days[window_ind], data.Total[window_ind], 1)
+        rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
+        yd = rd * reg[0] + reg[1]
+        ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors.total)
+        ax.plot(data.Days[window_ind], data.Total[window_ind], color=config.colors.total, **dotstyle)
+    
+        logfit = np.polyfit(data.Days[window_ind], np.log(data.Total[window_ind]), 1, w=np.sqrt(data.Total[window_ind]))
+        rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
+        yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
+        ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
+    
+        ax.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
+        yticks_dollars(ax2)
+    
+        ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+        ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+        ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    
+        gain = data.Total[window_ind].iat[-1] - data.Total[window_ind].iat[0]
+        elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
+    
+        ax.tick_params(axis="y", labelcolor=config.colors.total)
+    
+        x_min, x_max = ax2.get_xlim()
+        y_min, y_max = ax2.get_ylim()
+    
+        if anon:
+            ax.text(
+                x_min + 0.05 * (x_max - x_min),
+                y_min + 0.95 * (y_max - y_min),
+                "Net worth\nincrease",
+                color=config.colors.total,
+                va="top",
+            )
+        else:
+            peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
+            txtstr = "Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
+            ax.text(
+                x_min + 0.05 * (x_max - x_min),
+                y_min + 0.95 * (y_max - y_min),
+                txtstr,
+                color=config.colors.total,
+                va="top",
+                backgroundcolor=config.colors.axis,
+            )
 
-    ax2.xaxis.set_minor_locator(AutoMinorLocator(3))
-    ax2.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    ax2.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    graph_total_window(ax2)
 
-    gain = data.Total[window_ind].iat[-1] - data.Total[window_ind].iat[0]
-    elap = data.Days[window_ind].iat[-1] - data.Days[window_ind].iat[0]
 
-    ax2.tick_params(axis="y", labelcolor=config.colors.total)
-
-    x_min, x_max = ax2.get_xlim()
-    y_min, y_max = ax2.get_ylim()
-
-    if anon:
-        ax2.text(
-            x_min + 0.05 * (x_max - x_min),
-            y_min + 0.95 * (y_max - y_min),
-            "Net worth\nincrease",
-            color=config.colors.total,
-            va="top",
-        )
-    else:
-        peryrtext = "" if winyr == 1 else ("\n" + int_to_dollars(gain / elap) + "/yr")
-        txtstr = "Net worth\nincrease\n" + int_to_dollars(gain) + peryrtext
-        ax2.text(
-            x_min + 0.05 * (x_max - x_min),
-            y_min + 0.95 * (y_max - y_min),
-            txtstr,
-            color=config.colors.total,
-            va="top",
-            backgroundcolor=config.colors.axis,
-        )
 
     ############## INSET 2
 
@@ -519,6 +526,9 @@ def dashboard(config: Config):
         profitloss = g3["profitloss"]
     else:
         profitloss = 0
+
+
+
 
     ############## SANKEY SETUP
 
