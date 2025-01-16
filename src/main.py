@@ -210,12 +210,12 @@ def dashboard(config: Config):
     ax = ax1
     ax2 = fig.add_axes([inset_x[0], row_y[2], inset_w, inset_h])
     ax3 = fig.add_axes([inset_x[1], row_y[2], inset_w, inset_h])
-    ax6 = fig.add_axes([inset_x[0], row_y[0], sankey_w, sankey_h])
-    ax7 = fig.add_axes([inset_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
-    # ax4 = fig.add_axes([0.1, row_y[0], 0.4, 0.2])
-    # ax5 = fig.add_axes([0.5, row_y[0], 0.4, 0.2])
+
     ax4 = fig.add_axes([inset_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
     ax5 = fig.add_axes([inset_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
+
+    ax6 = fig.add_axes([inset_x[0], row_y[0], sankey_w, sankey_h])
+    ax7 = fig.add_axes([inset_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
 
     color_axes(ax1)
     color_axes(ax2)
