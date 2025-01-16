@@ -252,22 +252,22 @@ def dashboard(config: Config):
         rd = np.linspace(d.iloc[0], years_until_retire)
         yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
         infl = np.exp(logfit[0]) - 1
-        hp = ax.plot(rd, yd, **(projstyle | arg))
+        ax.plot(rd, yd, **(projstyle | arg))
         ax.set_ylim(clim)
-        return hp, infl
+        return infl
 
     # total line
     rd1, yd1 = extrap(data.Days[window_ind], data.Total[window_ind])
     retire_worth = yd1[-1]
-    hp1 = ax.plot(rd1, yd1, **projstyle, color=config.colors.total)
-    hp11, tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], {"color": config.colors.total})
+    ax.plot(rd1, yd1, **projstyle, color=config.colors.total)
+    tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], {"color": config.colors.total})
 
     ax.plot(data.Days, data.Total, color=config.colors.total, **dotstyle)
 
     # super
     if super_bool:
         rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
-        hp2 = ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
+        ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
 
         ind = data.TotalSuper[expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
@@ -278,7 +278,7 @@ def dashboard(config: Config):
 
     if shares_bool:
         rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
-        hp3 = ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
+        ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
 
         ind = data["TotalShares"][expstart:-1] > 0
         days = data.Days[expstart:-1][ind]
@@ -481,7 +481,7 @@ def dashboard(config: Config):
         profitloss = shares2.iat[-1] - sharebuy.iat[-1]
         pcgr = 100 * bought / gain
 
-        hp7 = ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
+        ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **dotstyle, color=config.colors.expend)
 
         yticks1 = ax3.get_yticks()
         dy = yticks1[1] - yticks1[0]
