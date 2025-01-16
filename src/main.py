@@ -568,6 +568,8 @@ def dashboard(config: Config):
         yrstr = f"{yr}"
         return "'" + yrstr[2:4]
 
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     if income_bool:
@@ -579,8 +581,9 @@ def dashboard(config: Config):
             sort="bottom",
             node_gap=0.00,
             node_width=config.node_width,
-            label_loc=["none", "none", "left"],
-            label_font={"color": config.colors.text},
+            label_largest = True,
+            label_loc=["right", "left", "left"],
+            label_font=lbl_font,
             label_dict=hdrnew,
             label_thresh_ofmax=0.2,
             value_loc=["none", "none", "none"],
@@ -612,9 +615,10 @@ def dashboard(config: Config):
             sort_dict=sd,
             node_gap=0.00,
             node_width=config.node_width,
-            label_loc=["none", "none", "left"],
-            label_font={"color": config.colors.text},
+            label_loc=["right", "left", "left"],
+            label_font=lbl_font,
             label_dict=hdrnew,
+            label_largest = True,
             value_loc=["center", "center", "center"],
             node_alpha=config.node_alpha,
             flow_alpha=config.flow_alpha,
@@ -640,8 +644,9 @@ def dashboard(config: Config):
             node_gap=0.00,
             color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
             node_width=config.node_width,
-            label_loc=["none", "none", "left"],
-            label_font={"color": config.colors.text},
+            label_loc=["right", "left", "left"],
+            label_largest = True,
+            label_font=lbl_font,
             value_loc=["none", "none", "none"],
             node_alpha=config.node_alpha,
             flow_alpha=config.flow_alpha,
@@ -668,8 +673,9 @@ def dashboard(config: Config):
             label_values=not (anon),
             label_thresh_ofmax=0.10,
             node_width=config.node_width,
-            label_loc=["none", "none", "left"],
-            label_font={"color": config.colors.text},
+            label_loc = ["right", "left", "left"],
+            label_largest = True,
+            label_font=lbl_font,
             value_loc=["none", "none", "none"],
             value_fn=lambda x: "\n" + int_to_dollars(x),
             node_alpha=config.node_alpha,
@@ -685,7 +691,7 @@ def dashboard(config: Config):
     def faux_title(ax, txtstr):
         xrange = np.diff(ax.get_xlim())
         ax.text(
-            ax.get_xlim()[0] + 0.02 * xrange,
+            ax.get_xlim()[0] + 0.04 * xrange,
             0.95 * ax.get_ylim()[1],
             txtstr,
             color=config.colors.title,
