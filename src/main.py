@@ -61,14 +61,6 @@ def dashboard(config: Config):
     errors = {}
     errors["DateColMissing"] = f"One column must be called '{datecol}'."
 
-    def color_axes(ax):
-        ax.set_facecolor(config.colors.axis)
-        for sp in ax.spines:
-            ax.spines[sp].set_color(config.colors.frame)
-        ax.tick_params(axis="x", colors=config.colors.frame)
-        ax.tick_params(axis="y", colors=config.colors.frame)
-        ax.tick_params(labelcolor=config.colors.tick)
-
     def dates_to_years(alldata):
         allcols = alldata.columns.tolist()
         if datecol not in allcols:
@@ -227,15 +219,15 @@ def dashboard(config: Config):
     ax6 = fig.add_axes([inset_x[0], row_y[0], sankey_w, sankey_h])
     ax7 = fig.add_axes([inset_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
 
-    color_axes(ax1)
-    color_axes(ax2)
-    color_axes(ax3)
-    color_axes(ax4)
-    color_axes(ax5)
+    color_axes(config, ax1)
+    color_axes(config, ax2)
+    color_axes(config, ax3)
+    color_axes(config, ax4)
+    color_axes(config, ax5)
 
     if expend_bool:
         ax33 = ax3.twinx()
-        color_axes(ax33)
+        color_axes(config, ax33)
         ax33.tick_params(axis="y", labelcolor=config.colors.expend)
     else:
         ax33 = ax3
