@@ -667,7 +667,7 @@ def dashboard(config: Config):
     if shares_bool:
         sky.sankey(
             ax=ax7,
-            data=sankey_shares_makeup(alldata),
+            data=sankey_shares_makeup(data),
             titles=[yrlbl(i) for i in years_uniq],
             colormap=config.sankey_colormaps[2],
             sort="bottom",
@@ -734,6 +734,7 @@ def dashboard(config: Config):
 
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax6.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax7.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
     if income_bool:
