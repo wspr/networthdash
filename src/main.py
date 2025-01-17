@@ -535,7 +535,6 @@ def dashboard(config: Config):
 
     ############## SANKEY SETUP
 
-
     def get_totals(data, val, spend):
         shares = data[data[val] > 0]
         total = {}
@@ -556,6 +555,7 @@ def dashboard(config: Config):
             total_by_yr[f"f{yr}"] = income_cols
             total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
         return pd.DataFrame(total_by_yr)
+
     ############## SANKEY
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
@@ -589,7 +589,6 @@ def dashboard(config: Config):
             label_values=not (anon),
             value_fn=lambda x: "\n" + int_to_dollars(x),
         )
-
 
     if shares_bool:
         sky.sankey(
@@ -639,7 +638,6 @@ def dashboard(config: Config):
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-
     if income_bool:
         faux_title(config, ax4, "Annual income")
     else:
@@ -650,7 +648,6 @@ def dashboard(config: Config):
         faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
 
     ######## PANEL 6 ########
-
 
     if iminor_bool:
         panel_income_breakdown(config, alldata, ax6)
@@ -698,6 +695,7 @@ def dashboard(config: Config):
         fig.savefig(filename + ".png")
 
     plt.close()
+
 
 def panel_income_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -749,7 +747,7 @@ def panel_income_breakdown(config, data, ax):
         label_thresh_ofmax=0.2,
         label_values=not (config.anon),
         colormap=config.sankey_colormaps[1],
-        value_fn=lambda x: "\n" + int_to_dollars(config,x),
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
     )
 
     ax.axis("on")
@@ -760,6 +758,7 @@ def panel_income_breakdown(config, data, ax):
     faux_title(config, ax, "'Other' income breakdown")
     if config.anon:
         ax.set_yticklabels([])
+
 
 def panel_shares_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -886,10 +885,12 @@ def faux_title(config, ax, txtstr):
         va="top",
     )
 
+
 def get_inc_totals(data, income_cols):
     total = {}
     for col in income_cols:
         total[col] = sum(data[col])
     return total
+
 
 ################################
