@@ -314,7 +314,9 @@ def dashboard(config: Config):
     ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
 
     ax.set_xticks(range(years_until_retire + 1))
-    ax.set_xticklabels(range(config.since_yr, config.since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick)
+    ax.set_xticklabels(
+        range(config.since_yr, config.since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick
+    )
     clim = ax.get_ylim()
     ax.set_ylim(0, clim[1])
     yticks_dollars(config, ax1)
@@ -671,7 +673,6 @@ def dashboard(config: Config):
     ax5.set_xticklabels(())
     ax5.yaxis.tick_right()
 
-
     yticks_dollars(config, ax4)
     yticks_dollars(config, ax5)
     yticks_dollars(config, ax6)
@@ -696,7 +697,6 @@ def dashboard(config: Config):
     else:
         ax6.set_xticklabels([])
         ax6.set_yticklabels([])
-
 
     ######## PANEL 7 ########
 
@@ -736,8 +736,8 @@ def dashboard(config: Config):
 
     plt.close()
 
-def panel_shares_breakdown(config, data, ax):
 
+def panel_shares_breakdown(config, data, ax):
     color_axes(config, ax)
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
@@ -749,7 +749,6 @@ def panel_shares_breakdown(config, data, ax):
     for x in data["Year"]:
         if x >= config.since_yr and x <= config.until_yr:
             years_uniq[x] = True
-
 
     def get_shares_totals(data, cols):
         total = {}
@@ -803,15 +802,18 @@ def panel_shares_breakdown(config, data, ax):
     if config.anon:
         ax.set_yticklabels([])
 
+
 def yrlbl(yr):
     yrstr = f"{yr}"
     return "'" + yrstr[2:4]
+
 
 def yticks_dollars(config, ax):
     ticks = ax.get_yticks()
     ax.set_yticks(ticks)
     newticks = [int_to_dollars(config, int(tick)) for tick in ticks]
     ax.set_yticklabels(newticks)
+
 
 def int_to_dollars(config, x, plussig=0):
     x = round(x)
@@ -848,6 +850,7 @@ def int_to_dollars(config, x, plussig=0):
         sig = 1
     return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
 
+
 def faux_title(config, ax, txtstr):
     xrange = np.diff(ax.get_xlim())
     ax.text(
@@ -858,5 +861,6 @@ def faux_title(config, ax, txtstr):
         ha="left",
         va="top",
     )
+
 
 ################################
