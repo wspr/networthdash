@@ -12,6 +12,15 @@ from .config import Config
 ############# PARAM ##############
 
 
+def color_axes(config, ax):
+    ax.set_facecolor(config.colors.axis)
+    for sp in ax.spines:
+        ax.spines[sp].set_color(config.colors.frame)
+    ax.tick_params(axis="x", colors=config.colors.frame)
+    ax.tick_params(axis="y", colors=config.colors.frame)
+    ax.tick_params(labelcolor=config.colors.tick)
+
+
 def dashboard(config: Config):
     # internal parameters
     # (possibly to generalise later)
@@ -109,12 +118,6 @@ def dashboard(config: Config):
             sig = 1
         return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
 
-    def yticks_dollars(ax):
-        ticks = ax.get_yticks()
-        ax.set_yticks(ticks)
-        newticks = [int_to_dollars(int(tick)) for tick in ticks]
-        ax.set_yticklabels(newticks)
-
     dotstyle = {
         "marker": config.marker,
         "markersize": config.markersize,
@@ -136,6 +139,7 @@ def dashboard(config: Config):
         prefix = hdr[0][ii] if isinstance(hdr[0][ii], str) else "_"
         tmpstr = datecol if hdr[1][ii] == datecol else prefix + "_" + hdr[1][ii]
         hdrnew[tmpstr] = hdr[1][ii]
+    config.hdrnew = hdrnew
 
     hdr[1] = list(hdrnew.keys())
     super_cols = list(hdr[1][hdr[0] == supercol])
@@ -143,6 +147,9 @@ def dashboard(config: Config):
     cash_cols = list(hdr[1][hdr[0] == cashcol])
     expend_cols = list(hdr[1][hdr[0] == expendcol])
     income_cols = list(hdr[1][hdr[0] == incomecol])
+
+    config.super_cols = super_cols
+    config.shares_cols = shares_cols
 
     super_bool = len(super_cols) > 0
     shares_bool = len(shares_cols) > 0
@@ -157,10 +164,10 @@ def dashboard(config: Config):
     alldata.columns = hdr[1]
     alldata["Year"] = dates_to_years(alldata)
 
-    since_yr = config.since_yr or min(alldata.Year)
-    until_yr = config.until_yr or max(alldata.Year)
-    sincedate = datetime(since_yr, 1, 1, tzinfo=timezone.utc)
-    years_until_retire = max_yr - since_yr
+    config.since_yr = config.since_yr or min(alldata.Year)
+    config.until_yr = config.until_yr or max(alldata.Year)
+    sincedate = datetime(config.since_yr, 1, 1, tzinfo=timezone.utc)
+    years_until_retire = max_yr - config.since_yr
     age_at_retirement = max_yr - config.born_yr
 
     alldata["Days"] = dates_to_days(alldata, sincedate)
@@ -181,7 +188,7 @@ def dashboard(config: Config):
 
     years_uniq = {}
     for x in alldata["Year"]:
-        if x >= since_yr and x <= until_yr:
+        if x >= config.since_yr and x <= config.until_yr:
             years_uniq[x] = True
 
     data = alldata[alldata.Total > 0]
@@ -223,7 +230,6 @@ def dashboard(config: Config):
     color_axes(ax4)
     color_axes(ax5)
     color_axes(ax6)
-    color_axes(ax7)
 
     if expend_bool:
         ax33 = ax3.twinx()
@@ -238,7 +244,7 @@ def dashboard(config: Config):
     ax1.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
 
     if retire_yr == max_yr:
-        ax1.axvline(x=retire_yr - since_yr, linestyle="--", color=config.colors.dashes)
+        ax1.axvline(x=retire_yr - config.since_yr, linestyle="--", color=config.colors.dashes)
 
     def extrap(d, t):
         reg = np.polyfit(d, t, 1)
@@ -295,23 +301,23 @@ def dashboard(config: Config):
     va = "center"
 
     if cash_bool:
-        ax.text(data.Days.iat[-1], alldata["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
+        ax.text(data.Days.iat[-1], data["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
 
     if shares_bool:
-        ax.text(data.Days.iat[-1], alldata["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
+        ax.text(data.Days.iat[-1], data["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
 
     if super_bool:
-        ax.text(data.Days.iat[-1], alldata["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
+        ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
     txtstr = "  Total" if anon else ("  Total\n  " + int_to_dollars(data.Total.iat[-1]))
 
     ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
 
     ax.set_xticks(range(years_until_retire + 1))
-    ax.set_xticklabels(range(since_yr, since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick)
+    ax.set_xticklabels(range(config.since_yr, config.since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick)
     clim = ax.get_ylim()
     ax.set_ylim(0, clim[1])
-    yticks_dollars(ax1)
+    yticks_dollars(config, ax1)
     ax.set_ylim(0, clim[1])
 
     if not anon:
@@ -380,8 +386,8 @@ def dashboard(config: Config):
         yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
         ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
 
-        ax.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
-        yticks_dollars(ax2)
+        ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
+        yticks_dollars(config, ax2)
 
         ax.xaxis.set_minor_locator(AutoMinorLocator(3))
         ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
@@ -427,9 +433,9 @@ def dashboard(config: Config):
             color=config.colors.shares,
             markersize=config.markersize,
         )
-        ax3.set_xlabel(f"Years since {since_yr}", color=config.colors.label)
+        ax3.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
 
-        yticks_dollars(ax3)
+        yticks_dollars(config, ax3)
         ax3.tick_params(axis="y", labelcolor=config.colors.shares)
 
         ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
@@ -510,8 +516,8 @@ def dashboard(config: Config):
         yylim2 = ax33.get_ylim()
         yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
-        yticks_dollars(ax3)
-        yticks_dollars(ax33)
+        yticks_dollars(config, ax3)
+        yticks_dollars(config, ax33)
         label_graph_shares_a(ax3)
         label_graph_shares_b(ax3)
 
@@ -529,12 +535,6 @@ def dashboard(config: Config):
         total = {}
         for col in income_cols:
             total[col] = sum(data[col])
-        return total
-
-    def get_shares_totals(data, cols):
-        total = {}
-        for col in cols:
-            total[col] = list(data[col])[-1]
         return total
 
     def sankey_income(data, income_cols):
@@ -558,18 +558,7 @@ def dashboard(config: Config):
             total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
         return pd.DataFrame(total_by_yr)
 
-    def sankey_shares_makeup(data):
-        total_by_yr = {}
-        for yr in years_uniq:
-            total_by_yr[f"f{yr}"] = shares_cols
-            total_by_yr[yr] = get_shares_totals(data[data["Year"] == yr], shares_cols).values()
-        return pd.DataFrame(total_by_yr)
-
     ############## SANKEY
-
-    def yrlbl(yr):
-        yrstr = f"{yr}"
-        return "'" + yrstr[2:4]
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
@@ -664,70 +653,28 @@ def dashboard(config: Config):
             value_fn=lambda x: "\n" + int_to_dollars(x),
         )
 
-    if shares_bool:
-        sky.sankey(
-            ax=ax7,
-            data=sankey_shares_makeup(data),
-            titles=[yrlbl(i) for i in years_uniq],
-            colormap=config.sankey_colormaps[2],
-            sort="bottom",
-            node_gap=0.00,
-            label_dict=hdrnew,
-            label_values=not (anon),
-            label_thresh_ofmax=0.10,
-            node_width=config.node_width,
-            label_loc=["right", "left", "left"],
-            label_largest=True,
-            label_font=lbl_font,
-            value_loc=["none", "none", "none"],
-            value_fn=lambda x: "\n" + int_to_dollars(x),
-            node_alpha=config.node_alpha,
-            flow_alpha=config.flow_alpha,
-            title_side="none",
-            percent_loc="center",
-            percent_loc_ht=0.05,
-            percent_font=pc_font,
-            percent_thresh=0.1,
-            percent_thresh_ofmax=0.2,
-        )
-
-    def faux_title(ax, txtstr):
-        xrange = np.diff(ax.get_xlim())
-        ax.text(
-            ax.get_xlim()[0] + 0.04 * xrange,
-            0.95 * ax.get_ylim()[1],
-            txtstr,
-            color=config.colors.title,
-            ha="left",
-            va="top",
-        )
-
     ax4.axis("on")
     ax5.axis("on")
     ax6.axis("on")
-    ax7.axis("on")
 
     ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
     ax4.set_ylim([0, ymax])
     ax5.set_ylim([0, ymax])
     ax6.set_ylim([0, ax6.get_ylim()[1]])
-    ax7.set_ylim([0, ax7.get_ylim()[1]])
 
     ax4.set_yticks(ax4.get_yticks())
     ax6.set_yticks(ax6.get_yticks())
-    ax7.set_yticks(ax7.get_yticks())
 
     ax5.set_yticks(list(ax4.get_yticks()))
 
     ax4.set_xticklabels(())
     ax5.set_xticklabels(())
     ax5.yaxis.tick_right()
-    ax7.yaxis.tick_right()
 
-    yticks_dollars(ax4)
-    yticks_dollars(ax5)
-    yticks_dollars(ax6)
-    yticks_dollars(ax7)
+
+    yticks_dollars(config, ax4)
+    yticks_dollars(config, ax5)
+    yticks_dollars(config, ax6)
 
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
@@ -735,23 +682,26 @@ def dashboard(config: Config):
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax6.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
-    ax7.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
     if income_bool:
-        faux_title(ax4, "Annual income")
+        faux_title(config, ax4, "Annual income")
     else:
         ax4.set_yticklabels([])
     if anon or (not expend_bool):
-        faux_title(ax5, "Annual shares increase")
+        faux_title(config, ax5, "Annual shares increase")
     else:
-        faux_title(ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
+        faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(profitloss))
     if iminor_bool:
-        faux_title(ax6, "'Other' income breakdown")
+        faux_title(config, ax6, "'Other' income breakdown")
     else:
         ax6.set_xticklabels([])
         ax6.set_yticklabels([])
+
+
+    ######## PANEL 7 ########
+
     if shares_bool:
-        faux_title(ax7, "Shares breakdown")
+        panel_shares_breakdown(config, data, ax7)
 
     ############## FINISH UP
 
@@ -763,7 +713,6 @@ def dashboard(config: Config):
         ax4.set_yticklabels([])
         ax5.set_yticklabels([])
         ax6.set_yticklabels([])
-        ax7.set_yticklabels([])
         ax.set_ylabel("Amount", color=config.colors.text)
         ax2.set_ylabel("Amount", color=config.colors.text)
         ax3.set_ylabel("Amount", color=config.colors.text)
@@ -787,5 +736,127 @@ def dashboard(config: Config):
 
     plt.close()
 
+def panel_shares_breakdown(config, data, ax):
+
+    color_axes(config, ax)
+
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+
+    # TODO: avoid recalc this
+    years_uniq = {}
+    for x in data["Year"]:
+        if x >= config.since_yr and x <= config.until_yr:
+            years_uniq[x] = True
+
+
+    def get_shares_totals(data, cols):
+        total = {}
+        for col in cols:
+            total[col] = list(data[col])[-1]
+        return total
+
+    def sankey_shares_makeup(data):
+        total_by_yr = {}
+        for yr in years_uniq:
+            total_by_yr[f"f{yr}"] = config.shares_cols
+            total_by_yr[yr] = get_shares_totals(data[data["Year"] == yr], config.shares_cols).values()
+        return pd.DataFrame(total_by_yr)
+
+    sky.sankey(
+        ax=ax,
+        data=sankey_shares_makeup(data),
+        titles=[yrlbl(i) for i in years_uniq],
+        colormap=config.sankey_colormaps[2],
+        sort="bottom",
+        node_gap=0.00,
+        label_dict=config.hdrnew,
+        label_values=not (config.anon),
+        label_thresh_ofmax=0.10,
+        node_width=config.node_width,
+        label_loc=["right", "left", "left"],
+        label_largest=True,
+        label_font=lbl_font,
+        value_loc=["none", "none", "none"],
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.1,
+        percent_thresh_ofmax=0.2,
+    )
+
+    ax.axis("on")
+    ax.set_ylim([0, ax.get_ylim()[1]])
+    ax.set_yticks(ax.get_yticks())
+    ax.yaxis.tick_right()
+
+    yticks_dollars(config, ax)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
+    faux_title(config, ax, "Shares breakdown")
+
+    if config.anon:
+        ax.set_yticklabels([])
+
+def yrlbl(yr):
+    yrstr = f"{yr}"
+    return "'" + yrstr[2:4]
+
+def yticks_dollars(config, ax):
+    ticks = ax.get_yticks()
+    ax.set_yticks(ticks)
+    newticks = [int_to_dollars(config, int(tick)) for tick in ticks]
+    ax.set_yticklabels(newticks)
+
+def int_to_dollars(config, x, plussig=0):
+    x = round(x)
+    amt_k = 1_000
+    amt_m = 1_000_000
+    amt_b = 1_000_000_000
+    if x < amt_k:
+        div = 1
+        suffix = ""
+        sig = 0
+    elif x >= amt_k and x < 10 * amt_k:
+        div = amt_k
+        suffix = "k"
+        sig = 1
+    elif x >= 10 * amt_k and x < amt_m:
+        div = amt_k
+        suffix = "k"
+        sig = 0
+    elif x >= amt_m and x < 10 * amt_m:
+        div = amt_m
+        suffix = "M"
+        sig = 2
+    elif x >= 10 * amt_m and x < amt_b:
+        div = amt_m
+        suffix = "M"
+        sig = 1
+    elif x >= amt_b and x < 10 * amt_b:
+        div = amt_b
+        suffix = "B"
+        sig = 2
+    else:
+        div = amt_b
+        suffix = "B"
+        sig = 1
+    return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
+
+def faux_title(config, ax, txtstr):
+    xrange = np.diff(ax.get_xlim())
+    ax.text(
+        ax.get_xlim()[0] + 0.04 * xrange,
+        0.95 * ax.get_ylim()[1],
+        txtstr,
+        color=config.colors.title,
+        ha="left",
+        va="top",
+    )
 
 ################################
