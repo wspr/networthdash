@@ -200,16 +200,16 @@ def dashboard(config: Config):
         color_axes(config, ax1)
         ax1.set_title("", color=config.colors.title)
         ax1.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
-    
+
         if retire_yr == max_yr:
             ax1.axvline(x=retire_yr - config.since_yr, linestyle="--", color=config.colors.dashes)
-    
+
         def extrap(d, t):
             reg = np.polyfit(d, t, 1)
             rd = np.linspace(data.Days[window_ind].iat[0], years_until_retire)
             yd = rd * reg[0] + reg[1]
             return rd, yd
-    
+
         def extrap_exp(ax, d, t, arg):
             clim = ax.get_ylim()
             logfit = np.polyfit(d, np.log(t), 1, w=np.sqrt(t))
@@ -219,58 +219,58 @@ def dashboard(config: Config):
             ax.plot(rd, yd, **(projstyle | arg))
             ax.set_ylim(clim)
             return infl
-    
+
         # total line
         rd1, yd1 = extrap(data.Days[window_ind], data.Total[window_ind])
         retire_worth = yd1[-1]
         ax.plot(rd1, yd1, **projstyle, color=config.colors.total)
         tot_growth = extrap_exp(ax, data.Days[expstart:-1], data.Total[expstart:-1], {"color": config.colors.total})
-    
+
         ax.plot(data.Days, data.Total, color=config.colors.total, **dotstyle)
-    
+
         # super
         if super_bool:
             rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
             ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
-    
+
             ind = data.TotalSuper[expstart:-1] > 0
             days = data.Days[expstart:-1][ind]
             val = data.TotalSuper[expstart:-1][ind]
             extrap_exp(ax, days, val, {"color": config.colors.super})
-    
+
             ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
-    
+
         if shares_bool:
             rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
             ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
-    
+
             ind = data["TotalShares"][expstart:-1] > 0
             days = data.Days[expstart:-1][ind]
             val = data["TotalShares"][expstart:-1][ind]
             extrap_exp(ax, days, val, {"color": config.colors.shares})
-    
+
             ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
-    
+
         if cash_bool:
             ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
-    
+
         ############% LABELS
-    
+
         va = "center"
-    
+
         if cash_bool:
             ax.text(data.Days.iat[-1], data["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
-    
+
         if shares_bool:
             ax.text(data.Days.iat[-1], data["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
-    
+
         if super_bool:
             ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
-    
+
         txtstr = "  Total" if anon else ("  Total\n  " + int_to_dollars(config, data.Total.iat[-1]))
-    
+
         ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
-    
+
         ax.set_xticks(range(years_until_retire + 1))
         ax.set_xticklabels(
             range(config.since_yr, config.since_yr + years_until_retire + 1), rotation=90, color=config.colors.tick
@@ -279,7 +279,7 @@ def dashboard(config: Config):
         ax.set_ylim(0, clim[1])
         yticks_dollars(config, ax1)
         ax.set_ylim(0, clim[1])
-    
+
         if not anon:
             txtstr = (
                 f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a."
@@ -297,19 +297,19 @@ def dashboard(config: Config):
                 va="top",
                 color=config.colors.total,
             )
-    
+
         #######%%###### EXTRAP
-    
+
         def extrap_target(yy):
             if data.Total.iat[-1] > 0.8 * yy:
                 return
-    
+
             reg = np.polyfit(data.Days[window_ind], data.Total[window_ind], 1)
-    
+
             rr = (yy - reg[1]) / reg[0]
-    
+
             ax.plot((rr, rr, data.Days.iat[-1]), (0, yy, yy), "-", lw=config.linewidth, color=config.colors.target)
-    
+
             ax.text(
                 data.Days.iat[-1] + (rr - data.Days.iat[-1]) / 2,
                 yy * 0.99,
@@ -326,7 +326,7 @@ def dashboard(config: Config):
                 va="bottom",
                 color=config.colors.text,
             )
-    
+
         if not anon:
             for ii in config.linear_targets:
                 if ii < 0.85 * ax.get_ylim()[1]:
@@ -337,7 +337,6 @@ def dashboard(config: Config):
     ############## PANEL 2: Total Window
 
     def graph_total_window(config, ax):
-
         color_axes(config, ax)
         reg = np.polyfit(data.Days[window_ind], data.Total[window_ind], 1)
         rd = np.linspace(data.Days[window_ind].iat[0], data.Days.iat[-1])
@@ -390,7 +389,6 @@ def dashboard(config: Config):
     ############## INSET 2
 
     def graph_shares_window(config, ax3, ax33):
-        
         color_axes(config, ax3)
         ax3.plot(
             data.Days[window_ind],
