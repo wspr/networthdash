@@ -99,21 +99,17 @@ def dashboard(config: Config):
     config.hdrnew = hdrnew
 
     hdr[1] = list(hdrnew.keys())
-    super_cols = list(hdr[1][hdr[0] == supercol])
-    shares_cols = list(hdr[1][hdr[0] == sharescol])
-    cash_cols = list(hdr[1][hdr[0] == cashcol])
-    expend_cols = list(hdr[1][hdr[0] == expendcol])
-    income_cols = list(hdr[1][hdr[0] == incomecol])
+    config.super_cols = list(hdr[1][hdr[0] == supercol])
+    config.shares_cols = list(hdr[1][hdr[0] == sharescol])
+    config.cash_cols = list(hdr[1][hdr[0] == cashcol])
+    config.expend_cols = list(hdr[1][hdr[0] == expendcol])
+    config.income_cols = list(hdr[1][hdr[0] == incomecol])
 
-    config.super_cols = super_cols
-    config.shares_cols = shares_cols
-    config.income_cols = income_cols
-
-    super_bool = len(super_cols) > 0
-    shares_bool = len(shares_cols) > 0
-    cash_bool = len(cash_cols) > 0
-    expend_bool = len(expend_cols) > 0
-    income_bool = len(income_cols) > 0
+    config.super_bool = len(config.super_cols) > 0
+    config.shares_bool = len(config.shares_cols) > 0
+    config.cash_bool = len(config.cash_cols) > 0
+    config.expend_bool = len(config.expend_cols) > 0
+    config.income_bool = len(config.income_cols) > 0
 
     ############# DATA
 
@@ -132,15 +128,15 @@ def dashboard(config: Config):
     alldata = alldata.sort_values(by="Days")
     alldata = alldata.reset_index(drop=True)
 
-    alldata["TotalSuper"] = alldata[super_cols].sum(axis=1)
-    alldata["TotalShares"] = alldata[shares_cols].sum(axis=1)
-    alldata["TotalCash"] = alldata[cash_cols].sum(axis=1)
-    alldata["TotalExpend"] = alldata[expend_cols].sum(axis=1)
-    alldata["TotalIncome"] = alldata[income_cols].sum(axis=1)
+    alldata["TotalSuper"] = alldata[config.super_cols].sum(axis=1)
+    alldata["TotalShares"] = alldata[config.shares_cols].sum(axis=1)
+    alldata["TotalCash"] = alldata[config.cash_cols].sum(axis=1)
+    alldata["TotalExpend"] = alldata[config.expend_cols].sum(axis=1)
+    alldata["TotalIncome"] = alldata[config.income_cols].sum(axis=1)
     alldata["Total"] = alldata["TotalShares"] + alldata["TotalSuper"] + alldata["TotalCash"]
 
     income_grand_tot = alldata["TotalIncome"].sum()
-    income_sum = alldata[income_cols].sum()
+    income_sum = alldata[config.income_cols].sum()
     income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
     iminor_bool = len(income_minor) > 0
 
@@ -155,14 +151,14 @@ def dashboard(config: Config):
     data = data.reset_index(drop=True)
     window_ind = data.Days > (data.Days.iat[-1] - winyr)
 
-    if expend_bool:
+    if config.expend_bool:
         data_sp = alldata[alldata.TotalExpend > 0]
         data_sp = data_sp.reset_index(drop=True)
         win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - winyr)
 
-    data["TotalSuper"] = data[super_cols].sum(axis=1)
-    data["TotalShares"] = data[shares_cols].sum(axis=1)
-    data["TotalCash"] = data[cash_cols].sum(axis=1)
+    data["TotalSuper"] = data[config.super_cols].sum(axis=1)
+    data["TotalShares"] = data[config.shares_cols].sum(axis=1)
+    data["TotalCash"] = data[config.cash_cols].sum(axis=1)
     data["Total"] = data["TotalShares"] + data["TotalSuper"] + data["TotalCash"]
 
     ########### CREATE FIGURE and AXES
@@ -187,7 +183,7 @@ def dashboard(config: Config):
     color_axes(config, ax4)
     color_axes(config, ax5)
 
-    if expend_bool:
+    if config.expend_bool:
         ax33 = ax3.twinx()
         color_axes(config, ax33)
         ax33.tick_params(axis="y", labelcolor=config.colors.expend)
@@ -229,7 +225,7 @@ def dashboard(config: Config):
         ax.plot(data.Days, data.Total, color=config.colors.total, **dotstyle)
 
         # super
-        if super_bool:
+        if config.super_bool:
             rd2, yd2 = extrap(data.Days[window_ind], data.TotalSuper[window_ind])
             ax.plot(rd2, yd2, **projstyle, color=config.colors.super)
 
@@ -239,8 +235,8 @@ def dashboard(config: Config):
             extrap_exp(ax, days, val, {"color": config.colors.super})
 
             ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
-
-        if shares_bool:
+    
+        if config.shares_bool:
             rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
             ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
 
@@ -250,21 +246,21 @@ def dashboard(config: Config):
             extrap_exp(ax, days, val, {"color": config.colors.shares})
 
             ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
-
-        if cash_bool:
+    
+        if config.cash_bool:
             ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
 
         ############% LABELS
 
         va = "center"
-
-        if cash_bool:
+    
+        if config.cash_bool:
             ax.text(data.Days.iat[-1], data["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
-
-        if shares_bool:
+    
+        if config.shares_bool:
             ax.text(data.Days.iat[-1], data["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
-
-        if super_bool:
+    
+        if config.super_bool:
             ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
         txtstr = "  Total" if anon else ("  Total\n  " + int_to_dollars(config, data.Total.iat[-1]))
@@ -444,7 +440,7 @@ def dashboard(config: Config):
                 backgroundcolor=config.colors.axis,
             )
 
-        if not expend_bool:
+        if not config.expend_bool:
             label_graph_shares_a(ax3)
             return {"profitloss": 0}
 
@@ -487,7 +483,7 @@ def dashboard(config: Config):
 
         return {"profitloss": profitloss}
 
-    if shares_bool:
+    if config.shares_bool:
         g3 = graph_shares_window(config, ax3, ax33)
         profitloss = g3["profitloss"]
     else:
@@ -522,10 +518,10 @@ def dashboard(config: Config):
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-    if income_bool:
+    if config.income_bool:
         sky.sankey(
             ax=ax4,
-            data=sankey_income(alldata, income_cols),
+            data=sankey_income(alldata, config.income_cols),
             titles=[yrlbl(i) for i in years_uniq],
             other_thresh_ofsum=config.income_thresh,
             sort="bottom",
@@ -550,7 +546,7 @@ def dashboard(config: Config):
             value_fn=lambda x: "\n" + int_to_dollars(config, x),
         )
 
-    if shares_bool:
+    if config.shares_bool:
         sky.sankey(
             ax=ax5,
             data=sankey_shares(alldata),
@@ -598,11 +594,11 @@ def dashboard(config: Config):
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-    if income_bool:
+    if config.income_bool:
         faux_title(config, ax4, "Annual income")
     else:
         ax4.set_yticklabels([])
-    if anon or (not expend_bool):
+    if anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
         faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, profitloss))
@@ -617,7 +613,7 @@ def dashboard(config: Config):
 
     ######## PANEL 7 ########
 
-    if shares_bool:
+    if config.shares_bool:
         panel_shares_breakdown(config, data, ax7)
     else:
         color_axes(ax7)
