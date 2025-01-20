@@ -235,7 +235,7 @@ def dashboard(config: Config):
             extrap_exp(ax, days, val, {"color": config.colors.super})
 
             ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **dotstyle)
-    
+
         if config.shares_bool:
             rd3, yd3 = extrap(data.Days[window_ind], data.TotalShares[window_ind])
             ax.plot(rd3, yd3, **projstyle, color=config.colors.shares)
@@ -246,20 +246,20 @@ def dashboard(config: Config):
             extrap_exp(ax, days, val, {"color": config.colors.shares})
 
             ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **dotstyle)
-    
+
         if config.cash_bool:
             ax.plot(data.Days, data["TotalCash"], **dotstyle, color=config.colors.cash)
 
         ############% LABELS
 
         va = "center"
-    
+
         if config.cash_bool:
             ax.text(data.Days.iat[-1], data["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
-    
+
         if config.shares_bool:
             ax.text(data.Days.iat[-1], data["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
-    
+
         if config.super_bool:
             ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
