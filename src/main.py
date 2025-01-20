@@ -504,10 +504,6 @@ def dashboard(config: Config):
     else:
         ax4.set_yticklabels([])
 
-
-
-
-
     if config.shares_bool:
         sky.sankey(
             ax=ax5,
@@ -600,6 +596,7 @@ def dashboard(config: Config):
 
 ############## PANEL 2: Total Window
 
+
 def panel_total_window(config, ax, data):
     color_axes(config, ax)
     reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
@@ -650,7 +647,9 @@ def panel_total_window(config, ax, data):
             backgroundcolor=config.colors.axis,
         )
 
+
 ############## PANEL 4: Total Window
+
 
 def panel_income_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -714,7 +713,9 @@ def panel_income_breakdown(config, data, ax):
     if config.anon:
         ax.set_yticklabels([])
 
+
 ############## PANEL 5: Shares Breakdown
+
 
 def panel_shares_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -774,6 +775,7 @@ def panel_shares_breakdown(config, data, ax):
 
     if config.anon:
         ax.set_yticklabels([])
+
 
 ################################
 
@@ -844,6 +846,7 @@ def get_inc_totals(data, income_cols):
         total[col] = sum(data[col])
     return total
 
+
 def yticks_equalise(config, ax4, ax5):
     ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
     ax4.set_ylim([0, ymax])
@@ -852,5 +855,6 @@ def yticks_equalise(config, ax4, ax5):
     ax5.set_yticks(list(ax4.get_yticks()))
     yticks_dollars(config, ax4)
     yticks_dollars(config, ax5)
+
 
 ################################
