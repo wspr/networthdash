@@ -141,10 +141,10 @@ def dashboard(config: Config):
 
     config.income_minor = income_minor
 
-    years_uniq = {}
+    config.years_uniq = {}
     for x in alldata["Year"]:
         if x >= config.since_yr and x <= config.until_yr:
-            years_uniq[x] = True
+            config.years_uniq[x] = True
 
     data = alldata[alldata.Total > 0]
     data = data.reset_index(drop=True)
@@ -448,14 +448,14 @@ def dashboard(config: Config):
 
     def sankey_shares(data):
         total_by_yr = {}
-        for yr in years_uniq:
+        for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
             total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
         return pd.DataFrame(total_by_yr)
 
     def sankey_income(data, income_cols):
         total_by_yr = {}
-        for yr in years_uniq:
+        for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = income_cols
             total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
         return pd.DataFrame(total_by_yr)
@@ -470,7 +470,7 @@ def dashboard(config: Config):
         sky.sankey(
             ax=ax4,
             data=sankey_income(alldata, config.income_cols),
-            titles=[yrlbl(i) for i in years_uniq],
+            titles=[yrlbl(i) for i in config.years_uniq],
             other_thresh_ofsum=config.income_thresh,
             sort="bottom",
             node_gap=0.00,
@@ -494,11 +494,25 @@ def dashboard(config: Config):
             value_fn=lambda x: "\n" + int_to_dollars(config, x),
         )
 
+    ax4.axis("on")
+    ax4.set_xticklabels(())
+    # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
+    ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
+    if config.income_bool:
+        faux_title(config, ax4, "Annual income")
+    else:
+        ax4.set_yticklabels([])
+
+
+
+
+
     if config.shares_bool:
         sky.sankey(
             ax=ax5,
             data=sankey_shares(alldata),
-            titles=[yrlbl(i) for i in years_uniq],
+            titles=[yrlbl(i) for i in config.years_uniq],
             colormap="Pastel2",
             sort="bottom",
             node_gap=0.00,
@@ -521,31 +535,14 @@ def dashboard(config: Config):
             value_fn=lambda x: "\n" + int_to_dollars(config, x),
         )
 
-    ax4.axis("on")
-    ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
-    ax4.set_ylim([0, ymax])
-    ax4.set_yticks(ax4.get_yticks())
-    ax4.set_xticklabels(())
-
     ax5.axis("on")
-    ax5.set_ylim([0, ymax])
-    ax5.set_yticks(list(ax4.get_yticks()))
     ax5.set_xticklabels(())
     ax5.yaxis.tick_right()
-
-    yticks_dollars(config, ax4)
-    yticks_dollars(config, ax5)
-
-    # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
-
-    ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-    if config.income_bool:
-        faux_title(config, ax4, "Annual income")
-    else:
-        ax4.set_yticklabels([])
+    yticks_equalise(config, ax4, ax5)
+
     if anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
@@ -663,14 +660,14 @@ def panel_income_breakdown(config, data, ax):
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     # TODO: avoid recalc this
-    years_uniq = {}
+    config.years_uniq = {}
     for x in data["Year"]:
         if x >= config.since_yr and x <= config.until_yr:
-            years_uniq[x] = True
+            config.years_uniq[x] = True
 
     def sankey_income(data, income_cols):
         total_by_yr = {}
-        for yr in years_uniq:
+        for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = income_cols
             total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
         return pd.DataFrame(total_by_yr)
@@ -683,7 +680,7 @@ def panel_income_breakdown(config, data, ax):
     sky.sankey(
         ax=ax,
         data=ssdata,
-        titles=[yrlbl(i) for i in years_uniq],
+        titles=[yrlbl(i) for i in config.years_uniq],
         other_thresh=100,
         sort="bottom",
         sort_dict=sd,
@@ -725,12 +722,6 @@ def panel_shares_breakdown(config, data, ax):
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-    # TODO: avoid recalc this
-    years_uniq = {}
-    for x in data["Year"]:
-        if x >= config.since_yr and x <= config.until_yr:
-            years_uniq[x] = True
-
     def get_shares_totals(data, cols):
         total = {}
         for col in cols:
@@ -739,7 +730,7 @@ def panel_shares_breakdown(config, data, ax):
 
     def sankey_shares_makeup(data):
         total_by_yr = {}
-        for yr in years_uniq:
+        for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = config.shares_cols
             total_by_yr[yr] = get_shares_totals(data[data["Year"] == yr], config.shares_cols).values()
         return pd.DataFrame(total_by_yr)
@@ -747,7 +738,7 @@ def panel_shares_breakdown(config, data, ax):
     sky.sankey(
         ax=ax,
         data=sankey_shares_makeup(data),
-        titles=[yrlbl(i) for i in years_uniq],
+        titles=[yrlbl(i) for i in config.years_uniq],
         colormap=config.sankey_colormaps[2],
         sort="bottom",
         node_gap=0.00,
@@ -850,5 +841,14 @@ def get_inc_totals(data, income_cols):
         total[col] = sum(data[col])
     return total
 
+def yticks_equalise(config, ax4, ax5):
+    ymin = min(ax4.get_ylim()[0], ax5.get_ylim()[0])
+    ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
+    ax4.set_ylim([0, ymax])
+    ax5.set_ylim([0, ymax])
+    ax4.set_yticks(ax4.get_yticks())
+    ax5.set_yticks(list(ax4.get_yticks()))
+    yticks_dollars(config, ax4)
+    yticks_dollars(config, ax5)
 
 ################################
