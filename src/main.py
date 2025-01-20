@@ -328,7 +328,7 @@ def dashboard(config: Config):
                     extrap_target(ii)
 
     graph_all_vs_time(config, ax1)
-    graph_total_window(config, ax2, data)
+    panel_total_window(config, ax2, data)
 
     ############## INSET 2
 
@@ -600,8 +600,7 @@ def dashboard(config: Config):
 
 ############## PANEL 2: Total Window
 
-
-def graph_total_window(config, ax, data):
+def panel_total_window(config, ax, data):
     color_axes(config, ax)
     reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
@@ -651,6 +650,7 @@ def graph_total_window(config, ax, data):
             backgroundcolor=config.colors.axis,
         )
 
+############## PANEL 4: Total Window
 
 def panel_income_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -714,6 +714,7 @@ def panel_income_breakdown(config, data, ax):
     if config.anon:
         ax.set_yticklabels([])
 
+############## PANEL 5: Shares Breakdown
 
 def panel_shares_breakdown(config, data, ax):
     color_axes(config, ax)
@@ -773,6 +774,8 @@ def panel_shares_breakdown(config, data, ax):
 
     if config.anon:
         ax.set_yticklabels([])
+
+################################
 
 
 def yrlbl(yr):
@@ -842,7 +845,6 @@ def get_inc_totals(data, income_cols):
     return total
 
 def yticks_equalise(config, ax4, ax5):
-    ymin = min(ax4.get_ylim()[0], ax5.get_ylim()[0])
     ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
     ax4.set_ylim([0, ymax])
     ax5.set_ylim([0, ymax])
