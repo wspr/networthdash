@@ -616,7 +616,7 @@ def dashboard(config: Config):
     if config.shares_bool:
         panel_shares_breakdown(config, data, ax7)
     else:
-        color_axes(ax7)
+        color_axes(config, ax7)
         ax7.set_xticklabels([])
         ax7.set_yticklabels([])
 
