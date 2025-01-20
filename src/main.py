@@ -600,10 +600,11 @@ def dashboard(config: Config):
 
     plt.close()
 
+
 ############## PANEL 2: Total Window
 
-def graph_total_window(config, ax, data):
 
+def graph_total_window(config, ax, data):
     color_axes(config, ax)
     reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
@@ -611,7 +612,9 @@ def graph_total_window(config, ax, data):
     ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors.total)
     ax.plot(data.Days[config.window_ind], data.Total[config.window_ind], color=config.colors.total, **config.dotstyle)
 
-    logfit = np.polyfit(data.Days[config.window_ind], np.log(data.Total[config.window_ind]), 1, w=np.sqrt(data.Total[config.window_ind]))
+    logfit = np.polyfit(
+        data.Days[config.window_ind], np.log(data.Total[config.window_ind]), 1, w=np.sqrt(data.Total[config.window_ind])
+    )
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
     ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
@@ -650,6 +653,7 @@ def graph_total_window(config, ax, data):
             va="top",
             backgroundcolor=config.colors.axis,
         )
+
 
 def panel_income_breakdown(config, data, ax):
     color_axes(config, ax)
