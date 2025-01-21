@@ -330,9 +330,6 @@ def dashboard(config: Config):
     graph_all_vs_time(config, ax1)
     panel_total_window(config, ax2, data)
 
-
-
-
     if config.shares_bool:
         g3 = graph_shares_window(config, ax3, ax33, data, data_sp)
         config.profitloss = g3["profitloss"]
@@ -552,7 +549,6 @@ def panel_total_window(config, ax, data):
         )
 
 
-
 def graph_shares_window(config, ax3, ax33, data, data_sp):
     color_axes(config, ax3)
     ax3.plot(
@@ -619,7 +615,9 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
     profitloss = shares2.iat[-1] - sharebuy.iat[-1]
     pcgr = 100 * bought / gain
 
-    ax33.plot(data_sp.Days[config.win_sp_ind], sharesum[config.win_sp_ind], **config.dotstyle, color=config.colors.expend)
+    ax33.plot(
+        data_sp.Days[config.win_sp_ind], sharesum[config.win_sp_ind], **config.dotstyle, color=config.colors.expend
+    )
 
     yticks1 = ax3.get_yticks()
     dy = yticks1[1] - yticks1[0]
@@ -651,6 +649,7 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
     label_graph_shares_b(ax3)
 
     return {"profitloss": profitloss}
+
 
 ############## PANEL 4: Total Window
 
