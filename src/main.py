@@ -38,10 +38,6 @@ def dashboard(config: Config):
     row_y = [0.05, 0.44, 0.79]
     row_gap = 0.03
 
-    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
-
-    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-
     # process Config parameters
 
     config.retire_yr = config.born_yr + config.retire_age
@@ -186,7 +182,7 @@ def dashboard(config: Config):
     else:
         ax33 = ax3
 
-    ########### FITTING and PLOTTING
+    ########### PANEL 1
 
     graph_all_vs_time(config, ax1, data)
     panel_total_window(config, ax2, data)
@@ -199,39 +195,11 @@ def dashboard(config: Config):
 
     ############## SANKEY
 
-    if config.income_bool:
-        sky.sankey(
-            ax=ax4,
-            data=sankey_income(config, alldata, config.income_cols),
-            titles=[yrlbl(i) for i in config.years_uniq],
-            other_thresh_ofsum=config.income_thresh,
-            sort="bottom",
-            node_gap=0.00,
-            node_width=config.node_width,
-            label_largest=True,
-            label_loc=["right", "left", "left"],
-            label_font=lbl_font,
-            label_dict=hdrnew,
-            label_thresh_ofmax=0.2,
-            value_loc=["none", "none", "none"],
-            node_alpha=config.node_alpha,
-            flow_alpha=config.flow_alpha,
-            title_side="none",
-            percent_loc="center",
-            percent_loc_ht=0.05,
-            percent_font=pc_font,
-            percent_thresh=0.2,
-            percent_thresh_ofmax=0.2,
-            colormap=config.sankey_colormaps[0],
-            label_values=not (config.anon),
-            value_fn=lambda x: "\n" + int_to_dollars(config, x),
-        )
+    panel_income(config, ax4, alldata)
 
-    ax4.axis("on")
-    ax4.set_xticklabels(())
-    # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
-    ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
     if config.shares_bool:
         sky.sankey(
             ax=ax5,
@@ -753,7 +721,48 @@ def panel_shares_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
+
+
+def panel_income(config, ax4, alldata):
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+    if config.income_bool:
+        sky.sankey(
+            ax=ax4,
+            data=sankey_income(config, alldata, config.income_cols),
+            titles=[yrlbl(i) for i in config.years_uniq],
+            other_thresh_ofsum=config.income_thresh,
+            sort="bottom",
+            node_gap=0.00,
+            node_width=config.node_width,
+            label_largest=True,
+            label_loc=["right", "left", "left"],
+            label_font=lbl_font,
+            label_dict = config.hdrnew,
+            label_thresh_ofmax=0.2,
+            value_loc=["none", "none", "none"],
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc="center",
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.2,
+            percent_thresh_ofmax=0.2,
+            colormap=config.sankey_colormaps[0],
+            label_values=not (config.anon),
+            value_fn=lambda x: "\n" + int_to_dollars(config, x),
+        )
+
+    ax4.axis("on")
+    ax4.set_xticklabels(())
+    # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
+    ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
 ################################
+
+
 
 
 def yrlbl(yr):
