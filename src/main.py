@@ -499,10 +499,6 @@ def dashboard(config: Config):
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-
-
-
-
     if config.shares_bool:
         sky.sankey(
             ax=ax5,
@@ -546,7 +542,9 @@ def dashboard(config: Config):
     if anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
-        faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss))
+        faux_title(
+            config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
+        )
 
     ######## PANEL 6 ########
 
