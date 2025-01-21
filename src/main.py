@@ -157,11 +157,6 @@ def dashboard(config: Config):
         data_sp = data_sp.reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
 
-    data["TotalSuper"] = data[config.super_cols].sum(axis=1)
-    data["TotalShares"] = data[config.shares_cols].sum(axis=1)
-    data["TotalCash"] = data[config.cash_cols].sum(axis=1)
-    data["Total"] = data["TotalShares"] + data["TotalSuper"] + data["TotalCash"]
-
     ########### CREATE FIGURE and AXES
 
     fig, ax0 = plt.subplots(
@@ -193,13 +188,13 @@ def dashboard(config: Config):
 
     ########### FITTING and PLOTTING
 
-    def graph_all_vs_time(config, ax1):
-        color_axes(config, ax1)
-        ax1.set_title("", color=config.colors.title)
-        ax1.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
+    def graph_all_vs_time(config, ax):
+        color_axes(config, ax)
+        ax.set_title("", color=config.colors.title)
+        ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
 
         if retire_yr == max_yr:
-            ax1.axvline(x=retire_yr - config.since_yr, linestyle="--", color=config.colors.dashes)
+            ax.axvline(x=retire_yr - config.since_yr, linestyle="--", color=config.colors.dashes)
 
         def extrap(d, t):
             reg = np.polyfit(d, t, 1)
@@ -274,7 +269,7 @@ def dashboard(config: Config):
         )
         clim = ax.get_ylim()
         ax.set_ylim(0, clim[1])
-        yticks_dollars(config, ax1)
+        yticks_dollars(config, ax)
         ax.set_ylim(0, clim[1])
 
         if not config.anon:
