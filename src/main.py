@@ -433,9 +433,9 @@ def dashboard(config: Config):
 
     if config.shares_bool:
         g3 = graph_shares_window(config, ax3, ax33)
-        profitloss = g3["profitloss"]
+        config.profitloss = g3["profitloss"]
     else:
-        profitloss = 0
+        config.profitloss = 0
 
     ############## SANKEY SETUP
 
@@ -499,10 +499,9 @@ def dashboard(config: Config):
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-    if config.income_bool:
-        faux_title(config, ax4, "Annual income")
-    else:
-        ax4.set_yticklabels([])
+
+
+
 
     if config.shares_bool:
         sky.sankey(
@@ -539,10 +538,15 @@ def dashboard(config: Config):
 
     yticks_equalise(config, ax4, ax5)
 
+    if config.income_bool:
+        faux_title(config, ax4, "Annual income")
+    else:
+        ax4.set_yticklabels([])
+
     if anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
-        faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, profitloss))
+        faux_title(config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss))
 
     ######## PANEL 6 ########
 
