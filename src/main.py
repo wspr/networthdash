@@ -153,7 +153,7 @@ def dashboard(config: Config):
     if config.expend_bool:
         data_sp = alldata[alldata.TotalExpend > 0]
         data_sp = data_sp.reset_index(drop=True)
-        win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
 
     data["TotalSuper"] = data[config.super_cols].sum(axis=1)
     data["TotalShares"] = data[config.shares_cols].sum(axis=1)
@@ -330,109 +330,11 @@ def dashboard(config: Config):
     graph_all_vs_time(config, ax1)
     panel_total_window(config, ax2, data)
 
-    ############## INSET 2
 
-    def graph_shares_window(config, ax3, ax33):
-        color_axes(config, ax3)
-        ax3.plot(
-            data.Days[config.window_ind],
-            data["TotalShares"][config.window_ind],
-            config.marker,
-            color=config.colors.shares,
-            markersize=config.markersize,
-        )
-        ax3.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
 
-        yticks_dollars(config, ax3)
-        ax3.tick_params(axis="y", labelcolor=config.colors.shares)
-
-        ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
-        ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-        ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
-
-        shares2 = pd.Series(data["TotalShares"][config.window_ind]).reset_index(drop=True)
-        gain = shares2.iat[-1] - shares2.iat[0]
-        elap = data.Days[config.window_ind].iat[-1] - data.Days[config.window_ind].iat[0]
-
-        def label_graph_shares_a(ax):
-            x_min, x_max = ax.get_xlim()
-            y_min, y_max = ax.get_ylim()
-            if anon:
-                txt = "Shares\nincrease"
-            else:
-                peryrtext = "" if config.linear_window == 1 else ("\n" + int_to_dollars(config, gain / elap) + "/yr")
-                txt = "Shares\nincrease\n" + int_to_dollars(config, gain) + peryrtext
-            ax.text(
-                x_min + 0.05 * (x_max - x_min),
-                y_min + 0.95 * (y_max - y_min),
-                txt,
-                color=config.colors.shares,
-                va="top",
-                backgroundcolor=config.colors.axis,
-            )
-
-        def label_graph_shares_b(ax):
-            if anon:
-                txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
-            else:
-                val = sharebuy.iat[-1] - sharebuy.iat[0]
-                txtstr = "Bought " + int_to_dollars(config, val) + f"\n{pcgr:2.0f}% of growth"
-            x_min, x_max = ax.get_xlim()
-            y_min, y_max = ax.get_ylim()
-            ax.text(
-                x_min + 0.95 * (x_max - x_min),
-                y_min + 0.05 * (y_max - y_min),
-                txtstr,
-                color=config.colors.expend,
-                ha="right",
-                backgroundcolor=config.colors.axis,
-            )
-
-        if not config.expend_bool:
-            label_graph_shares_a(ax3)
-            return {"profitloss": 0}
-
-        sharesum = data_sp["TotalExpend"].cumsum()
-        sharebuy = pd.Series(sharesum[win_sp_ind]).reset_index(drop=True)
-        bought = sharebuy.iat[-1] - sharebuy.iat[0]
-        profitloss = shares2.iat[-1] - sharebuy.iat[-1]
-        pcgr = 100 * bought / gain
-
-        ax33.plot(data_sp.Days[win_sp_ind], sharesum[win_sp_ind], **config.dotstyle, color=config.colors.expend)
-
-        yticks1 = ax3.get_yticks()
-        dy = yticks1[1] - yticks1[0]
-        yytickx = np.arange(yticks1[0], yticks1[-1] + dy, dy)
-        ax3.set_yticks(yytickx)
-        ax3.set_ylim(yytickx[0] - dy, yytickx[-1])
-        # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
-        # ax3.set_yticks()
-        yylim1 = ax3.get_ylim()
-
-        yticks2 = ax33.get_yticks()
-        ax33.set_ylim(yticks2[0], yticks2[-1])
-        yytickx = np.arange(yticks2[0], yticks2[-1] + dy, dy)
-        ax33.set_yticks(yytickx)
-        ax33.set_ylim(yytickx[0], yytickx[-1])
-        yylim2 = ax33.get_ylim()
-
-        yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
-
-        ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
-        ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-        yylim1 = ax3.get_ylim()
-        yylim2 = ax33.get_ylim()
-        yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
-
-        yticks_dollars(config, ax3)
-        yticks_dollars(config, ax33)
-        label_graph_shares_a(ax3)
-        label_graph_shares_b(ax3)
-
-        return {"profitloss": profitloss}
 
     if config.shares_bool:
-        g3 = graph_shares_window(config, ax3, ax33)
+        g3 = graph_shares_window(config, ax3, ax33, data, data_sp)
         config.profitloss = g3["profitloss"]
     else:
         config.profitloss = 0
@@ -649,6 +551,106 @@ def panel_total_window(config, ax, data):
             backgroundcolor=config.colors.axis,
         )
 
+
+
+def graph_shares_window(config, ax3, ax33, data, data_sp):
+    color_axes(config, ax3)
+    ax3.plot(
+        data.Days[config.window_ind],
+        data["TotalShares"][config.window_ind],
+        config.marker,
+        color=config.colors.shares,
+        markersize=config.markersize,
+    )
+    ax3.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
+
+    yticks_dollars(config, ax3)
+    ax3.tick_params(axis="y", labelcolor=config.colors.shares)
+
+    ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+    shares2 = pd.Series(data["TotalShares"][config.window_ind]).reset_index(drop=True)
+    gain = shares2.iat[-1] - shares2.iat[0]
+    elap = data.Days[config.window_ind].iat[-1] - data.Days[config.window_ind].iat[0]
+
+    def label_graph_shares_a(ax):
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        if config.anon:
+            txt = "Shares\nincrease"
+        else:
+            peryrtext = "" if config.linear_window == 1 else ("\n" + int_to_dollars(config, gain / elap) + "/yr")
+            txt = "Shares\nincrease\n" + int_to_dollars(config, gain) + peryrtext
+        ax.text(
+            x_min + 0.05 * (x_max - x_min),
+            y_min + 0.95 * (y_max - y_min),
+            txt,
+            color=config.colors.shares,
+            va="top",
+            backgroundcolor=config.colors.axis,
+        )
+
+    def label_graph_shares_b(ax):
+        if config.anon:
+            txtstr = f"Bought =\n{pcgr:2.0f}% of growth"
+        else:
+            val = sharebuy.iat[-1] - sharebuy.iat[0]
+            txtstr = "Bought " + int_to_dollars(config, val) + f"\n{pcgr:2.0f}% of growth"
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        ax.text(
+            x_min + 0.95 * (x_max - x_min),
+            y_min + 0.05 * (y_max - y_min),
+            txtstr,
+            color=config.colors.expend,
+            ha="right",
+            backgroundcolor=config.colors.axis,
+        )
+
+    if not config.expend_bool:
+        label_graph_shares_a(ax3)
+        return {"profitloss": 0}
+
+    sharesum = data_sp["TotalExpend"].cumsum()
+    sharebuy = pd.Series(sharesum[config.win_sp_ind]).reset_index(drop=True)
+    bought = sharebuy.iat[-1] - sharebuy.iat[0]
+    profitloss = shares2.iat[-1] - sharebuy.iat[-1]
+    pcgr = 100 * bought / gain
+
+    ax33.plot(data_sp.Days[config.win_sp_ind], sharesum[config.win_sp_ind], **config.dotstyle, color=config.colors.expend)
+
+    yticks1 = ax3.get_yticks()
+    dy = yticks1[1] - yticks1[0]
+    yytickx = np.arange(yticks1[0], yticks1[-1] + dy, dy)
+    ax3.set_yticks(yytickx)
+    ax3.set_ylim(yytickx[0] - dy, yytickx[-1])
+    # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
+    # ax3.set_yticks()
+    yylim1 = ax3.get_ylim()
+
+    yticks2 = ax33.get_yticks()
+    ax33.set_ylim(yticks2[0], yticks2[-1])
+    yytickx = np.arange(yticks2[0], yticks2[-1] + dy, dy)
+    ax33.set_yticks(yytickx)
+    ax33.set_ylim(yytickx[0], yytickx[-1])
+    yylim2 = ax33.get_ylim()
+
+    yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
+
+    ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
+    ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
+    yylim1 = ax3.get_ylim()
+    yylim2 = ax33.get_ylim()
+    yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
+
+    yticks_dollars(config, ax3)
+    yticks_dollars(config, ax33)
+    label_graph_shares_a(ax3)
+    label_graph_shares_b(ax3)
+
+    return {"profitloss": profitloss}
 
 ############## PANEL 4: Total Window
 
