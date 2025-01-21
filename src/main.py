@@ -12,15 +12,6 @@ from .config import Config
 ############# PARAM ##############
 
 
-def color_axes(config, ax):
-    ax.set_facecolor(config.colors.axis)
-    for sp in ax.spines:
-        ax.spines[sp].set_color(config.colors.frame)
-    ax.tick_params(axis="x", colors=config.colors.frame)
-    ax.tick_params(axis="y", colors=config.colors.frame)
-    ax.tick_params(labelcolor=config.colors.tick)
-
-
 def dashboard(config: Config):
     # internal parameters
     # (possibly to generalise later)
@@ -44,8 +35,6 @@ def dashboard(config: Config):
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
     config.max_yr = min(ahead_yr, config.retire_yr)
 
-    saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
-
     datecol = config.strings.datecol
     supercol = config.strings.supercol
     sharescol = config.strings.sharescol
@@ -57,20 +46,6 @@ def dashboard(config: Config):
 
     errors = {}
     errors["DateColMissing"] = f"One column must be called '{datecol}'."
-
-    def dates_to_years(alldata):
-        allcols = alldata.columns.tolist()
-        if datecol not in allcols:
-            raise RuntimeError(errors.DateColMissing)
-
-        return alldata[datecol].apply(lambda x: datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year)
-
-    def dates_to_days(data, sincedate):
-        days = np.empty(len(data[datecol]))
-        for ii, ent in enumerate(data[datecol]):
-            y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
-            days[ii] = (y - sincedate).days / 365
-        return days
 
     config.dotstyle = {
         "marker": config.marker,
@@ -113,7 +88,7 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, na_values=0, header=1)
     alldata = alldata.fillna(0)
     alldata.columns = hdr[1]
-    alldata["Year"] = dates_to_years(alldata)
+    alldata["Year"] = dates_to_years(config, alldata)
 
     config.since_yr = config.since_yr or min(alldata.Year)
     config.until_yr = config.until_yr or max(alldata.Year)
@@ -121,7 +96,7 @@ def dashboard(config: Config):
     config.years_until_retire = config.max_yr - config.since_yr
     config.age_at_retire = config.max_yr - config.born_yr
 
-    alldata["Days"] = dates_to_days(alldata, sincedate)
+    alldata["Days"] = dates_to_days(config, alldata, sincedate)
     alldata = alldata.sort_values(by="Days")
     alldata = alldata.reset_index(drop=True)
 
@@ -162,7 +137,6 @@ def dashboard(config: Config):
     ax0.axis("off")
 
     ax1 = fig.add_axes([(1 - main_wd) / 2, row_y[1], main_wd, main_ht])
-    ax = ax1
     ax2 = fig.add_axes([inset_x[0], row_y[2], inset_w, inset_h])
     ax3 = fig.add_axes([inset_x[1], row_y[2], inset_w, inset_h])
 
@@ -182,7 +156,7 @@ def dashboard(config: Config):
     else:
         ax33 = ax3
 
-    ########### PANEL 1
+    ######## PANELS ########
 
     graph_all_vs_time(config, ax1, data)
     panel_total_window(config, ax2, data)
@@ -193,45 +167,8 @@ def dashboard(config: Config):
     else:
         config.profitloss = 0
 
-    ############## SANKEY
-
     panel_income(config, ax4, alldata)
-
-    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
-
-    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-    if config.shares_bool:
-        sky.sankey(
-            ax=ax5,
-            data=sankey_shares(config, alldata),
-            titles=[yrlbl(i) for i in config.years_uniq],
-            colormap="Pastel2",
-            sort="bottom",
-            node_gap=0.00,
-            color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
-            node_width=config.node_width,
-            label_loc=["right", "left", "left"],
-            label_largest=True,
-            label_font=lbl_font,
-            value_loc=["none", "none", "none"],
-            node_alpha=config.node_alpha,
-            flow_alpha=config.flow_alpha,
-            title_side="none",
-            percent_loc="center",
-            percent_loc_ht=0.05,
-            percent_font=pc_font,
-            percent_thresh=0.2,
-            percent_thresh_ofmax=0.2,
-            label_values=not (config.anon),
-            label_thresh_ofmax=0.2,
-            value_fn=lambda x: "\n" + int_to_dollars(config, x),
-        )
-
-    ax5.axis("on")
-    ax5.set_xticklabels(())
-    ax5.yaxis.tick_right()
-    # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
-    ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    panel_shares(config, ax5, alldata)
 
     yticks_equalise(config, ax4, ax5)
 
@@ -267,7 +204,7 @@ def dashboard(config: Config):
     ############## FINISH UP
 
     if config.anon:
-        ax.set_yticklabels([])
+        ax1.set_yticklabels([])
         ax2.set_yticklabels([])
         ax3.set_yticklabels([])
         ax33.set_yticklabels([])
@@ -278,7 +215,13 @@ def dashboard(config: Config):
         ax3.set_ylabel("Amount", color=config.colors.text)
 
     plt.show()
+    savefiles(config, fig)
+    plt.close()
 
+
+
+def savefiles(config, fig):
+    saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
     filename = config.savedir + saveprefix + "-" + datetime.now(timezone.utc).strftime(config.savesuffix)
 
     if config.anon:
@@ -294,7 +237,24 @@ def dashboard(config: Config):
     if config.savepng:
         fig.savefig(filename + ".png")
 
-    plt.close()
+
+
+
+def dates_to_years(config, alldata):
+    datecol = config.strings.datecol
+    allcols = alldata.columns.tolist()
+    if datecol not in allcols:
+        raise RuntimeError(errors.DateColMissing)
+
+    return alldata[datecol].apply(lambda x: datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year)
+
+def dates_to_days(config, data, sincedate):
+    datecol = config.strings.datecol
+    days = np.empty(len(data[datecol]))
+    for ii, ent in enumerate(data[datecol]):
+        y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
+        days[ii] = (y - sincedate).days / 365
+    return days
 
 
 ############## PANEL 2: Total Window
@@ -760,6 +720,55 @@ def panel_income(config, ax4, alldata):
 
 
 ################################
+
+def panel_shares(config, ax5, alldata):
+
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+
+    if config.shares_bool:
+        sky.sankey(
+            ax=ax5,
+            data=sankey_shares(config, alldata),
+            titles=[yrlbl(i) for i in config.years_uniq],
+            colormap="Pastel2",
+            sort="bottom",
+            node_gap=0.00,
+            color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
+            node_width=config.node_width,
+            label_loc=["right", "left", "left"],
+            label_largest=True,
+            label_font=lbl_font,
+            value_loc=["none", "none", "none"],
+            node_alpha=config.node_alpha,
+            flow_alpha=config.flow_alpha,
+            title_side="none",
+            percent_loc="center",
+            percent_loc_ht=0.05,
+            percent_font=pc_font,
+            percent_thresh=0.2,
+            percent_thresh_ofmax=0.2,
+            label_values=not (config.anon),
+            label_thresh_ofmax=0.2,
+            value_fn=lambda x: "\n" + int_to_dollars(config, x),
+        )
+
+    ax5.axis("on")
+    ax5.set_xticklabels(())
+    ax5.yaxis.tick_right()
+    # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
+    ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
+
+################################
+
+def color_axes(config, ax):
+    ax.set_facecolor(config.colors.axis)
+    for sp in ax.spines:
+        ax.spines[sp].set_color(config.colors.frame)
+    ax.tick_params(axis="x", colors=config.colors.frame)
+    ax.tick_params(axis="y", colors=config.colors.frame)
+    ax.tick_params(labelcolor=config.colors.tick)
 
 
 def yrlbl(yr):
