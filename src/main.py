@@ -338,7 +338,6 @@ def dashboard(config: Config):
     else:
         config.profitloss = 0
 
-
     ############## SANKEY
 
     if config.income_bool:
@@ -806,6 +805,7 @@ def int_to_dollars(config, x, plussig=0):
         sig = 1
     return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
 
+
 def yticks_equalise(config, ax4, ax5):
     ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
     ax4.set_ylim([0, ymax])
@@ -827,7 +827,9 @@ def faux_title(config, ax, txtstr):
         va="top",
     )
 
+
 ############## SANKEY SETUP
+
 
 def get_totals(data, val, spend):
     shares = data[data[val] > 0]
@@ -836,12 +838,14 @@ def get_totals(data, val, spend):
     total["Growth"] = max(shares[val]) - min(shares[val]) - sum(data[spend])
     return total
 
+
 def sankey_shares(config, data):
     total_by_yr = {}
     for yr in config.years_uniq:
         total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
         total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
     return pd.DataFrame(total_by_yr)
+
 
 def sankey_income(config, data, income_cols):
     total_by_yr = {}
@@ -850,12 +854,12 @@ def sankey_income(config, data, income_cols):
         total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
     return pd.DataFrame(total_by_yr)
 
+
 def get_inc_totals(data, income_cols):
     total = {}
     for col in income_cols:
         total[col] = sum(data[col])
     return total
-
 
 
 ################################
