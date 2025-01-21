@@ -360,7 +360,9 @@ def graph_all_vs_time(config, ax, data):
     rd1, yd1 = extrap(data.Days[config.window_ind], data.Total[config.window_ind])
     retire_worth = yd1[-1]
     ax.plot(rd1, yd1, **config.projstyle, color=config.colors.total)
-    tot_growth = extrap_exp(ax, data.Days[config.expstart:-1], data.Total[config.expstart:-1], {"color": config.colors.total})
+    tot_growth = extrap_exp(
+        ax, data.Days[config.expstart : -1], data.Total[config.expstart : -1], {"color": config.colors.total}
+    )
 
     ax.plot(data.Days, data.Total, color=config.colors.total, **config.dotstyle)
 
@@ -369,9 +371,9 @@ def graph_all_vs_time(config, ax, data):
         rd2, yd2 = extrap(data.Days[config.window_ind], data.TotalSuper[config.window_ind])
         ax.plot(rd2, yd2, **config.projstyle, color=config.colors.super)
 
-        ind = data.TotalSuper[config.expstart:-1] > 0
-        days = data.Days[config.expstart:-1][ind]
-        val = data.TotalSuper[config.expstart:-1][ind]
+        ind = data.TotalSuper[config.expstart : -1] > 0
+        days = data.Days[config.expstart : -1][ind]
+        val = data.TotalSuper[config.expstart : -1][ind]
         extrap_exp(ax, days, val, {"color": config.colors.super})
 
         ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **config.dotstyle)
@@ -380,9 +382,9 @@ def graph_all_vs_time(config, ax, data):
         rd3, yd3 = extrap(data.Days[config.window_ind], data.TotalShares[config.window_ind])
         ax.plot(rd3, yd3, **config.projstyle, color=config.colors.shares)
 
-        ind = data["TotalShares"][config.expstart:-1] > 0
-        days = data.Days[config.expstart:-1][ind]
-        val = data["TotalShares"][config.expstart:-1][ind]
+        ind = data["TotalShares"][config.expstart : -1] > 0
+        days = data.Days[config.expstart : -1][ind]
+        val = data["TotalShares"][config.expstart : -1][ind]
         extrap_exp(ax, days, val, {"color": config.colors.shares})
 
         ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **config.dotstyle)
