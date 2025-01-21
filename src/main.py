@@ -69,8 +69,8 @@ def dashboard(config: Config):
         tmpstr = datecol if hdr[1][ii] == datecol else prefix + "_" + hdr[1][ii]
         hdrnew[tmpstr] = hdr[1][ii]
     config.hdrnew = hdrnew
-
     hdr[1] = list(hdrnew.keys())
+
     config.super_cols = list(hdr[1][hdr[0] == supercol])
     config.shares_cols = list(hdr[1][hdr[0] == sharescol])
     config.cash_cols = list(hdr[1][hdr[0] == cashcol])
@@ -109,10 +109,8 @@ def dashboard(config: Config):
 
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[config.income_cols].sum()
-    income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
-    iminor_bool = len(income_minor) > 0
-
-    config.income_minor = income_minor
+    config.income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
+    config.iminor_bool = len(config.income_minor) > 0
 
     config.years_uniq = {}
     for x in alldata["Year"]:
@@ -146,9 +144,6 @@ def dashboard(config: Config):
     ax6 = fig.add_axes([inset_x[0], row_y[0], sankey_w, sankey_h])
     ax7 = fig.add_axes([inset_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
 
-    color_axes(config, ax4)
-    color_axes(config, ax5)
-
     if config.expend_bool:
         ax33 = ax3.twinx()
         color_axes(config, ax33)
@@ -169,7 +164,6 @@ def dashboard(config: Config):
 
     panel_income(config, ax4, alldata)
     panel_shares(config, ax5, alldata)
-
     yticks_equalise(config, ax4, ax5)
 
     if config.income_bool:
@@ -184,15 +178,9 @@ def dashboard(config: Config):
             config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
         )
 
-    ######## PANEL 6 ########
+    ######## PANEL 6-7 ########
 
-    if iminor_bool:
-        panel_income_breakdown(config, alldata, ax6)
-    else:
-        ax6.set_xticklabels([])
-        ax6.set_yticklabels([])
-
-    ######## PANEL 7 ########
+    panel_income_breakdown(config, alldata, ax6)
 
     if config.shares_bool:
         panel_shares_breakdown(config, data, ax7)
@@ -558,15 +546,14 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
 def panel_income_breakdown(config, data, ax):
     color_axes(config, ax)
 
+    if not config.iminor_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        return
+
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-
-    # TODO: avoid recalc this
-    config.years_uniq = {}
-    for x in data["Year"]:
-        if x >= config.since_yr and x <= config.until_yr:
-            config.years_uniq[x] = True
 
     def sankey_income(data, income_cols):
         total_by_yr = {}
@@ -682,36 +669,41 @@ def panel_shares_breakdown(config, data, ax):
 
 
 def panel_income(config, ax4, alldata):
+
+    color_axes(config, ax4)
+
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-    if config.income_bool:
-        sky.sankey(
-            ax=ax4,
-            data=sankey_income(config, alldata, config.income_cols),
-            titles=[yrlbl(i) for i in config.years_uniq],
-            other_thresh_ofsum=config.income_thresh,
-            sort="bottom",
-            node_gap=0.00,
-            node_width=config.node_width,
-            label_largest=True,
-            label_loc=["right", "left", "left"],
-            label_font=lbl_font,
-            label_dict=config.hdrnew,
-            label_thresh_ofmax=0.2,
-            value_loc=["none", "none", "none"],
-            node_alpha=config.node_alpha,
-            flow_alpha=config.flow_alpha,
-            title_side="none",
-            percent_loc="center",
-            percent_loc_ht=0.05,
-            percent_font=pc_font,
-            percent_thresh=0.2,
-            percent_thresh_ofmax=0.2,
-            colormap=config.sankey_colormaps[0],
-            label_values=not (config.anon),
-            value_fn=lambda x: "\n" + int_to_dollars(config, x),
-        )
+    if not config.income_bool:
+        return
+
+    sky.sankey(
+        ax=ax4,
+        data=sankey_income(config, alldata, config.income_cols),
+        titles=[yrlbl(i) for i in config.years_uniq],
+        other_thresh_ofsum=config.income_thresh,
+        sort="bottom",
+        node_gap=0.00,
+        node_width=config.node_width,
+        label_largest=True,
+        label_loc=["right", "left", "left"],
+        label_font=lbl_font,
+        label_dict=config.hdrnew,
+        label_thresh_ofmax=0.2,
+        value_loc=["none", "none", "none"],
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.2,
+        percent_thresh_ofmax=0.2,
+        colormap=config.sankey_colormaps[0],
+        label_values=not (config.anon),
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+    )
 
     ax4.axis("on")
     ax4.set_xticklabels(())
@@ -723,35 +715,43 @@ def panel_income(config, ax4, alldata):
 
 def panel_shares(config, ax5, alldata):
 
+    color_axes(config, ax5)
+
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-    if config.shares_bool:
-        sky.sankey(
-            ax=ax5,
-            data=sankey_shares(config, alldata),
-            titles=[yrlbl(i) for i in config.years_uniq],
-            colormap="Pastel2",
-            sort="bottom",
-            node_gap=0.00,
-            color_dict={"Bought": config.colors.expend, "Growth": config.colors.shares},
-            node_width=config.node_width,
-            label_loc=["right", "left", "left"],
-            label_largest=True,
-            label_font=lbl_font,
-            value_loc=["none", "none", "none"],
-            node_alpha=config.node_alpha,
-            flow_alpha=config.flow_alpha,
-            title_side="none",
-            percent_loc="center",
-            percent_loc_ht=0.05,
-            percent_font=pc_font,
-            percent_thresh=0.2,
-            percent_thresh_ofmax=0.2,
-            label_values=not (config.anon),
-            label_thresh_ofmax=0.2,
-            value_fn=lambda x: "\n" + int_to_dollars(config, x),
-        )
+    if not config.shares_bool:
+        return
+
+    cdict = {
+        "Bought": config.colors.expend, 
+        "Growth": config.colors.shares,
+    }
+    sky.sankey(
+        ax=ax5,
+        data=sankey_shares(config, alldata),
+        titles=[yrlbl(i) for i in config.years_uniq],
+        colormap="Pastel2",
+        sort="bottom",
+        node_gap=0.00,
+        color_dict = cdict,
+        node_width=config.node_width,
+        label_loc=["right", "left", "left"],
+        label_largest=True,
+        label_font=lbl_font,
+        value_loc=["none", "none", "none"],
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.2,
+        percent_thresh_ofmax=0.2,
+        label_values=not (config.anon),
+        label_thresh_ofmax=0.2,
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+    )
 
     ax5.axis("on")
     ax5.set_xticklabels(())
