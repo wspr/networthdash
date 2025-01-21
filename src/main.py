@@ -721,8 +721,6 @@ def panel_shares_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
-
-
 def panel_income(config, ax4, alldata):
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
@@ -739,7 +737,7 @@ def panel_income(config, ax4, alldata):
             label_largest=True,
             label_loc=["right", "left", "left"],
             label_font=lbl_font,
-            label_dict = config.hdrnew,
+            label_dict=config.hdrnew,
             label_thresh_ofmax=0.2,
             value_loc=["none", "none", "none"],
             node_alpha=config.node_alpha,
@@ -760,9 +758,8 @@ def panel_income(config, ax4, alldata):
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
+
 ################################
-
-
 
 
 def yrlbl(yr):
