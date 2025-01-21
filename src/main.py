@@ -38,13 +38,15 @@ def dashboard(config: Config):
     row_y = [0.05, 0.44, 0.79]
     row_gap = 0.03
 
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+
     # process Config parameters
 
     retire_yr = config.born_yr + config.retire_age
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
     max_yr = min(ahead_yr, retire_yr)
-
-    anon = config.anon
 
     saveprefix = config.saveprefix or os.path.splitext(config.csv)[0]
 
@@ -262,7 +264,7 @@ def dashboard(config: Config):
         if config.super_bool:
             ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
-        txtstr = "  Total" if anon else ("  Total\n  " + int_to_dollars(config, data.Total.iat[-1]))
+        txtstr = "  Total" if config.anon else ("  Total\n  " + int_to_dollars(config, data.Total.iat[-1]))
 
         ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
 
@@ -275,7 +277,7 @@ def dashboard(config: Config):
         yticks_dollars(config, ax1)
         ax.set_ylim(0, clim[1])
 
-        if not anon:
+        if not config.anon:
             txtstr = (
                 f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a."
                 f"\n\nNet worth\nat age {age_at_retirement}\n= "
@@ -322,7 +324,7 @@ def dashboard(config: Config):
                 color=config.colors.text,
             )
 
-        if not anon:
+        if not config.anon:
             for ii in config.linear_targets:
                 if ii < 0.85 * ax.get_ylim()[1]:
                     extrap_target(ii)
@@ -336,39 +338,13 @@ def dashboard(config: Config):
     else:
         config.profitloss = 0
 
-    ############## SANKEY SETUP
-
-    def get_totals(data, val, spend):
-        shares = data[data[val] > 0]
-        total = {}
-        total["Bought"] = sum(data[spend])
-        total["Growth"] = max(shares[val]) - min(shares[val]) - sum(data[spend])
-        return total
-
-    def sankey_shares(data):
-        total_by_yr = {}
-        for yr in config.years_uniq:
-            total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
-            total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
-        return pd.DataFrame(total_by_yr)
-
-    def sankey_income(data, income_cols):
-        total_by_yr = {}
-        for yr in config.years_uniq:
-            total_by_yr[f"f{yr}"] = income_cols
-            total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
-        return pd.DataFrame(total_by_yr)
 
     ############## SANKEY
-
-    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
-
-    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
     if config.income_bool:
         sky.sankey(
             ax=ax4,
-            data=sankey_income(alldata, config.income_cols),
+            data=sankey_income(config, alldata, config.income_cols),
             titles=[yrlbl(i) for i in config.years_uniq],
             other_thresh_ofsum=config.income_thresh,
             sort="bottom",
@@ -389,7 +365,7 @@ def dashboard(config: Config):
             percent_thresh=0.2,
             percent_thresh_ofmax=0.2,
             colormap=config.sankey_colormaps[0],
-            label_values=not (anon),
+            label_values=not (config.anon),
             value_fn=lambda x: "\n" + int_to_dollars(config, x),
         )
 
@@ -401,7 +377,7 @@ def dashboard(config: Config):
     if config.shares_bool:
         sky.sankey(
             ax=ax5,
-            data=sankey_shares(alldata),
+            data=sankey_shares(config, alldata),
             titles=[yrlbl(i) for i in config.years_uniq],
             colormap="Pastel2",
             sort="bottom",
@@ -419,8 +395,8 @@ def dashboard(config: Config):
             percent_loc_ht=0.05,
             percent_font=pc_font,
             percent_thresh=0.2,
-            percent_thresh_val=20000,
-            label_values=not (anon),
+            percent_thresh_ofmax=0.2,
+            label_values=not (config.anon),
             label_thresh_ofmax=0.2,
             value_fn=lambda x: "\n" + int_to_dollars(config, x),
         )
@@ -438,7 +414,7 @@ def dashboard(config: Config):
     else:
         ax4.set_yticklabels([])
 
-    if anon or (not config.expend_bool):
+    if config.anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
         faux_title(
@@ -464,7 +440,7 @@ def dashboard(config: Config):
 
     ############## FINISH UP
 
-    if anon:
+    if config.anon:
         ax.set_yticklabels([])
         ax2.set_yticklabels([])
         ax3.set_yticklabels([])
@@ -479,7 +455,7 @@ def dashboard(config: Config):
 
     filename = config.savedir + saveprefix + "-" + datetime.now(timezone.utc).strftime(config.savesuffix)
 
-    if anon:
+    if config.anon:
         filename = filename + "-anon"
 
     if config.savepdf or config.savepng or config.savejpg:
@@ -830,6 +806,15 @@ def int_to_dollars(config, x, plussig=0):
         sig = 1
     return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
 
+def yticks_equalise(config, ax4, ax5):
+    ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
+    ax4.set_ylim([0, ymax])
+    ax5.set_ylim([0, ymax])
+    ax4.set_yticks(ax4.get_yticks())
+    ax5.set_yticks(list(ax4.get_yticks()))
+    yticks_dollars(config, ax4)
+    yticks_dollars(config, ax5)
+
 
 def faux_title(config, ax, txtstr):
     xrange = np.diff(ax.get_xlim())
@@ -842,6 +827,28 @@ def faux_title(config, ax, txtstr):
         va="top",
     )
 
+############## SANKEY SETUP
+
+def get_totals(data, val, spend):
+    shares = data[data[val] > 0]
+    total = {}
+    total["Bought"] = sum(data[spend])
+    total["Growth"] = max(shares[val]) - min(shares[val]) - sum(data[spend])
+    return total
+
+def sankey_shares(config, data):
+    total_by_yr = {}
+    for yr in config.years_uniq:
+        total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
+        total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
+    return pd.DataFrame(total_by_yr)
+
+def sankey_income(config, data, income_cols):
+    total_by_yr = {}
+    for yr in config.years_uniq:
+        total_by_yr[f"f{yr}"] = income_cols
+        total_by_yr[yr] = get_inc_totals(data[data["Year"] == yr], income_cols).values()
+    return pd.DataFrame(total_by_yr)
 
 def get_inc_totals(data, income_cols):
     total = {}
@@ -849,15 +856,6 @@ def get_inc_totals(data, income_cols):
         total[col] = sum(data[col])
     return total
 
-
-def yticks_equalise(config, ax4, ax5):
-    ymax = max(ax4.get_ylim()[1], ax5.get_ylim()[1])
-    ax4.set_ylim([0, ymax])
-    ax5.set_ylim([0, ymax])
-    ax4.set_yticks(ax4.get_yticks())
-    ax5.set_yticks(list(ax4.get_yticks()))
-    yticks_dollars(config, ax4)
-    yticks_dollars(config, ax5)
 
 
 ################################
