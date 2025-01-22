@@ -120,6 +120,8 @@ def dashboard(config: Config):
         data_sp = alldata[alldata.TotalExpend > 0]
         data_sp = data_sp.reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+    else:
+        data_sp = alldata
 
     ########### CREATE FIGURE and AXES
 
@@ -151,11 +153,10 @@ def dashboard(config: Config):
     graph_all_vs_time(config, ax1, data)
     panel_total_window(config, ax2, data)
 
+    config.profitloss = 0
     if config.shares_bool:
         g3 = graph_shares_window(config, ax3, ax33, data, data_sp)
         config.profitloss = g3["profitloss"]
-    else:
-        config.profitloss = 0
 
     panel_income(config, ax4, alldata)
     panel_shares(config, ax5, alldata)
