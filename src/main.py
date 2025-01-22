@@ -9,8 +9,7 @@ from matplotlib.ticker import AutoMinorLocator
 
 from .config import Config
 
-############# PARAM ##############
-
+####################
 
 def dashboard(config: Config):
     # internal parameters
@@ -39,8 +38,8 @@ def dashboard(config: Config):
 
     ############# HELPERS
 
-    errors = {}
-    errors["DateColMissing"] = f"One column must be called '{datecol}'."
+    config.errors = {}
+    config.errors["DateColMissing"] = f"One column must be called '{datecol}'."
 
     config.dotstyle = {
         "marker": config.marker,
@@ -187,15 +186,11 @@ def dashboard(config: Config):
     ############## FINISH UP
 
     if config.anon:
-        ax1.set_yticklabels([])
-        ax2.set_yticklabels([])
         ax3.set_yticklabels([])
         ax33.set_yticklabels([])
+    
         ax4.set_yticklabels([])
         ax5.set_yticklabels([])
-        ax1.set_ylabel("Amount", color=config.colors.text)
-        ax2.set_ylabel("Amount", color=config.colors.text)
-        ax3.set_ylabel("Amount", color=config.colors.text)
 
     plt.show()
     savefiles(config, fig)
@@ -227,7 +222,7 @@ def dates_to_years(config, alldata):
     datecol = config.strings.datecol
     allcols = alldata.columns.tolist()
     if datecol not in allcols:
-        raise RuntimeError(errors.DateColMissing)
+        raise RuntimeError(config.errors.DateColMissing)
 
     return alldata[datecol].apply(lambda x: datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year)
 
@@ -347,6 +342,10 @@ def graph_all_vs_time(config, ax, data):
             color=config.colors.total,
         )
 
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
+
     #######%%###### EXTRAP
 
     def extrap_target(yy):
@@ -432,6 +431,9 @@ def panel_total_window(config, ax, data):
             backgroundcolor=config.colors.axis,
         )
 
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
 
 def graph_shares_window(config, ax3, ax33, data, data_sp):
     color_axes(config, ax3)
