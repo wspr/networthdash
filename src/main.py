@@ -36,11 +36,6 @@ def dashboard(config: Config):
     config.max_yr = min(ahead_yr, config.retire_yr)
 
     datecol = config.strings.datecol
-    supercol = config.strings.supercol
-    sharescol = config.strings.sharescol
-    cashcol = config.strings.cashcol
-    expendcol = config.strings.expendcol
-    incomecol = config.strings.incomecol
 
     ############# HELPERS
 
@@ -71,11 +66,11 @@ def dashboard(config: Config):
     config.hdrnew = hdrnew
     hdr[1] = list(hdrnew.keys())
 
-    config.super_cols = list(hdr[1][hdr[0] == supercol])
-    config.shares_cols = list(hdr[1][hdr[0] == sharescol])
-    config.cash_cols = list(hdr[1][hdr[0] == cashcol])
-    config.expend_cols = list(hdr[1][hdr[0] == expendcol])
-    config.income_cols = list(hdr[1][hdr[0] == incomecol])
+    config.super_cols = list(hdr[1][hdr[0] == config.strings.supercol])
+    config.shares_cols = list(hdr[1][hdr[0] == config.strings.sharescol])
+    config.cash_cols = list(hdr[1][hdr[0] == config.strings.cashcol])
+    config.expend_cols = list(hdr[1][hdr[0] == config.strings.expendcol])
+    config.income_cols = list(hdr[1][hdr[0] == config.strings.incomecol])
 
     config.super_bool = len(config.super_cols) > 0
     config.shares_bool = len(config.shares_cols) > 0
