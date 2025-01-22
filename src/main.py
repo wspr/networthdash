@@ -193,7 +193,7 @@ def dashboard(config: Config):
         ax33.set_yticklabels([])
         ax4.set_yticklabels([])
         ax5.set_yticklabels([])
-        ax.set_ylabel("Amount", color=config.colors.text)
+        ax1.set_ylabel("Amount", color=config.colors.text)
         ax2.set_ylabel("Amount", color=config.colors.text)
         ax3.set_ylabel("Amount", color=config.colors.text)
 
