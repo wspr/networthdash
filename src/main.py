@@ -11,6 +11,7 @@ from .config import Config
 
 ####################
 
+
 def dashboard(config: Config):
     # internal parameters
     # (possibly to generalise later)
@@ -188,14 +189,13 @@ def dashboard(config: Config):
     if config.anon:
         ax3.set_yticklabels([])
         ax33.set_yticklabels([])
-    
+
         ax4.set_yticklabels([])
         ax5.set_yticklabels([])
 
     plt.show()
     savefiles(config, fig)
     plt.close()
-
 
 
 def savefiles(config, fig):
@@ -216,8 +216,6 @@ def savefiles(config, fig):
         fig.savefig(filename + ".png")
 
 
-
-
 def dates_to_years(config, alldata):
     datecol = config.strings.datecol
     allcols = alldata.columns.tolist()
@@ -225,6 +223,7 @@ def dates_to_years(config, alldata):
         raise RuntimeError(config.errors.DateColMissing)
 
     return alldata[datecol].apply(lambda x: datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year)
+
 
 def dates_to_days(config, data, sincedate):
     datecol = config.strings.datecol
@@ -434,6 +433,7 @@ def panel_total_window(config, ax, data):
     if config.anon:
         ax.set_yticklabels([])
         ax.set_ylabel("Amount", color=config.colors.text)
+
 
 def graph_shares_window(config, ax3, ax33, data, data_sp):
     color_axes(config, ax3)
@@ -666,7 +666,6 @@ def panel_shares_breakdown(config, data, ax):
 
 
 def panel_income(config, ax4, alldata):
-
     color_axes(config, ax4)
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
@@ -710,8 +709,8 @@ def panel_income(config, ax4, alldata):
 
 ################################
 
-def panel_shares(config, ax5, alldata):
 
+def panel_shares(config, ax5, alldata):
     color_axes(config, ax5)
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
@@ -721,7 +720,7 @@ def panel_shares(config, ax5, alldata):
         return
 
     cdict = {
-        "Bought": config.colors.expend, 
+        "Bought": config.colors.expend,
         "Growth": config.colors.shares,
     }
     sky.sankey(
@@ -731,7 +730,7 @@ def panel_shares(config, ax5, alldata):
         colormap="Pastel2",
         sort="bottom",
         node_gap=0.00,
-        color_dict = cdict,
+        color_dict=cdict,
         node_width=config.node_width,
         label_loc=["right", "left", "left"],
         label_largest=True,
@@ -758,6 +757,7 @@ def panel_shares(config, ax5, alldata):
 
 
 ################################
+
 
 def color_axes(config, ax):
     ax.set_facecolor(config.colors.axis)
