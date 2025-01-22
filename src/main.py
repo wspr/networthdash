@@ -121,7 +121,7 @@ def dashboard(config: Config):
         data_sp = data_sp.reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
-        data_sp = alldata
+        data_sp = alldata # dummy data, not used, to ensure variable exists
 
     ########### CREATE FIGURE and AXES
 
@@ -153,21 +153,21 @@ def dashboard(config: Config):
     graph_all_vs_time(config, ax1, data)
     panel_total_window(config, ax2, data)
 
-    config.profitloss = 0
-    if config.shares_bool:
-        g3 = graph_shares_window(config, ax3, ax33, data, data_sp)
-        config.profitloss = g3["profitloss"]
+    config.profitloss = graph_shares_window(config, ax3, ax33, data, data_sp)
+
+    ######## PANEL 4-5 ########
 
     panel_income(config, ax4, alldata)
     panel_shares(config, ax5, alldata)
-    yticks_equalise(config, ax4, ax5)
+    if config.income_bool and config.shares_bool:
+        yticks_equalise(config, ax4, ax5)
 
     if config.income_bool:
         faux_title(config, ax4, "Annual income")
-    else:
-        ax4.set_yticklabels([])
 
-    if config.anon or (not config.expend_bool):
+    if not config.shares_bool:
+        pass
+    elif config.anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
         faux_title(
@@ -177,22 +177,9 @@ def dashboard(config: Config):
     ######## PANEL 6-7 ########
 
     panel_income_breakdown(config, alldata, ax6)
-
-    if config.shares_bool:
-        panel_shares_breakdown(config, data, ax7)
-    else:
-        color_axes(config, ax7)
-        ax7.set_xticklabels([])
-        ax7.set_yticklabels([])
+    panel_shares_breakdown(config, data, ax7)
 
     ############## FINISH UP
-
-    if config.anon:
-        ax3.set_yticklabels([])
-        ax33.set_yticklabels([])
-
-        ax4.set_yticklabels([])
-        ax5.set_yticklabels([])
 
     plt.show()
     savefiles(config, fig)
@@ -436,23 +423,30 @@ def panel_total_window(config, ax, data):
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
-def graph_shares_window(config, ax3, ax33, data, data_sp):
-    color_axes(config, ax3)
-    ax3.plot(
+def graph_shares_window(config, ax, ax33, data, data_sp):
+    color_axes(config, ax)
+
+    if not config.shares_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax33.set_yticklabels([])
+        return 0
+
+    ax.plot(
         data.Days[config.window_ind],
         data["TotalShares"][config.window_ind],
         config.marker,
         color=config.colors.shares,
         markersize=config.markersize,
     )
-    ax3.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
+    ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
 
-    yticks_dollars(config, ax3)
-    ax3.tick_params(axis="y", labelcolor=config.colors.shares)
+    yticks_dollars(config, ax)
+    ax.tick_params(axis="y", labelcolor=config.colors.shares)
 
-    ax3.xaxis.set_minor_locator(AutoMinorLocator(3))
-    ax3.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    ax3.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
     shares2 = pd.Series(data["TotalShares"][config.window_ind]).reset_index(drop=True)
     gain = shares2.iat[-1] - shares2.iat[0]
@@ -492,9 +486,13 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
             backgroundcolor=config.colors.axis,
         )
 
+    if config.anon:
+        ax.set_yticklabels([])
+        ax33.set_yticklabels([])
+
     if not config.expend_bool:
-        label_graph_shares_a(ax3)
-        return {"profitloss": 0}
+        label_graph_shares_a(ax)
+        return 0
 
     sharesum = data_sp["TotalExpend"].cumsum()
     sharebuy = pd.Series(sharesum[config.win_sp_ind]).reset_index(drop=True)
@@ -506,14 +504,13 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
         data_sp.Days[config.win_sp_ind], sharesum[config.win_sp_ind], **config.dotstyle, color=config.colors.expend
     )
 
-    yticks1 = ax3.get_yticks()
+    yticks1 = ax.get_yticks()
     dy = yticks1[1] - yticks1[0]
     yytickx = np.arange(yticks1[0], yticks1[-1] + dy, dy)
-    ax3.set_yticks(yytickx)
-    ax3.set_ylim(yytickx[0] - dy, yytickx[-1])
+    ax.set_yticks(yytickx)
+    ax.set_ylim(yytickx[0] - dy, yytickx[-1])
     # "-dy" to bump up this line one tick to avoid sometimes clashes with other line
-    # ax3.set_yticks()
-    yylim1 = ax3.get_ylim()
+    yylim1 = ax.get_ylim()
 
     yticks2 = ax33.get_yticks()
     ax33.set_ylim(yticks2[0], yticks2[-1])
@@ -524,18 +521,22 @@ def graph_shares_window(config, ax3, ax33, data, data_sp):
 
     yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
-    ax3.set_ylim(yylim1[0], yylim1[0] + yrange)
+    ax.set_ylim(yylim1[0], yylim1[0] + yrange)
     ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-    yylim1 = ax3.get_ylim()
+    yylim1 = ax.get_ylim()
     yylim2 = ax33.get_ylim()
     yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
-    yticks_dollars(config, ax3)
+    yticks_dollars(config, ax)
     yticks_dollars(config, ax33)
-    label_graph_shares_a(ax3)
-    label_graph_shares_b(ax3)
+    label_graph_shares_a(ax)
+    label_graph_shares_b(ax)
 
-    return {"profitloss": profitloss}
+    if config.anon:
+        ax.set_yticklabels([])
+        ax33.set_yticklabels([])
+
+    return profitloss
 
 
 ############## PANEL 4: Total Window
@@ -609,6 +610,11 @@ def panel_income_breakdown(config, data, ax):
 def panel_shares_breakdown(config, data, ax):
     color_axes(config, ax)
 
+    if not config.shares_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        return
+
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
@@ -669,11 +675,14 @@ def panel_shares_breakdown(config, data, ax):
 def panel_income(config, ax4, alldata):
     color_axes(config, ax4)
 
+    if not config.income_bool:
+        ax4.set_xticklabels([])
+        ax4.set_yticklabels([])
+        return
+
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-    if not config.income_bool:
-        return
 
     sky.sankey(
         ax=ax4,
@@ -706,26 +715,33 @@ def panel_income(config, ax4, alldata):
     ax4.set_xticklabels(())
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax4.set_ylim(0,ax4.get_ylim()[1])
+    yticks_dollars(config, ax4)
+
+    if config.anon:
+        ax4.set_yticklabels([])
 
 
 ################################
 
 
-def panel_shares(config, ax5, alldata):
-    color_axes(config, ax5)
+def panel_shares(config, ax, alldata):
+    color_axes(config, ax)
+
+    if not config.shares_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        return
 
     lbl_font = {"color": config.colors.text, "fontweight": "bold"}
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
-
-    if not config.shares_bool:
-        return
 
     cdict = {
         "Bought": config.colors.expend,
         "Growth": config.colors.shares,
     }
     sky.sankey(
-        ax=ax5,
+        ax=ax,
         data=sankey_shares(config, alldata),
         titles=[yrlbl(i) for i in config.years_uniq],
         colormap="Pastel2",
@@ -750,11 +766,15 @@ def panel_shares(config, ax5, alldata):
         value_fn=lambda x: "\n" + int_to_dollars(config, x),
     )
 
-    ax5.axis("on")
-    ax5.set_xticklabels(())
-    ax5.yaxis.tick_right()
+    ax.axis("on")
+    ax.set_xticklabels(())
+    ax.yaxis.tick_right()
     # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
-    ax5.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax.set_ylim(0,ax.get_ylim()[1])
+    yticks_dollars(config, ax)
+    if config.anon:
+        ax.set_yticklabels([])
 
 
 ################################
