@@ -121,7 +121,7 @@ def dashboard(config: Config):
         data_sp = data_sp.reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
-        data_sp = alldata # dummy data, not used, to ensure variable exists
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
 
     ########### CREATE FIGURE and AXES
 
@@ -715,7 +715,7 @@ def panel_income(config, ax4, alldata):
     ax4.set_xticklabels(())
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
-    ax4.set_ylim(0,ax4.get_ylim()[1])
+    ax4.set_ylim(0, ax4.get_ylim()[1])
     yticks_dollars(config, ax4)
 
     if config.anon:
@@ -771,7 +771,7 @@ def panel_shares(config, ax, alldata):
     ax.yaxis.tick_right()
     # ax5.set_xticklabels([i for i in ax5.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
-    ax.set_ylim(0,ax.get_ylim()[1])
+    ax.set_ylim(0, ax.get_ylim()[1])
     yticks_dollars(config, ax)
     if config.anon:
         ax.set_yticklabels([])
