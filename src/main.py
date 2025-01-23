@@ -54,35 +54,13 @@ def dashboard(config: Config):
         "linewidth": config.linewidth / 4,
     }
 
-    ############# HEADERS
-
-    hdr = pd.read_csv(config.csvdir + config.csv, na_values=0, header=None, nrows=2).transpose()
-
-    hdrnew = {}
-    for ii, _ in enumerate(hdr[1]):
-        prefix = hdr[0][ii] if isinstance(hdr[0][ii], str) else "_"
-        tmpstr = datecol if hdr[1][ii] == datecol else prefix + "_" + hdr[1][ii]
-        hdrnew[tmpstr] = hdr[1][ii]
-    config.hdrnew = hdrnew
-    hdr[1] = list(hdrnew.keys())
-
-    config.super_cols = list(hdr[1][hdr[0] == config.strings.supercol])
-    config.shares_cols = list(hdr[1][hdr[0] == config.strings.sharescol])
-    config.cash_cols = list(hdr[1][hdr[0] == config.strings.cashcol])
-    config.expend_cols = list(hdr[1][hdr[0] == config.strings.expendcol])
-    config.income_cols = list(hdr[1][hdr[0] == config.strings.incomecol])
-
-    config.super_bool = len(config.super_cols) > 0
-    config.shares_bool = len(config.shares_cols) > 0
-    config.cash_bool = len(config.cash_cols) > 0
-    config.expend_bool = len(config.expend_cols) > 0
-    config.income_bool = len(config.income_cols) > 0
+    config = read_headers(config)
 
     ############# DATA
 
     alldata = pd.read_csv(config.csvdir + config.csv, na_values=0, header=1)
     alldata = alldata.fillna(0)
-    alldata.columns = hdr[1]
+    alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
 
     config.since_yr = config.since_yr or min(alldata.Year)
@@ -170,8 +148,8 @@ def dashboard(config: Config):
     elif config.anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
-        faux_title(
-            config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
+        faux_title(config, ax5, 
+            "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
         )
 
     ######## PANEL 6-7 ########
@@ -184,6 +162,40 @@ def dashboard(config: Config):
     plt.show()
     savefiles(config, fig)
     plt.close()
+
+
+############ SUBFUNCTIONS
+
+
+def read_headers(config):
+
+    datecol = config.strings.datecol
+
+    hdr = pd.read_csv(config.csvdir + config.csv, na_values=0, header=None, nrows=2).transpose()
+
+    hdrnew = {}
+    for ii, _ in enumerate(hdr[1]):
+        prefix = hdr[0][ii] if isinstance(hdr[0][ii], str) else "_"
+        tmpstr = datecol if hdr[1][ii] == datecol else prefix + "_" + hdr[1][ii]
+        hdrnew[tmpstr] = hdr[1][ii]
+
+    hdr[1] = list(hdrnew.keys())
+
+    config.super_cols = list(hdr[1][hdr[0] == config.strings.supercol])
+    config.shares_cols = list(hdr[1][hdr[0] == config.strings.sharescol])
+    config.cash_cols = list(hdr[1][hdr[0] == config.strings.cashcol])
+    config.expend_cols = list(hdr[1][hdr[0] == config.strings.expendcol])
+    config.income_cols = list(hdr[1][hdr[0] == config.strings.incomecol])
+
+    config.super_bool = len(config.super_cols) > 0
+    config.shares_bool = len(config.shares_cols) > 0
+    config.cash_bool = len(config.cash_cols) > 0
+    config.expend_bool = len(config.expend_cols) > 0
+    config.income_bool = len(config.income_cols) > 0
+
+    config.hdrnew = hdrnew
+
+    return config
 
 
 def savefiles(config, fig):
