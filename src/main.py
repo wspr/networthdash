@@ -148,8 +148,8 @@ def dashboard(config: Config):
     elif config.anon or (not config.expend_bool):
         faux_title(config, ax5, "Annual shares increase")
     else:
-        faux_title(config, ax5, 
-            "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
+        faux_title(
+            config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
         )
 
     ######## PANEL 6-7 ########
@@ -168,7 +168,6 @@ def dashboard(config: Config):
 
 
 def read_headers(config):
-
     datecol = config.strings.datecol
 
     hdr = pd.read_csv(config.csvdir + config.csv, na_values=0, header=None, nrows=2).transpose()
