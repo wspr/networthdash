@@ -128,10 +128,10 @@ def dashboard(config: Config):
 
     ######## PANELS ########
 
-    graph_all_vs_time(config, ax1, data)
+    panel_all_vs_time(config, ax1, data)
     panel_total_window(config, ax2, data)
 
-    config.profitloss = graph_shares_window(config, ax3, ax33, data, data_sp)
+    config.profitloss = panel_shares_window(config, ax3, ax33, data, data_sp)
 
     ######## PANEL 4-5 ########
 
@@ -236,7 +236,7 @@ def dates_to_days(config, data, sincedate):
 ############## PANEL 2: Total Window
 
 
-def graph_all_vs_time(config, ax, data):
+def panel_all_vs_time(config, ax, data):
     color_axes(config, ax)
     ax.set_title("", color=config.colors.title)
     ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
@@ -434,7 +434,7 @@ def panel_total_window(config, ax, data):
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
-def graph_shares_window(config, ax, ax33, data, data_sp):
+def panel_shares_window(config, ax, ax33, data, data_sp):
     color_axes(config, ax)
 
     if not config.shares_bool:
@@ -534,9 +534,6 @@ def graph_shares_window(config, ax, ax33, data, data_sp):
 
     ax.set_ylim(yylim1[0], yylim1[0] + yrange)
     ax33.set_ylim(yylim2[0], yylim2[0] + yrange)
-    yylim1 = ax.get_ylim()
-    yylim2 = ax33.get_ylim()
-    yrange = max(yylim1[1] - yylim1[0], yylim2[1] - yylim2[0])
 
     yticks_dollars(config, ax)
     yticks_dollars(config, ax33)
