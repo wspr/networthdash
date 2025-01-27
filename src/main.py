@@ -28,6 +28,11 @@ def dashboard(config: Config):
     inset_x = [0.1, 0.55]
     row_y = [0.05, 0.44, 0.79]
     row_gap = 0.03
+    
+    config.label_path_effects = {
+        "linewidth": 1,
+        "foreground": config.colors.contrast,
+    }
 
     # process Config parameters
 
@@ -58,8 +63,7 @@ def dashboard(config: Config):
 
     ############# DATA
 
-    alldata = pd.read_csv(config.csvdir + config.csv, na_values=0, header=1)
-    alldata = alldata.fillna(0)
+    alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
 
@@ -170,7 +174,7 @@ def dashboard(config: Config):
 def read_headers(config):
     datecol = config.strings.datecol
 
-    hdr = pd.read_csv(config.csvdir + config.csv, na_values=0, header=None, nrows=2).transpose()
+    hdr = pd.read_csv(config.csvdir + config.csv, header=None, nrows=2).transpose()
 
     hdrnew = {}
     for ii, _ in enumerate(hdr[1]):
@@ -585,6 +589,7 @@ def panel_income_breakdown(config, data, ax):
         node_width=config.node_width,
         label_loc=["right", "left", "left"],
         label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
         label_dict=config.hdrnew,
         label_largest=True,
         value_loc=["center", "center", "center"],
@@ -654,6 +659,7 @@ def panel_shares_breakdown(config, data, ax):
         label_loc=["right", "left", "left"],
         label_largest=True,
         label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
         value_loc=["none", "none", "none"],
         value_fn=lambda x: "\n" + int_to_dollars(config, x),
         node_alpha=config.node_alpha,
@@ -703,6 +709,7 @@ def panel_income(config, ax4, alldata):
         label_largest=True,
         label_loc=["right", "left", "left"],
         label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
         label_dict=config.hdrnew,
         label_thresh_ofmax=0.2,
         value_loc=["none", "none", "none"],
@@ -760,6 +767,7 @@ def panel_shares(config, ax, alldata):
         label_loc=["right", "left", "left"],
         label_largest=True,
         label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
         value_loc=["none", "none", "none"],
         node_alpha=config.node_alpha,
         flow_alpha=config.flow_alpha,
