@@ -28,7 +28,7 @@ def dashboard(config: Config):
     inset_x = [0.1, 0.55]
     row_y = [0.05, 0.44, 0.79]
     row_gap = 0.03
-    
+
     config.label_path_effects = {
         "linewidth": 1,
         "foreground": config.colors.contrast,
