@@ -40,12 +40,10 @@ def dashboard(config: Config):
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
     config.max_yr = min(ahead_yr, config.retire_yr)
 
-    datecol = config.strings.datecol
-
     ############# HELPERS
 
     config.errors = {}
-    config.errors["DateColMissing"] = f"One column must be called '{datecol}'."
+    config.errors["DateColMissing"] = f"One column must be called '{config.strings.datecol}'."
 
     config.dotstyle = {
         "marker": config.marker,
@@ -583,7 +581,7 @@ def panel_income_breakdown(config, data, ax):
         data=ssdata,
         titles=[yrlbl(i) for i in config.years_uniq],
         other_thresh=100,
-        sort="bottom",
+        sort = config.sankey_sort,
         sort_dict=sd,
         node_gap=0.00,
         node_width=config.node_width,
@@ -650,7 +648,7 @@ def panel_shares_breakdown(config, data, ax):
         data=sankey_shares_makeup(data),
         titles=[yrlbl(i) for i in config.years_uniq],
         colormap=config.sankey_colormaps[2],
-        sort="bottom",
+        sort = config.sankey_sort,
         node_gap=0.00,
         label_dict=config.hdrnew,
         label_values=not (config.anon),
@@ -703,7 +701,7 @@ def panel_income(config, ax4, alldata):
         data=sankey_income(config, alldata, config.income_cols),
         titles=[yrlbl(i) for i in config.years_uniq],
         other_thresh_ofsum=config.income_thresh,
-        sort="bottom",
+        sort = config.sankey_sort,
         node_gap=0.00,
         node_width=config.node_width,
         label_largest=True,
@@ -760,7 +758,7 @@ def panel_shares(config, ax, alldata):
         data=sankey_shares(config, alldata),
         titles=[yrlbl(i) for i in config.years_uniq],
         colormap="Pastel2",
-        sort="bottom",
+        sort = config.sankey_sort,
         node_gap=0.00,
         color_dict=cdict,
         node_width=config.node_width,

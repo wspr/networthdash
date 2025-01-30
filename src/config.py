@@ -71,6 +71,8 @@ class Config:
         Alpha (transparency) of Sankey diagram flow transitions between nodes (ausankey parameter).
     currency_sign : str
         The currency sign used to display amounts.
+    sankey_sort : str
+        The sort option to pass through to the Sankey diagrams. Valid options are `"top"`, `"bottom"`, `"none"`.
     sankey_colormaps : list
         Three colormaps for the panels which are automatically coloured based on breakdown of components. (I.e., not coloured using the Colors class.)
     """
@@ -117,6 +119,7 @@ class Config:
 
     currencysign = "$"
 
+    sankey_sort: str = "bottom"
     sankey_colormaps: list = ("Set3", "Pastel1", "Pastel2")
 
     linear_targets: list[float] = (
