@@ -64,16 +64,13 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
+    alldata["Days"] = dates_to_days(config, alldata, sincedate)
 
     config.since_yr = config.since_yr or min(alldata.Year)
     config.until_yr = config.until_yr or max(alldata.Year)
     sincedate = datetime(config.since_yr, 1, 1, tzinfo=timezone.utc)
     config.years_until_retire = config.max_yr - config.since_yr
     config.age_at_retire = config.max_yr - config.born_yr
-
-    alldata["Days"] = dates_to_days(config, alldata, sincedate)
-    alldata = alldata.sort_values(by="Days")
-    alldata = alldata.reset_index(drop=True)
 
     alldata["TotalSuper"] = alldata[config.super_cols].sum(axis=1)
     alldata["TotalShares"] = alldata[config.shares_cols].sum(axis=1)
@@ -82,6 +79,7 @@ def dashboard(config: Config):
     alldata["TotalIncome"] = alldata[config.income_cols].sum(axis=1)
     alldata["Total"] = alldata["TotalShares"] + alldata["TotalSuper"] + alldata["TotalCash"]
 
+    alldata = alldata.sort_values(by="Days").reset_index(drop=True)
     income_grand_tot = alldata["TotalIncome"].sum()
     income_sum = alldata[config.income_cols].sum()
     config.income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
@@ -92,13 +90,11 @@ def dashboard(config: Config):
         if x >= config.since_yr and x <= config.until_yr:
             config.years_uniq[x] = True
 
-    data = alldata[alldata.Total > 0]
-    data = data.reset_index(drop=True)
+    data = alldata[alldata.Total > 0].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
     if config.expend_bool:
-        data_sp = alldata[alldata.TotalExpend > 0]
-        data_sp = data_sp.reset_index(drop=True)
+        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
