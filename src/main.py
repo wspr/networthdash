@@ -34,12 +34,6 @@ def dashboard(config: Config):
         "foreground": config.colors.contrast,
     }
 
-    # process Config parameters
-
-    config.retire_yr = config.born_yr + config.retire_age
-    ahead_yr = datetime.now(timezone.utc).year + config.future_window
-    config.max_yr = min(ahead_yr, config.retire_yr)
-
     ############# HELPERS
 
     config.errors = {}
@@ -64,14 +58,17 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
-    alldata["Days"] = dates_to_days(config, alldata, sincedate)
+
+    config.retire_yr = config.born_yr + config.retire_age
+    ahead_yr = datetime.now(timezone.utc).year + config.future_window
+    config.max_yr = min(ahead_yr, config.retire_yr)
 
     config.since_yr = config.since_yr or min(alldata.Year)
     config.until_yr = config.until_yr or max(alldata.Year)
-    sincedate = datetime(config.since_yr, 1, 1, tzinfo=timezone.utc)
     config.years_until_retire = config.max_yr - config.since_yr
     config.age_at_retire = config.max_yr - config.born_yr
 
+    alldata["Days"] = dates_to_days(config, alldata)
     alldata["TotalSuper"] = alldata[config.super_cols].sum(axis=1)
     alldata["TotalShares"] = alldata[config.shares_cols].sum(axis=1)
     alldata["TotalCash"] = alldata[config.cash_cols].sum(axis=1)
@@ -222,8 +219,9 @@ def dates_to_years(config, alldata):
     return alldata[datecol].apply(lambda x: datetime.strptime(x, config.datefmt).replace(tzinfo=timezone.utc).year)
 
 
-def dates_to_days(config, data, sincedate):
+def dates_to_days(config, data):
     datecol = config.strings.datecol
+    sincedate = datetime(config.since_yr, 1, 1, tzinfo=timezone.utc)
     days = np.empty(len(data[datecol]))
     for ii, ent in enumerate(data[datecol]):
         y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
