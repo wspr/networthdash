@@ -305,9 +305,7 @@ def panel_all_vs_time(config, ax, data):
     if config.super_bool:
         ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
-    txtstr = "  Total" if config.anon else ("  Total\n  " + int_to_dollars(config, data.Total.iat[-1]))
-
-    ax.text(data.Days.iat[-1], data.Total.iat[-1], txtstr, va="center", color=config.colors.total)
+    ax.text(data.Days.iat[-1], data.Total.iat[-1], "  Total", va="center", color=config.colors.total)
 
     ax.set_xticks(range(config.years_until_retire + 1))
     ax.set_xticklabels(
@@ -320,21 +318,44 @@ def panel_all_vs_time(config, ax, data):
 
     if not config.anon:
         txtstr = (
-            f"Exp growth rate:\n{tot_growth*100:2.1f}% p.a."
-            f"\n\nNet worth\nat age {config.age_at_retire}\n= "
-            f"{int_to_dollars(config, retire_worth)}"
-            f"\n\n{config.retire_ratio:.1%} rule\n= "
+            f"{config.retire_ratio:.1%} rule\n= "
             f"{int_to_dollars(config, config.retire_ratio*retire_worth)}"
             f"/yr"
         )
         ax.text(
-            data.Days[0],
-            0.95 * clim[1],
-            txtstr,
-            ha="left",
-            va="top",
-            color=config.colors.total,
+            0.98*rd1[-1],
+            0.95*retire_worth,
+            f"Age {config.age_at_retire}\n" + txtstr,
+            color = config.colors.total,
+            ha = "right", va = "top",
+            backgroundcolor = config.colors.axis,
         )
+        ax.plot(
+            rd1[-1],
+            retire_worth,
+            marker = "+",
+            markersize = config.markersize,
+            color = config.colors.total,
+        )
+        def extra_ticks(config, ax, ticks, col):
+            axx1 = ax.twinx()
+            color_axes(config, axx1)
+            axx1.set_ylim(0, clim[1])
+            axx1.set_yticks(ticks)
+            axx1.tick_params(axis="y", direction="out",
+                right=True, left=False,
+                labelcolor=col,
+            )
+            yticks_dollars(config, axx1)
+        extra_ticks(config, ax,
+            [data.Total.iat[-1], retire_worth],
+            config.colors.total)
+        if config.cash_bool:
+             extra_ticks(config, ax, [data.TotalCash.iat[-1]],config.colors.cash)
+        if config.shares_bool:
+             extra_ticks(config, ax, [data.TotalShares.iat[-1]],config.colors.shares)
+        if config.super_bool:
+             extra_ticks(config, ax, [data.TotalSuper.iat[-1]],config.colors.super)
 
     if config.anon:
         ax.set_yticklabels([])
@@ -388,6 +409,7 @@ def panel_total_window(config, ax, data):
     )
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
+    infl = np.exp(logfit[0]) - 1
     ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
 
     ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
@@ -423,6 +445,17 @@ def panel_total_window(config, ax, data):
             color=config.colors.total,
             va="top",
             backgroundcolor=config.colors.axis,
+        )
+        txtstr = (
+            f"Exp growth:\n{infl*100:2.1f}% p.a."
+        )
+        ax.text(
+            x_min + 0.95 * (x_max - x_min),
+            y_min + 0.05 * (y_max - y_min),
+            txtstr,
+            color = config.colors.total,
+            ha = "right", va = "bottom",
+            backgroundcolor = config.colors.axis,
         )
 
     if config.anon:
