@@ -39,6 +39,8 @@ class Config:
         The age at which you expect to retire.
     retire_ratio : float
         Thw fraction of your net worth to commence drawing down from yearly in retirement (e.g., for the "4% rule" it would be 0.04).
+    cash_thresh : float
+        Threshold (between 0 and 1) for identifying "major" or "minor" cash sources based on the all-time grand totals for each cash column.
     income_thresh : float
         Threshold (between 0 and 1) for identifying "major" or "minor" income sources based on the all-time grand totals for each income column.
     linear_window : float
@@ -96,6 +98,7 @@ class Config:
     retire_age: int = 67
     retire_ratio: float = 0.04
 
+    # cash_thresh: float = 0.6
     income_thresh: float = 0.6
     linear_window: float = 1.0
     future_window: int = 8

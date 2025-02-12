@@ -20,14 +20,19 @@ def dashboard(config: Config):
 
     main_wd = 0.75
     main_ht = 0.30
-    inset_w = 0.35
-    inset_h = 0.15
+    pane_w = 0.35
+    pane_h = 0.15
     sankey_w = 0.375
     sankey_h = 0.15
 
-    inset_x = [0.1, 0.55]
+    pane_x = [0.1, 0.55]
     row_y = [0.05, 0.44, 0.79]
     row_gap = 0.03
+    
+    inset_w = 0.25
+    inset_h = 0.11
+    inset_x = pane_x[0] + 0.15
+    inset_y = row_y[1] + main_ht/2 + 0.025
 
     config.label_path_effects = {
         "linewidth": 1,
@@ -82,6 +87,12 @@ def dashboard(config: Config):
     config.income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
     config.iminor_bool = len(config.income_minor) > 0
 
+    ## not currently used in the cash panel but this should be generalised
+    # cash_grand_tot = alldata["TotalCash"].sum()
+    # cash_sum = alldata[config.cash_cols].sum()
+    # config.cash_minor = list(cash_sum[cash_sum < (1 - config.cash_thresh) * cash_grand_tot].keys())
+    # config.cminor_bool = len(config.cash_minor) > 0
+
     config.years_uniq = {}
     for x in alldata["Year"]:
         if x >= config.since_yr and x <= config.until_yr:
@@ -105,14 +116,16 @@ def dashboard(config: Config):
     ax0.axis("off")
 
     ax1 = fig.add_axes([(1 - main_wd) / 2, row_y[1], main_wd, main_ht])
-    ax2 = fig.add_axes([inset_x[0], row_y[2], inset_w, inset_h])
-    ax3 = fig.add_axes([inset_x[1], row_y[2], inset_w, inset_h])
+    ax2 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[1], row_y[2], pane_w, pane_h])
 
-    ax4 = fig.add_axes([inset_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
-    ax5 = fig.add_axes([inset_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
+    ax4 = fig.add_axes([pane_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
+    ax5 = fig.add_axes([pane_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
 
-    ax6 = fig.add_axes([inset_x[0], row_y[0], sankey_w, sankey_h])
-    ax7 = fig.add_axes([inset_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
+    ax6 = fig.add_axes([pane_x[0], row_y[0], sankey_w, sankey_h])
+    ax7 = fig.add_axes([pane_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
+
+    ax8 = fig.add_axes([inset_x, inset_y, inset_w, inset_h])
 
     if config.expend_bool:
         ax33 = ax3.twinx()
@@ -124,7 +137,11 @@ def dashboard(config: Config):
     ######## PANELS ########
 
     panel_all_vs_time(config, ax1, data)
-    panel_total_window(config, ax2, data)
+    panel_total_window(config, ax8, data)
+    panel_cash_window(config, ax2, data)
+
+    if config.cash_bool:
+        faux_title(config, ax2, "Cash trends")
 
     config.profitloss = panel_shares_window(config, ax3, ax33, data, data_sp)
 
@@ -461,6 +478,50 @@ def panel_total_window(config, ax, data):
     if config.anon:
         ax.set_yticklabels([])
         ax.set_ylabel("Amount", color=config.colors.text)
+
+
+
+
+
+def panel_cash_window(config, ax, data):
+    color_axes(config, ax)
+
+    if not config.cash_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax33.set_yticklabels([])
+        return 0
+
+    maxcash = max(data["TotalCash"][config.window_ind])
+    ax.plot(
+        data.Days[config.window_ind],
+        data["TotalCash"][config.window_ind] / maxcash,
+        config.marker,
+        linestyle="-",
+        color=config.colors.cash,
+        markersize=config.markersize,
+    )
+    ax.set_ylim([-0.0, 1.1])
+
+    for col in config.cash_cols:
+        maxcash = max(data[col][config.window_ind])
+        ax.plot(
+            data.Days[config.window_ind],
+            data[col][config.window_ind] / maxcash,
+            config.marker,
+            linestyle="-",
+#            color=config.colors.cash,
+            markersize=config.markersize,
+        )
+    ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_yticklabels(
+        ["0%", "20%", "40%", "60%", "80%", "100%"],
+        color = config.colors.cash,
+    )
+    ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
+    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
 
 def panel_shares_window(config, ax, ax33, data, data_sp):
@@ -842,8 +903,9 @@ def yticks_dollars(config, ax):
     ax.set_yticklabels(newticks)
 
 
-def int_to_dollars(config, x, plussig=0):
-    x = round(x)
+def int_to_dollars(config, xx, plussig=0):
+    x = abs(round(xx))
+    sgn = "-" if xx<0 else ""
     amt_k = 1_000
     amt_m = 1_000_000
     amt_b = 1_000_000_000
@@ -875,7 +937,7 @@ def int_to_dollars(config, x, plussig=0):
         div = amt_b
         suffix = "B"
         sig = 1
-    return config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
+    return sgn + config.currencysign + f"{ x / div :.{sig+plussig}f}" + suffix
 
 
 def yticks_equalise(config, ax4, ax5):
@@ -897,6 +959,7 @@ def faux_title(config, ax, txtstr):
         color=config.colors.title,
         ha="left",
         va="top",
+        backgroundcolor=config.colors.axis,
     )
 
 
