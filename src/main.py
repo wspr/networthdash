@@ -26,7 +26,7 @@ def dashboard(config: Config):
     sankey_h = 0.15
 
     pane_x = [0.1, 0.55]
-    row_y = [0.05, 0.44, 0.79]
+    row_y = [0.04, 0.43, 0.78]
     row_gap = 0.03
     
     inset_w = 0.25
@@ -63,6 +63,8 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
+    alldata[config.expend_cols] = alldata[config.expend_cols].applymap(parse_purchase)
+    alldata[config.cash_cols] = alldata[config.cash_cols].applymap(parse_purchase)
 
     config.retire_yr = config.born_yr + config.retire_age
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
@@ -115,6 +117,8 @@ def dashboard(config: Config):
     )
     ax0.axis("off")
 
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
     ax1 = fig.add_axes([(1 - main_wd) / 2, row_y[1], main_wd, main_ht])
     ax2 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
     ax3 = fig.add_axes([pane_x[1], row_y[2], pane_w, pane_h])
@@ -136,12 +140,59 @@ def dashboard(config: Config):
 
     ######## PANELS ########
 
+    ax = ax00
+    color_axes(config, ax00)
+    ax00.axis("off")
+    # Get today's date
+    now = datetime.now()
+    
+    # First and last day of the year
+    start_of_year = datetime(now.year, 1, 1)
+    end_of_year = datetime(now.year + 1, 1, 1)
+    
+    # Total seconds in the year and seconds passed
+    year_duration = (end_of_year - start_of_year).total_seconds()
+    elapsed = (now - start_of_year).total_seconds()
+    
+    # Calculate percentage
+    percentage = (elapsed / year_duration)
+    xx = percentage
+
+    ax.plot([0,1],[1,1],"-",color=config.colors.frame)
+    
+    Npoints = 26
+    edgecol = config.colors.frame
+    for ii in range(Npoints):
+        jj = ii / (Npoints - 1)
+        facecol = config.colors.frame
+        if jj > percentage:
+            facecol = config.colors.bg
+
+        ax.plot([jj],[1],
+            "o",
+            markeredgecolor = edgecol,
+            markerfacecolor = facecol,
+        )
+
+    ax.plot([xx],[1],"o",
+        markeredgecolor = edgecol,
+        markerfacecolor = config.colors.total,
+    )
+    ax.set_xlim([-0.01, 1.01])
+    ax.set_ylim([0, 2])
+
     panel_all_vs_time(config, ax1, data)
     panel_total_window(config, ax8, data)
-    panel_cash_window(config, ax2, data)
+    
+    xx = ax8.get_xlim()
+    yy = ax8.get_ylim()
+    xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
+    yp = pd.Series([yy[1], yy[1], yy[0], yy[0]])
+    ax1.plot( xp,
+              yp,
+              color = config.colors.frame )
 
-    if config.cash_bool:
-        faux_title(config, ax2, "Cash trends")
+    panel_cash_window(config, ax2, data)
 
     config.profitloss = panel_shares_window(config, ax3, ax33, data, data_sp)
 
@@ -244,6 +295,20 @@ def dates_to_days(config, data):
         y = datetime.strptime(ent, config.datefmt).replace(tzinfo=timezone.utc)
         days[ii] = (y - sincedate).days / 365
     return days
+
+# from Claude:
+def parse_purchase(value):
+    try:
+        # Handle math expressions like "20 x 4 + 10"
+        if any(op in value for op in ['x', '+', '-']):
+            # Replace 'x' with '*' for Python
+            expr = value.replace('x', '*').replace('$', '')
+            return eval(expr)
+        else:
+            # Simple number
+            return float(value.replace('$', ''))
+    except:
+        return float(value)
 
 
 ############## PANEL 2: Total Window
@@ -415,6 +480,7 @@ def panel_all_vs_time(config, ax, data):
 
 def panel_total_window(config, ax, data):
     color_axes(config, ax)
+
     reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = rd * reg[0] + reg[1]
@@ -429,7 +495,6 @@ def panel_total_window(config, ax, data):
     infl = np.exp(logfit[0]) - 1
     ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
 
-    ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
     yticks_dollars(config, ax)
 
     ax.xaxis.set_minor_locator(AutoMinorLocator(3))
@@ -439,22 +504,15 @@ def panel_total_window(config, ax, data):
     gain = data.Total[config.window_ind].iat[-1] - data.Total[config.window_ind].iat[0]
     elap = data.Days[config.window_ind].iat[-1] - data.Days[config.window_ind].iat[0]
 
+    ax.set_xticklabels([])
     ax.tick_params(axis="y", labelcolor=config.colors.total)
 
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
 
-    if config.anon:
-        ax.text(
-            x_min + 0.05 * (x_max - x_min),
-            y_min + 0.95 * (y_max - y_min),
-            "Net worth\nincrease",
-            color=config.colors.total,
-            va="top",
-        )
-    else:
+    if not config.anon:
         peryrtext = "" if config.linear_window == 1 else ("\n" + int_to_dollars(config, gain / elap) + "/yr")
-        txtstr = "Net worth\nincrease\n" + int_to_dollars(config, gain) + peryrtext
+        txtstr = "Δ=" + int_to_dollars(config, gain) + peryrtext
         ax.text(
             x_min + 0.05 * (x_max - x_min),
             y_min + 0.95 * (y_max - y_min),
@@ -522,6 +580,8 @@ def panel_cash_window(config, ax, data):
     ax.xaxis.set_minor_locator(AutoMinorLocator(3))
     ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+    faux_title(config, ax, "Cash trends")
 
 
 def panel_shares_window(config, ax, ax33, data, data_sp):
