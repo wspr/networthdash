@@ -110,7 +110,7 @@ def create_dashboard_main7(config, alldata):
     pane_x = [0.1, 0.55]
     row_y = [0.05, 0.25, 00.45, 0.65]
     row_gap = 0.03
-    
+
     inset_w = 0.25
     inset_h = 0.11
     inset_x = pane_x[0] + 0.15
@@ -149,15 +149,15 @@ def create_dashboard_main7(config, alldata):
     ax00.axis("off")
     # Get today's date
     now = datetime.now()
-    
+
     # First and last day of the year
     start_of_year = datetime(now.year, 1, 1)
     end_of_year = datetime(now.year + 1, 1, 1)
-    
+
     # Total seconds in the year and seconds passed
     year_duration = (end_of_year - start_of_year).total_seconds()
     elapsed = (now - start_of_year).total_seconds()
-    
+
     # Calculate percentage
     percentage = (elapsed / year_duration)
     xx = percentage
@@ -171,7 +171,7 @@ def create_dashboard_main7(config, alldata):
 
 
     ax.plot([0,1],[1,1],"-",color=config.colors.frame)
-    
+
     Npoints = 26
     edgecol = config.colors.frame
     for ii in range(Npoints):
@@ -195,7 +195,7 @@ def create_dashboard_main7(config, alldata):
 
     panel_all_vs_time(config, ax1, data)
     panel_total_window(config, ax8, data)
-    
+
     xx = ax8.get_xlim()
     yy = ax8.get_ylim()
     xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
@@ -238,9 +238,9 @@ def create_dashboard_main7(config, alldata):
     savefiles(config, fig)
     plt.close()
 
-    
-    
-    
+
+
+
 def create_dashboard_plain8(config, alldata):
 
     data = alldata[alldata.Total > 0].reset_index(drop=True)
@@ -256,7 +256,7 @@ def create_dashboard_plain8(config, alldata):
     pane_x = [0.1, 0.55]
     row_y = [0.04, 0.43, 0.78]
     row_gap = 0.03
-    
+
     inset_w = 0.25
     inset_h = 0.11
     inset_x = pane_x[0] + 0.15
@@ -295,15 +295,15 @@ def create_dashboard_plain8(config, alldata):
     ax00.axis("off")
     # Get today's date
     now = datetime.now()
-    
+
     # First and last day of the year
     start_of_year = datetime(now.year, 1, 1)
     end_of_year = datetime(now.year + 1, 1, 1)
-    
+
     # Total seconds in the year and seconds passed
     year_duration = (end_of_year - start_of_year).total_seconds()
     elapsed = (now - start_of_year).total_seconds()
-    
+
     # Calculate percentage
     percentage = (elapsed / year_duration)
     xx = percentage
@@ -317,7 +317,7 @@ def create_dashboard_plain8(config, alldata):
 
 
     ax.plot([0,1],[1,1],"-",color=config.colors.frame)
-    
+
     Npoints = 26
     edgecol = config.colors.frame
     for ii in range(Npoints):
@@ -340,7 +340,7 @@ def create_dashboard_plain8(config, alldata):
     ax.set_ylim([0, 2])
 
     panel_total_window(config, ax8, data)
-    
+
     xx = ax8.get_xlim()
     yy = ax8.get_ylim()
     xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
@@ -383,9 +383,9 @@ def create_dashboard_plain8(config, alldata):
     savefiles(config, fig)
     plt.close()
 
-    
-    
-    
+
+
+
 
 ############ SUBFUNCTIONS
 
