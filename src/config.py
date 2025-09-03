@@ -11,6 +11,9 @@ class Config:
 
     Parameters
     ----------
+    layout : str
+        Names visual layout style. Accepts one or more of:
+        {"main7","plain8"}
     csv : str
         Filename of the CSV input file. Path information should not be included.
     csvdir : str
@@ -80,6 +83,8 @@ class Config:
     """
 
     born_yr: int
+
+    layout: str = "main7"
 
     csv: str = "net-worth.csv"
     csvdir: str = "./"

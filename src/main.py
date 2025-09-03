@@ -18,22 +18,6 @@ def dashboard(config: Config):
 
     config.expstart = 0
 
-    main_wd = 0.75
-    main_ht = 0.30
-    pane_w = 0.35
-    pane_h = 0.15
-    sankey_w = 0.375
-    sankey_h = 0.15
-
-    pane_x = [0.1, 0.55]
-    row_y = [0.04, 0.43, 0.78]
-    row_gap = 0.03
-    
-    inset_w = 0.25
-    inset_h = 0.11
-    inset_x = pane_x[0] + 0.15
-    inset_y = row_y[1] + main_ht/2 + 0.025
-
     config.label_path_effects = {
         "linewidth": 1,
         "foreground": config.colors.contrast,
@@ -100,16 +84,31 @@ def dashboard(config: Config):
         if x >= config.since_yr and x <= config.until_yr:
             config.years_uniq[x] = True
 
+    ########### CREATE FIGURE and AXES
+
+    create_dashboard(config, alldata)
+
+
+def create_dashboard(config, alldata):
+
     data = alldata[alldata.Total > 0].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
-    if config.expend_bool:
-        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
-        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
-    else:
-        data_sp = alldata  # dummy data, not used, to ensure variable exists
+    main_wd = 0.75
+    main_ht = 0.30
+    pane_w = 0.35
+    pane_h = 0.15
+    sankey_w = 0.375
+    sankey_h = 0.15
 
-    ########### CREATE FIGURE and AXES
+    pane_x = [0.1, 0.55]
+    row_y = [0.04, 0.43, 0.78]
+    row_gap = 0.03
+    
+    inset_w = 0.25
+    inset_h = 0.11
+    inset_x = pane_x[0] + 0.15
+    inset_y = row_y[1] + main_ht/2 + 0.025
 
     fig, ax0 = plt.subplots(
         figsize=(config.figw, config.figh),
@@ -137,7 +136,6 @@ def dashboard(config: Config):
         ax33.tick_params(axis="y", labelcolor=config.colors.expend)
     else:
         ax33 = ax3
-
     ######## PANELS ########
 
     ax = ax00
@@ -157,6 +155,14 @@ def dashboard(config: Config):
     # Calculate percentage
     percentage = (elapsed / year_duration)
     xx = percentage
+
+    # Calculate expenditure
+    if config.expend_bool:
+        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+    else:
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
+
 
     ax.plot([0,1],[1,1],"-",color=config.colors.frame)
     
