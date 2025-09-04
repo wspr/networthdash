@@ -735,6 +735,7 @@ def panel_cash_window(config, ax, data):
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
     faux_title(config, ax, "Cash")
+    return None
 
 def panel_cash_window_percent(config, ax, data):
     color_axes(config, ax)
@@ -927,6 +928,7 @@ def panel_super_window(config, ax, data):
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
     faux_title(config, ax, "Super")
+    return None
 
 ############## PANEL 4: Total Window
 
