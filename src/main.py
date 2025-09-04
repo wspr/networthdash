@@ -266,8 +266,7 @@ def create_dashboard_plain8(config, alldata):
     plt.show()
     plt.close()
 
-
-############ SUBFUNCTIONS
+    ############ SUBFUNCTIONS
     panel_total_window(config, ax8, data)
 
     xx = ax8.get_xlim()
@@ -479,6 +478,7 @@ def panel_timeline(config, ax):
 
 
 ############## PANEL 1: All vs Time
+
 
 def panel_all_vs_time(config, ax, data):
     color_axes(config, ax)
@@ -737,6 +737,8 @@ def panel_cash_window(config, ax, data):
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
     faux_title(config, ax, "Cash")
+    return None
+
 
 def panel_cash_window_percent(config, ax, data):
     color_axes(config, ax)
@@ -894,7 +896,6 @@ def panel_shares_window(config, ax, ax33, data, data_sp):
     return profitloss
 
 
-
 def panel_super_window(config, ax, data):
     color_axes(config, ax)
 
@@ -918,7 +919,7 @@ def panel_super_window(config, ax, data):
             data[col][config.window_ind],
             config.marker,
             linestyle="-",
-#            color=config.colors.cash,
+            #            color=config.colors.cash,
             markersize=config.markersize,
         )
 
@@ -929,6 +930,7 @@ def panel_super_window(config, ax, data):
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
     faux_title(config, ax, "Super")
+
 
 ############## PANEL 4: Total Window
 
@@ -1065,7 +1067,6 @@ def panel_shares_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
-
 def panel_super_breakdown(config, data, ax):
     color_axes(config, ax)
 
@@ -1130,8 +1131,6 @@ def panel_super_breakdown(config, data, ax):
 
     if config.anon:
         ax.set_yticklabels([])
-
-
 
 
 def panel_income(config, ax4, alldata):
