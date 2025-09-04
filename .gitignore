@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 
 # Distribution / packaging
 .Python
@@ -124,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+/Net worth archive/
