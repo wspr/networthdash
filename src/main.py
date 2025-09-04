@@ -245,6 +245,7 @@ def create_dashboard_plain8(config, alldata):
         ax33.tick_params(axis="y", labelcolor=config.colors.expend)
     else:
         ax33 = ax3
+
     ######## PANELS ########
 
     panel_timeline(config, ax00)
@@ -254,10 +255,7 @@ def create_dashboard_plain8(config, alldata):
     panel_super_window(config, ax2, data)
     panel_cash_window(config, ax1, data)
 
-    panel_shares(config, ax5, alldata)
-    if config.shares_bool:
-        faux_title(config, ax5, "Annual shares increase")
-
+    panel_cash_breakdown(config, data, ax5)
     panel_super_breakdown(config, data, ax6)
     panel_shares_breakdown(config, data, ax7)
 
@@ -1127,6 +1125,70 @@ def panel_super_breakdown(config, data, ax):
     ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
     faux_title(config, ax, "Super breakdown")
+
+    if config.anon:
+        ax.set_yticklabels([])
+
+def panel_cash_breakdown(config, data, ax):
+    color_axes(config, ax)
+
+    if not config.cash_bool:
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        return
+
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+
+    def get_cash_totals(data, cols):
+        total = {}
+        for col in cols:
+            total[col] = list(data[col])[-1]
+        return total
+
+    def sankey_cash_makeup(data):
+        total_by_yr = {}
+        for yr in config.years_uniq:
+            total_by_yr[f"f{yr}"] = config.cash_cols
+            total_by_yr[yr] = get_cash_totals(data[data["Year"] == yr], config.cash_cols).values()
+        return pd.DataFrame(total_by_yr)
+
+    sky.sankey(
+        ax=ax,
+        data=sankey_cash_makeup(data),
+        titles=[yrlbl(i) for i in config.years_uniq],
+        colormap=config.sankey_colormaps[2],
+        sort=config.sankey_sort,
+        node_gap=0.00,
+        label_dict=config.hdrnew,
+        label_values=not (config.anon),
+        label_thresh_ofmax=0.10,
+        node_width=config.node_width,
+        label_loc=["none", "none", "left"],
+        label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
+        value_loc=["none", "none", "none"],
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.1,
+        percent_thresh_ofmax=0.2,
+    )
+
+    ax.axis("on")
+    ax.set_ylim([0, ax.get_ylim()[1]])
+    ax.set_yticks(ax.get_yticks())
+    ax.yaxis.tick_right()
+
+    yticks_dollars(config, ax)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
+    faux_title(config, ax, "Cash breakdown")
 
     if config.anon:
         ax.set_yticklabels([])
