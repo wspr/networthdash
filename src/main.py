@@ -721,7 +721,6 @@ def panel_cash_window(config, ax, data):
         ax.set_yticklabels([])
         return 0
 
-    maxcash = max(data["TotalCash"][config.window_ind])
     ax.plot(
         data.Days[config.window_ind],
         data["TotalCash"][config.window_ind],
@@ -732,13 +731,12 @@ def panel_cash_window(config, ax, data):
     )
 
     for col in config.cash_cols:
-        maxcash = max(data[col][config.window_ind])
         ax.plot(
             data.Days[config.window_ind],
             data[col][config.window_ind],
             config.marker,
             linestyle="-",
-#            color=config.colors.cash,
+            #            color=config.colors.cash,
             markersize=config.markersize,
         )
 
@@ -756,8 +754,7 @@ def panel_cash_window_percent(config, ax, data):
     if not config.cash_bool:
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax33.set_yticklabels([])
-        return 0
+        return None
 
     maxcash = max(data["TotalCash"][config.window_ind])
     ax.plot(
@@ -914,10 +911,8 @@ def panel_super_window(config, ax, data):
     if not config.super_bool:
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        ax33.set_yticklabels([])
-        return 0
+        return None
 
-    maxcash = max(data["TotalSuper"][config.window_ind])
     ax.plot(
         data.Days[config.window_ind],
         data["TotalSuper"][config.window_ind],
