@@ -1,6 +1,7 @@
 import pytest
 
-import src as nwd 
+import src as nwd
+
 # recall we are within the repo when running the test
 
 std = {
