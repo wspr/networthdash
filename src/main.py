@@ -213,21 +213,13 @@ def create_dashboard_plain8(config, alldata):
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
-    main_wd = 0.75
-    main_ht = 0.30
     pane_w = 0.35
     pane_h = 0.15
     sankey_w = 0.375
     sankey_h = 0.15
 
     pane_x = [0.1, 0.55]
-    row_y = [0.04, 0.43, 0.78]
-    row_gap = 0.03
-
-    inset_w = 0.25
-    inset_h = 0.11
-    inset_x = pane_x[0] + 0.15
-    inset_y = row_y[1] + main_ht / 2 + 0.025
+    row_y = [0.1, 0.3, 0.5, 0.7]
 
     fig, ax0 = plt.subplots(
         figsize=(config.figw, config.figh),
@@ -237,17 +229,15 @@ def create_dashboard_plain8(config, alldata):
 
     ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
 
-    ax1 = fig.add_axes([(1 - main_wd) / 2, row_y[1], main_wd, main_ht])
-    ax2 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
-    ax3 = fig.add_axes([pane_x[1], row_y[2], pane_w, pane_h])
+    ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([pane_x[0], row_y[1], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], pane_w, pane_h])
 
-    ax4 = fig.add_axes([pane_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
-    ax5 = fig.add_axes([pane_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
-
-    ax6 = fig.add_axes([pane_x[0], row_y[0], sankey_w, sankey_h])
-    ax7 = fig.add_axes([pane_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
-
-    ax8 = fig.add_axes([inset_x, inset_y, inset_w, inset_h])
+    ax5 = fig.add_axes([pane_x[1], row_y[0], sankey_w, sankey_h])
+    ax6 = fig.add_axes([pane_x[1], row_y[1], sankey_w, sankey_h])
+    ax7 = fig.add_axes([pane_x[1], row_y[2], sankey_w, sankey_h])
+    ax8 = fig.add_axes([pane_x[1], row_y[3], sankey_w, sankey_h])
 
     if config.expend_bool:
         ax33 = ax3.twinx()
@@ -1075,7 +1065,7 @@ def panel_shares_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
-        
+
 def panel_super_breakdown(config, data, ax):
     color_axes(config, ax)
 
@@ -1140,9 +1130,9 @@ def panel_super_breakdown(config, data, ax):
 
     if config.anon:
         ax.set_yticklabels([])
-        
-        
-        
+
+
+
 
 def panel_income(config, ax4, alldata):
     color_axes(config, ax4)
