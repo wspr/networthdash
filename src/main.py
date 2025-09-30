@@ -1,11 +1,13 @@
 import os
 from datetime import datetime, timezone
+import colorsys
 
 import ausankey as sky
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import AutoMinorLocator
+import matplotlib.colors as mcolors
 
 from .config import Config
 
@@ -60,21 +62,21 @@ def dashboard(config: Config):
     config.age_at_retire = config.max_yr - config.born_yr
 
     alldata["Days"] = dates_to_days(config, alldata)
-    alldata["TotalSuper"] = alldata[config.super_cols].sum(axis=1)
-    alldata["TotalShares"] = alldata[config.shares_cols].sum(axis=1)
-    alldata["TotalCash"] = alldata[config.cash_cols].sum(axis=1)
-    alldata["TotalExpend"] = alldata[config.expend_cols].sum(axis=1)
-    alldata["TotalIncome"] = alldata[config.income_cols].sum(axis=1)
-    alldata["Total"] = alldata["TotalShares"] + alldata["TotalSuper"] + alldata["TotalCash"]
+    alldata["totalSuper"] = alldata[config.super_cols].sum(axis=1)
+    alldata["totalShares"] = alldata[config.shares_cols].sum(axis=1)
+    alldata["totalCash"] = alldata[config.cash_cols].sum(axis=1)
+    alldata["totalExpend"] = alldata[config.expend_cols].sum(axis=1)
+    alldata["totalIncome"] = alldata[config.income_cols].sum(axis=1)
+    alldata["total"] = alldata["totalShares"] + alldata["totalSuper"] + alldata["totalCash"]
 
     alldata = alldata.sort_values(by="Days").reset_index(drop=True)
-    income_grand_tot = alldata["TotalIncome"].sum()
+    income_grand_tot = alldata["totalIncome"].sum()
     income_sum = alldata[config.income_cols].sum()
     config.income_minor = list(income_sum[income_sum < (1 - config.income_thresh) * income_grand_tot].keys())
     config.iminor_bool = len(config.income_minor) > 0
 
     ## not currently used in the cash panel but this should be generalised
-    # cash_grand_tot = alldata["TotalCash"].sum()
+    # cash_grand_tot = alldata["totalCash"].sum()
     # cash_sum = alldata[config.cash_cols].sum()
     # config.cash_minor = list(cash_sum[cash_sum < (1 - config.cash_thresh) * cash_grand_tot].keys())
     # config.cminor_bool = len(config.cash_minor) > 0
@@ -95,14 +97,16 @@ def dashboard(config: Config):
     if "plain8" in config.layout:
         create_dashboard_plain8(config, alldata)
 
+    if "income4" in config.layout:
+        create_dashboard_income4(config, alldata)
 
 def create_dashboard_main7(config, alldata):
-    data = alldata[alldata.Total > 0].reset_index(drop=True)
+    data = alldata[alldata.total > 0].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
     # Calculate expenditure
     if config.expend_bool:
-        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
@@ -154,13 +158,13 @@ def create_dashboard_main7(config, alldata):
     panel_timeline(config, ax00)
     # Calculate expenditure
     if config.expend_bool:
-        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
 
     panel_all_vs_time(config, ax1, data)
-    panel_total_window(config, ax8, data)
+    panel_total_window(config, ax8, data, xticklabels=False)
 
     xx = ax8.get_xlim()
     yy = ax8.get_ylim()
@@ -170,7 +174,7 @@ def create_dashboard_main7(config, alldata):
 
     panel_cash_window_percent(config, ax2, data)
 
-    config.profitloss = panel_shares_window(config, ax3, ax33, data, data_sp)
+    config.profitloss = panel_shares_tot_exp(config, ax3, ax33, data, data_sp)
 
     ######## PANEL 4-5 ########
 
@@ -204,21 +208,21 @@ def create_dashboard_main7(config, alldata):
 
 
 def create_dashboard_plain8(config, alldata):
-    data = alldata[alldata.Total > 0].reset_index(drop=True)
+    data = alldata[alldata.total > 0].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
     # Calculate expenditure
     if config.expend_bool:
-        data_sp = alldata[alldata.TotalExpend > 0].reset_index(drop=True)
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
     pane_w = 0.35
     pane_h = 0.15
-    sankey_w = 0.375
+    sankey_w = 0.35
     sankey_h = 0.15
 
-    pane_x = [0.1, 0.55]
+    pane_x = [0.125, 0.525]
     row_y = [0.1, 0.3, 0.5, 0.7]
 
     fig, ax0 = plt.subplots(
@@ -239,25 +243,19 @@ def create_dashboard_plain8(config, alldata):
     ax7 = fig.add_axes([pane_x[1], row_y[2], sankey_w, sankey_h])
     ax8 = fig.add_axes([pane_x[1], row_y[3], sankey_w, sankey_h])
 
-    if config.expend_bool:
-        ax33 = ax3.twinx()
-        color_axes(config, ax33)
-        ax33.tick_params(axis="y", labelcolor=config.colors.expend)
-    else:
-        ax33 = ax3
-
     ######## PANELS ########
 
     panel_timeline(config, ax00)
 
     panel_total_window(config, ax4, data)
-    panel_shares_window(config, ax3, ax33, data, data_sp)
+    panel_shares_window(config, ax3, data)
     panel_super_window(config, ax2, data)
     panel_cash_window(config, ax1, data)
 
     panel_cash_breakdown(config, data, ax5)
     panel_super_breakdown(config, data, ax6)
     panel_shares_breakdown(config, data, ax7)
+    panel_total_breakdown(config, data, ax8)
 
     ############## FINISH UP
 
@@ -267,45 +265,50 @@ def create_dashboard_plain8(config, alldata):
     ############ SUBFUNCTIONS
     panel_total_window(config, ax8, data)
 
-    xx = ax8.get_xlim()
-    yy = ax8.get_ylim()
-    xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
-    yp = pd.Series([yy[1], yy[1], yy[0], yy[0]])
-    ax1.plot(xp, yp, color=config.colors.frame)
 
-    panel_cash_window_percent(config, ax2, data)
+def create_dashboard_income4(config, alldata):
+    data = alldata[alldata.total > 0].reset_index(drop=True)
+    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
-    config.profitloss = panel_shares_window(config, ax3, ax33, data, data_sp)
-
-    ######## PANEL 4-5 ########
-
-    panel_income(config, ax4, alldata)
-    panel_shares(config, ax5, alldata)
-    if config.income_bool and config.shares_bool:
-        yticks_equalise(config, ax4, ax5)
-
-    if config.income_bool:
-        faux_title(config, ax4, "Annual income")
-
-    if not config.shares_bool:
-        pass
-    elif config.anon or (not config.expend_bool):
-        faux_title(config, ax5, "Annual shares increase")
+    # Calculate expenditure
+    if config.expend_bool:
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
-        faux_title(
-            config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
-        )
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
+    pane_w = 0.35
+    pane_h = 0.15
 
-    ######## PANEL 6-7 ########
+    pane_x = [0.125, 0.575]
+    row_y = [0.7, 0.5, 0.3, 0.1]
 
-    panel_income_breakdown(config, alldata, ax6)
-    panel_shares_breakdown(config, data, ax7)
+    fig, ax0 = plt.subplots(
+        figsize=(config.figw, config.figh),
+        facecolor=config.colors.bg,
+    )
+    ax0.axis("off")
+
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
+    ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([pane_x[1], row_y[0], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], pane_w, pane_h])
+
+    ######## PANELS ########
+
+    panel_timeline(config, ax00)
+
+    panel_income(config, ax1, alldata)
+    panel_income_breakdown(config, alldata, ax2)
+    panel_income_window(config, ax3, data)
+    panel_total_window(config, ax4, data)
 
     ############## FINISH UP
 
     plt.show()
-    savefiles(config, fig)
     plt.close()
+
 
 
 ############ SUBFUNCTIONS
@@ -438,7 +441,7 @@ def panel_timeline(config, ax):
     start_of_year = datetime(now.year, 1, 1, tzinfo=timezone.utc)
     end_of_year = datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
 
-    # Total seconds in the year and seconds passed
+    # total seconds in the year and seconds passed
     year_duration = (end_of_year - start_of_year).total_seconds()
     elapsed = (now - start_of_year).total_seconds()
 
@@ -503,53 +506,53 @@ def panel_all_vs_time(config, ax, data):
         return infl
 
     # total line
-    rd1, yd1 = extrap(data.Days[config.window_ind], data.Total[config.window_ind])
+    rd1, yd1 = extrap(data.Days[config.window_ind], data.total[config.window_ind])
     retire_worth = yd1[-1]
     ax.plot(rd1, yd1, **config.projstyle, color=config.colors.total)
-    extrap_exp(ax, data.Days[config.expstart : -1], data.Total[config.expstart : -1], {"color": config.colors.total})
+    extrap_exp(ax, data.Days[config.expstart : -1], data.total[config.expstart : -1], {"color": config.colors.total})
 
-    ax.plot(data.Days, data.Total, color=config.colors.total, **config.dotstyle)
+    ax.plot(data.Days, data.total, color=config.colors.total, **config.dotstyle)
 
     # super
     if config.super_bool:
-        rd2, yd2 = extrap(data.Days[config.window_ind], data.TotalSuper[config.window_ind])
+        rd2, yd2 = extrap(data.Days[config.window_ind], data.totalSuper[config.window_ind])
         ax.plot(rd2, yd2, **config.projstyle, color=config.colors.super)
 
-        ind = data.TotalSuper[config.expstart : -1] > 0
+        ind = data.totalSuper[config.expstart : -1] > 0
         days = data.Days[config.expstart : -1][ind]
-        val = data.TotalSuper[config.expstart : -1][ind]
+        val = data.totalSuper[config.expstart : -1][ind]
         extrap_exp(ax, days, val, {"color": config.colors.super})
 
-        ax.plot(data.Days, data.TotalSuper, color=config.colors.super, **config.dotstyle)
+        ax.plot(data.Days, data.totalSuper, color=config.colors.super, **config.dotstyle)
 
     if config.shares_bool:
-        rd3, yd3 = extrap(data.Days[config.window_ind], data.TotalShares[config.window_ind])
+        rd3, yd3 = extrap(data.Days[config.window_ind], data.totalShares[config.window_ind])
         ax.plot(rd3, yd3, **config.projstyle, color=config.colors.shares)
 
-        ind = data["TotalShares"][config.expstart : -1] > 0
+        ind = data["totalShares"][config.expstart : -1] > 0
         days = data.Days[config.expstart : -1][ind]
-        val = data["TotalShares"][config.expstart : -1][ind]
+        val = data["totalShares"][config.expstart : -1][ind]
         extrap_exp(ax, days, val, {"color": config.colors.shares})
 
-        ax.plot(data.Days, data["TotalShares"], color=config.colors.shares, **config.dotstyle)
+        ax.plot(data.Days, data["totalShares"], color=config.colors.shares, **config.dotstyle)
 
     if config.cash_bool:
-        ax.plot(data.Days, data["TotalCash"], **config.dotstyle, color=config.colors.cash)
+        ax.plot(data.Days, data["totalCash"], **config.dotstyle, color=config.colors.cash)
 
     ############% LABELS
 
     va = "center"
 
     if config.cash_bool:
-        ax.text(data.Days.iat[-1], data["TotalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
+        ax.text(data.Days.iat[-1], data["totalCash"].iat[-1], "  Cash", color=config.colors.cash, va=va)
 
     if config.shares_bool:
-        ax.text(data.Days.iat[-1], data["TotalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
+        ax.text(data.Days.iat[-1], data["totalShares"].iat[-1], "  Shares", color=config.colors.shares, va=va)
 
     if config.super_bool:
-        ax.text(data.Days.iat[-1], data["TotalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
+        ax.text(data.Days.iat[-1], data["totalSuper"].iat[-1], "  Super", color=config.colors.super, va=va)
 
-    ax.text(data.Days.iat[-1], data.Total.iat[-1], "  Total", va="center", color=config.colors.total)
+    ax.text(data.Days.iat[-1], data.total.iat[-1], "  total", va="center", color=config.colors.total)
 
     ax.set_xticks(range(config.years_until_retire + 1))
     ax.set_xticklabels(
@@ -595,13 +598,13 @@ def panel_all_vs_time(config, ax, data):
             )
             yticks_dollars(config, axx1)
 
-        extra_ticks(config, ax, [data.Total.iat[-1], retire_worth], config.colors.total)
+        extra_ticks(config, ax, [data.total.iat[-1], retire_worth], config.colors.total)
         if config.cash_bool:
-            extra_ticks(config, ax, [data.TotalCash.iat[-1]], config.colors.cash)
+            extra_ticks(config, ax, [data.totalCash.iat[-1]], config.colors.cash)
         if config.shares_bool:
-            extra_ticks(config, ax, [data.TotalShares.iat[-1]], config.colors.shares)
+            extra_ticks(config, ax, [data.totalShares.iat[-1]], config.colors.shares)
         if config.super_bool:
-            extra_ticks(config, ax, [data.TotalSuper.iat[-1]], config.colors.super)
+            extra_ticks(config, ax, [data.totalSuper.iat[-1]], config.colors.super)
 
     if config.anon:
         ax.set_yticklabels([])
@@ -610,10 +613,10 @@ def panel_all_vs_time(config, ax, data):
     #######%%###### EXTRAP
 
     def extrap_target(yy):
-        if data.Total.iat[-1] > 0.8 * yy:
+        if data.total.iat[-1] > 0.8 * yy:
             return
 
-        reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
+        reg = np.polyfit(data.Days[config.window_ind], data.total[config.window_ind], 1)
 
         rr = (yy - reg[1]) / reg[0]
 
@@ -641,23 +644,26 @@ def panel_all_vs_time(config, ax, data):
             if ii < 0.85 * ax.get_ylim()[1]:
                 extrap_target(ii)
 
-
-def panel_total_window(config, ax, data):
+def panel_window(config, ax, data, name, col, xticklabels=False):
     color_axes(config, ax)
 
-    reg = np.polyfit(data.Days[config.window_ind], data.Total[config.window_ind], 1)
+    reg = np.polyfit(
+      data.Days[config.window_ind],
+      data[name][config.window_ind],
+      1
+    )
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = rd * reg[0] + reg[1]
-    ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors.total)
-    ax.plot(data.Days[config.window_ind], data.Total[config.window_ind], color=config.colors.total, **config.dotstyle)
+    ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors[col])
+    ax.plot(data.Days[config.window_ind], data[name][config.window_ind], color=config.colors[col], **config.dotstyle)
 
     logfit = np.polyfit(
-        data.Days[config.window_ind], np.log(data.Total[config.window_ind]), 1, w=np.sqrt(data.Total[config.window_ind])
+        data.Days[config.window_ind], np.log(data[name][config.window_ind]), 1, w=np.sqrt(data[name][config.window_ind])
     )
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
     infl = np.exp(logfit[0]) - 1
-    ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors.total)
+    ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors[col])
 
     yticks_dollars(config, ax)
 
@@ -665,11 +671,12 @@ def panel_total_window(config, ax, data):
     ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
-    gain = data.Total[config.window_ind].iat[-1] - data.Total[config.window_ind].iat[0]
+    gain = data[name][config.window_ind].iat[-1] - data[name][config.window_ind].iat[0]
     elap = data.Days[config.window_ind].iat[-1] - data.Days[config.window_ind].iat[0]
 
-    ax.set_xticklabels([])
-    ax.tick_params(axis="y", labelcolor=config.colors.total)
+    if not xticklabels:
+        ax.set_xticklabels([])
+    ax.tick_params(axis="y", labelcolor=config.colors[col])
 
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
@@ -681,7 +688,7 @@ def panel_total_window(config, ax, data):
             x_min + 0.05 * (x_max - x_min),
             y_min + 0.95 * (y_max - y_min),
             txtstr,
-            color=config.colors.total,
+            color=config.colors[col],
             va="top",
             backgroundcolor=config.colors.axis,
         )
@@ -690,7 +697,7 @@ def panel_total_window(config, ax, data):
             x_min + 0.95 * (x_max - x_min),
             y_min + 0.05 * (y_max - y_min),
             txtstr,
-            color=config.colors.total,
+            color=config.colors[col],
             ha="right",
             va="bottom",
             backgroundcolor=config.colors.axis,
@@ -701,41 +708,21 @@ def panel_total_window(config, ax, data):
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
-def panel_cash_window(config, ax, data):
-    color_axes(config, ax)
 
-    if not config.cash_bool:
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        return 0
+def panel_total_window(config, ax, data, xticklabels=True):
+    panel_window(config, ax, data, "total", "total", xticklabels=xticklabels)
 
-    ax.plot(
-        data.Days[config.window_ind],
-        data["TotalCash"][config.window_ind],
-        config.marker,
-        linestyle="-",
-        color=config.colors.cash,
-        markersize=config.markersize,
-    )
+def panel_cash_window(config, ax, data, xticklabels=True):
+    panel_window(config, ax, data, "totalCash", "cash", xticklabels=xticklabels)
 
-    for col in config.cash_cols:
-        ax.plot(
-            data.Days[config.window_ind],
-            data[col][config.window_ind],
-            config.marker,
-            linestyle="-",
-            #            color=config.colors.cash,
-            markersize=config.markersize,
-        )
+def panel_shares_window(config, ax, data, xticklabels=True):
+    panel_window(config, ax, data, "totalShares", "shares", xticklabels=xticklabels)
 
-    yticks_dollars(config, ax)
-    ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
-    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
-    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+def panel_super_window(config, ax, data, xticklabels=True):
+    panel_window(config, ax, data, "totalSuper", "super", xticklabels=xticklabels)
 
-    faux_title(config, ax, "Cash")
-    return None
+def panel_income_window(config, ax, data, xticklabels=True):
+    panel_window(config, ax, data, "totalIncome", "income", xticklabels=xticklabels)
 
 
 def panel_cash_window_percent(config, ax, data):
@@ -746,10 +733,10 @@ def panel_cash_window_percent(config, ax, data):
         ax.set_yticklabels([])
         return None
 
-    maxcash = max(data["TotalCash"][config.window_ind])
+    maxcash = max(data["totalCash"][config.window_ind])
     ax.plot(
         data.Days[config.window_ind],
-        data["TotalCash"][config.window_ind] / maxcash,
+        data["totalCash"][config.window_ind] / maxcash,
         config.marker,
         linestyle="-",
         color=config.colors.cash,
@@ -781,7 +768,7 @@ def panel_cash_window_percent(config, ax, data):
     return None
 
 
-def panel_shares_window(config, ax, ax33, data, data_sp):
+def panel_shares_tot_exp(config, ax, ax33, data, data_sp):
     color_axes(config, ax)
 
     if not config.shares_bool:
@@ -792,7 +779,7 @@ def panel_shares_window(config, ax, ax33, data, data_sp):
 
     ax.plot(
         data.Days[config.window_ind],
-        data["TotalShares"][config.window_ind],
+        data["totalShares"][config.window_ind],
         config.marker,
         color=config.colors.shares,
         markersize=config.markersize,
@@ -806,7 +793,7 @@ def panel_shares_window(config, ax, ax33, data, data_sp):
     ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
     ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
 
-    shares2 = pd.Series(data["TotalShares"][config.window_ind]).reset_index(drop=True)
+    shares2 = pd.Series(data["totalShares"][config.window_ind]).reset_index(drop=True)
     gain = shares2.iat[-1] - shares2.iat[0]
     elap = data.Days[config.window_ind].iat[-1] - data.Days[config.window_ind].iat[0]
 
@@ -852,7 +839,7 @@ def panel_shares_window(config, ax, ax33, data, data_sp):
         label_graph_shares_a(ax)
         return 0
 
-    sharesum = data_sp["TotalExpend"].cumsum()
+    sharesum = data_sp["totalExpend"].cumsum()
     sharebuy = pd.Series(sharesum[config.win_sp_ind]).reset_index(drop=True)
     bought = sharebuy.iat[-1] - sharebuy.iat[0]
     profitloss = shares2.iat[-1] - sharebuy.iat[-1]
@@ -897,18 +884,66 @@ def panel_shares_window(config, ax, ax33, data, data_sp):
 def panel_super_window(config, ax, data):
     color_axes(config, ax)
 
-    if not config.super_bool:
+    if not config.shares_bool:
         ax.set_xticklabels([])
         ax.set_yticklabels([])
-        return None
+        return
 
-    ax.plot(
-        data.Days[config.window_ind],
-        data["TotalSuper"][config.window_ind],
-        config.marker,
-        linestyle="-",
-        color=config.colors.super,
-        markersize=config.markersize,
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+
+    pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
+
+    def get_shares_totals(data, cols):
+        total = {}
+        for col in cols:
+            total[col] = list(data[col])[-1]
+        return total
+
+    def sankey_shares_makeup(data):
+        total_by_yr = {}
+        total_cols = ["totalShares","totalSuper","totalCash"]
+        for yr in config.years_uniq:
+            total_by_yr[f"f{yr}"] = total_cols
+            total_by_yr[yr] = get_shares_totals(data[data["Year"] == yr], total_cols).values()
+        return pd.DataFrame(total_by_yr)
+    
+    ldict = {
+        "totalCash": "Cash",
+        "totalShares": "Shares",
+        "totalSuper": "Super",
+    }
+    cdict = {
+        "totalCash": config.colors.cash,
+        "totalSuper": config.colors.super,
+        "totalShares": config.colors.shares,
+    }
+
+    sky.sankey(
+        ax=ax,
+        data=sankey_shares_makeup(data),
+        titles=[yrlbl(i) for i in config.years_uniq],
+        colormap=config.sankey_colormaps[2],
+        color_dict=cdict,
+        sort=config.sankey_sort,
+        node_gap=0.00,
+        label_dict=ldict,
+        label_values=not (config.anon),
+        label_thresh_ofmax=0.10,
+        node_width=config.node_width,
+        label_loc=["right", "left", "left"],
+        label_largest=True,
+        label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
+        value_loc=["none", "none", "none"],
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.1,
+        percent_thresh_ofmax=0.2,
     )
 
     for col in config.super_cols:
@@ -922,13 +957,12 @@ def panel_super_window(config, ax, data):
         )
 
     yticks_dollars(config, ax)
-    ax.set_xlabel(f"Years since {config.since_yr}", color=config.colors.label)
-    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
-    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
-    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
 
-    faux_title(config, ax, "Super")
-    return None
+    faux_title(config, ax, "Total breakdown")
+
+    if config.anon:
+        ax.set_yticklabels([])
 
 
 ############## PANEL 4: Total Window
@@ -1157,6 +1191,7 @@ def panel_cash_breakdown(config, data, ax):
             total_by_yr[yr] = get_cash_totals(data[data["Year"] == yr], config.cash_cols).values()
         return pd.DataFrame(total_by_yr)
 
+    tmp = single_hue_colormap(color_to_hue(config.colors.cash),5)
     sky.sankey(
         ax=ax,
         data=sankey_cash_makeup(data),
@@ -1403,7 +1438,7 @@ def sankey_shares(config, data):
     total_by_yr = {}
     for yr in config.years_uniq:
         total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
-        total_by_yr[yr] = get_totals(data[data["Year"] == yr], "TotalShares", "TotalExpend").values()
+        total_by_yr[yr] = get_totals(data[data["Year"] == yr], "totalShares", "totalExpend").values()
     return pd.DataFrame(total_by_yr)
 
 
@@ -1423,3 +1458,92 @@ def get_inc_totals(data, income_cols):
 
 
 ################################
+
+def single_hue_colormap(
+    key,
+    N=256,
+    lightness_range=(0.2, 0.9),
+    saturation=0.9,
+    mode="lightness",
+):
+    """
+    Construct a colormap that varies within a single hue. Thx ChatGPT
+
+    Parameters
+    ----------
+    key : float or int
+        A value in [0, 1] interpreted as the hue. (Or pass an int for deterministic hashing).
+    N : int, default=256
+        Number of colors in the colormap.
+    lightness_range : (float, float)
+        Range of lightness values (0=black, 1=white).
+    saturation : float
+        Saturation level (only used for lightness mode).
+    mode : {"lightness", "saturation"}
+        - "lightness": vary lightness while holding saturation fixed.
+        - "saturation": vary both saturation and lightness in a perceptual ramp.
+    """
+
+    # Map integer keys into [0,1]
+    if isinstance(key, int):
+        hue = (key * 0.61803398875) % 1.0
+    else:
+        hue = float(key) % 1.0
+
+    if mode == "lightness":
+        lightness_values = np.linspace(lightness_range[0], lightness_range[1], N)
+        colors = [colorsys.hls_to_rgb(hue, l, saturation) for l in lightness_values]
+
+    elif mode == "saturation":
+        # Lightness from dark to light
+        lightness_values = np.linspace(lightness_range[0], lightness_range[1], N)
+        # Saturation ramps: dull → vivid → dull
+        sat_values = np.sin(np.linspace(0, np.pi, N))  # in [0,1]
+        colors = [
+            colorsys.hls_to_rgb(hue, l, s) for l, s in zip(lightness_values, sat_values)
+        ]
+
+    else:
+        raise ValueError("mode must be 'lightness' or 'saturation'")
+
+    return mcolors.LinearSegmentedColormap.from_list(f"hue_{key}_{mode}", colors, N)
+
+def color_to_hue(color_str):
+    """
+    Convert a Matplotlib-style color string (e.g. '#ffaaaaaa') into hue in [0,1).
+
+    Parameters
+    ----------
+    color_str : str
+        Hex color string (#RRGGBB or #RRGGBBAA) or any valid Matplotlib color.
+
+    Returns
+    -------
+    float
+        Hue value in [0,1).
+    """
+    r, g, b, _ = mcolors.to_rgba(color_str)  # drop alpha
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    return h
+
+
+def rgb_to_hue(rgb):
+    """
+    Convert an RGB triplet (0–1 range) into a single hue value in [0,1).
+    
+    Parameters
+    ----------
+    rgb : tuple of float
+        (r, g, b), each in [0,1].
+    
+    Returns
+    -------
+    float
+        Hue value in [0,1).
+    """
+    print(rgb)
+    r, g, b = rgb
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    return h
+
+

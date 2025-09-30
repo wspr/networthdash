@@ -58,3 +58,8 @@ class Colors:
     shares: str = "#5eff86"
     cash: str = "#ffa1a1"
     expend: str = "#e9a8ff"
+    income: str = "#e3a3aa"
+
+    def __getitem__(self, key: str) -> str:
+        return getattr(self, key)
+    # allows colors["bg"] for instance
