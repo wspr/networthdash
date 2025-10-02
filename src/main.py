@@ -49,8 +49,9 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
-    alldata[config.expend_cols] = alldata[config.expend_cols].applymap(parse_purchase)
-    alldata[config.cash_cols] = alldata[config.cash_cols].applymap(parse_purchase)
+    alldata[config.expend_cols] = alldata[config.expend_cols].applymap(_expr)
+    alldata[config.cash_cols] = alldata[config.cash_cols].applymap(_expr)
+    alldata[config.income_cols] = alldata[config.income_cols].applymap(_expr)
 
     config.retire_yr = config.born_yr + config.retire_age
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
@@ -268,7 +269,7 @@ def create_dashboard_plain8(config, alldata):
 
 def create_dashboard_income4(config, alldata):
     data = alldata[alldata.total > 0].reset_index(drop=True)
-    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
+    config.window_ind = data.Days > (data.Days.iat[-1] - 2.0)
 
     # Calculate expenditure
     if config.expend_bool:
@@ -292,8 +293,8 @@ def create_dashboard_income4(config, alldata):
 
     ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
     ax2 = fig.add_axes([pane_x[1], row_y[0], pane_w, pane_h])
-    ax3 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
-    ax4 = fig.add_axes([pane_x[0], row_y[3], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], 0.6, pane_h])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], 0.6, pane_h])
 
     ######## PANELS ########
 
@@ -301,8 +302,9 @@ def create_dashboard_income4(config, alldata):
 
     panel_income(config, ax1, alldata)
     panel_income_breakdown(config, alldata, ax2)
-    panel_income_window(config, ax3, data)
-    panel_total_window(config, ax4, data)
+
+    panel_income_window(config, ax4, data, thresh=[0, 1000])
+    panel_income_window(config, ax3, data, thresh=[1000,999999])
 
     ############## FINISH UP
 
@@ -382,7 +384,7 @@ def dates_to_days(config, data):
 
 
 # from Claude:
-def parse_purchase(value):
+def _expr(value):
     try:
         # Handle math expressions like "20 x 4 + 10"
         if any(op in value for op in ["x", "+", "-", "*"]):
@@ -720,9 +722,6 @@ def panel_shares_window(config, ax, data, xticklabels=True):
 
 def panel_super_window(config, ax, data, xticklabels=True):
     panel_window(config, ax, data, "totalSuper", "super", xticklabels=xticklabels)
-
-def panel_income_window(config, ax, data, xticklabels=True):
-    panel_window(config, ax, data, "totalIncome", "income", xticklabels=xticklabels)
 
 
 def panel_cash_window_percent(config, ax, data):
@@ -1282,6 +1281,67 @@ def panel_income(config, ax4, alldata):
     if config.anon:
         ax4.set_yticklabels([])
 
+################################
+
+
+def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
+
+    col = "income"
+
+    color_axes(config, ax)
+    
+    ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
+
+    n_colors = len(config.income_cols)
+    colors = plt.cm.Set2(np.linspace(0, 1, n_colors))  
+    
+    for ii, name in enumerate(config.income_cols):
+        inc = data[name]
+        days = data.Days
+        idx = config.window_ind * (inc>thresh[0]) * (inc<=thresh[1])
+        if sum(idx) == 0:
+            continue
+        print("")
+        print(inc)
+        # ax.vlines(days[idx], 0, inc[idx],  linewidth=0.5,  alpha=0.5)
+        ax.plot(days[idx], inc[idx],
+            markersize=1.5 * Config.markersize,
+            linewidth=0.0,
+            marker=".",
+            label=name.split("_")[1],
+            color=colors[ii],
+        )
+
+    legend = ax.legend(
+        loc="center left",
+        labelcolor=config.colors.label,
+        bbox_to_anchor=(1.05, 0.5),
+        ncol=1#len(config.income_cols)
+    )
+    legend.get_frame().set_facecolor(config.colors.bg)
+    yticks_dollars(config, ax)
+
+    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+    if not xticklabels:
+        ax.set_xticklabels([])
+    ax.tick_params(axis="y", labelcolor=config.colors[col])
+
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+    
+    ax.set_xlim(np.ceil(x_max) - 2,np.ceil(x_max))
+    ax.axvline(x=np.ceil(x_max) - 1, linestyle="-", color=config.colors.dashes)
+    if thresh[0] == 0:
+        ax.set_ylim(0,y_max)
+
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
+
+
 
 ################################
 
@@ -1340,7 +1400,6 @@ def panel_shares(config, ax, alldata):
 
 
 ################################
-
 
 def color_axes(config, ax):
     ax.set_facecolor(config.colors.axis)
