@@ -218,6 +218,7 @@ def create_dashboard_plain8(config, alldata):
         config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
     else:
         data_sp = alldata  # dummy data, not used, to ensure variable exists
+
     pane_w = 0.35
     pane_h = 0.15
     sankey_w = 0.35
@@ -248,14 +249,16 @@ def create_dashboard_plain8(config, alldata):
 
     panel_timeline(config, ax00)
 
-    panel_total_window(config, ax4, data)
-    panel_shares_window(config, ax3, data)
-    panel_super_window(config, ax2, data)
     panel_cash_window(config, ax1, data)
-
     panel_cash_breakdown(config, data, ax5)
+
+    panel_super_window(config, ax2, data)
     panel_super_breakdown(config, data, ax6)
+
+    panel_shares_window(config, ax3, data)
     panel_shares_breakdown(config, data, ax7)
+
+    panel_total_window(config, ax4, data)
     panel_total_breakdown(config, data, ax8)
 
     ############## FINISH UP
@@ -264,8 +267,6 @@ def create_dashboard_plain8(config, alldata):
     plt.close()
 
     ############ SUBFUNCTIONS
-    panel_total_window(config, ax8, data)
-
 
 def create_dashboard_income4(config, alldata):
     data = alldata[alldata.total > 0].reset_index(drop=True)
@@ -712,7 +713,8 @@ def panel_window(config, ax, data, name, col, xticklabels=False):
 
 
 def panel_total_window(config, ax, data, xticklabels=True):
-    panel_window(config, ax, data, "total", "total", xticklabels=xticklabels)
+    panel_window(config, ax, data, "total", "total",
+        xticklabels=xticklabels)
 
 def panel_cash_window(config, ax, data, xticklabels=True):
     panel_window(config, ax, data, "totalCash", "cash", xticklabels=xticklabels)
@@ -880,7 +882,7 @@ def panel_shares_tot_exp(config, ax, ax33, data, data_sp):
     return profitloss
 
 
-def panel_super_window(config, ax, data):
+def panel_total_breakdown(config, data, ax):
     color_axes(config, ax)
 
     if not config.shares_bool:
@@ -892,18 +894,18 @@ def panel_super_window(config, ax, data):
 
     pc_font = {"color": config.colors.contrast, "fontsize": 10, "rotation": 90, "va": "bottom"}
 
-    def get_shares_totals(data, cols):
+    def get_total_totals(data, cols):
         total = {}
         for col in cols:
             total[col] = list(data[col])[-1]
         return total
 
-    def sankey_shares_makeup(data):
+    def sankey_totals_makeup(data):
         total_by_yr = {}
         total_cols = ["totalShares","totalSuper","totalCash"]
         for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = total_cols
-            total_by_yr[yr] = get_shares_totals(data[data["Year"] == yr], total_cols).values()
+            total_by_yr[yr] = get_total_totals(data[data["Year"] == yr], total_cols).values()
         return pd.DataFrame(total_by_yr)
     
     ldict = {
@@ -919,7 +921,7 @@ def panel_super_window(config, ax, data):
 
     sky.sankey(
         ax=ax,
-        data=sankey_shares_makeup(data),
+        data=sankey_totals_makeup(data),
         titles=[yrlbl(i) for i in config.years_uniq],
         colormap=config.sankey_colormaps[2],
         color_dict=cdict,
@@ -945,18 +947,14 @@ def panel_super_window(config, ax, data):
         percent_thresh_ofmax=0.2,
     )
 
-    for col in config.super_cols:
-        ax.plot(
-            data.Days[config.window_ind],
-            data[col][config.window_ind],
-            config.marker,
-            linestyle="-",
-            #            color=config.colors.cash,
-            markersize=config.markersize,
-        )
+    ax.axis("on")
+    ax.set_ylim([0, ax.get_ylim()[1]])
+    ax.set_yticks(ax.get_yticks())
+    ax.yaxis.tick_right()
 
     yticks_dollars(config, ax)
     ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax.set_ylim([0, ax.get_ylim()[1]])
 
     faux_title(config, ax, "Total breakdown")
 
@@ -1023,7 +1021,8 @@ def panel_income_breakdown(config, data, ax):
     ax.axis("on")
 
     yticks_dollars(config, ax)
-    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+    ax.yaxis.set_tick_params(which="both", direction="out",
+        right=True, left=True)
     ax.set_ylim([0, ax.get_ylim()[1]])
     faux_title(config, ax, "'Other' income breakdown")
     if config.anon:
@@ -1316,9 +1315,9 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
         loc="center left",
         labelcolor=config.colors.label,
         bbox_to_anchor=(1.05, 0.5),
-        ncol=1#len(config.income_cols)
+        ncol=1,#len(config.income_cols),
+        #facecolor=config.colors.bg,
     )
-    legend.get_frame().set_facecolor(config.colors.bg)
     yticks_dollars(config, ax)
 
     ax.xaxis.set_minor_locator(AutoMinorLocator(3))
