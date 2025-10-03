@@ -1297,7 +1297,7 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
     for ii, name in enumerate(config.income_cols):
         inc = data[name]
         days = data.Days
-        idx = config.window_ind * (inc>thresh[0]) * (inc<=thresh[1])
+        idx = (inc>thresh[0]) * (inc<=thresh[1])
         if sum(idx) == 0:
             continue
         print("")
@@ -1311,12 +1311,12 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
             color=colors[ii],
         )
 
-    legend = ax.legend(
+    ax.legend(
         loc="center left",
         labelcolor=config.colors.label,
         bbox_to_anchor=(1.05, 0.5),
         ncol=1,#len(config.income_cols),
-        #facecolor=config.colors.bg,
+        facecolor=config.colors.bg,
     )
     yticks_dollars(config, ax)
 
