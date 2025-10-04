@@ -269,8 +269,6 @@ def create_dashboard_plain8(config, alldata):
     ############ SUBFUNCTIONS
 
 def create_dashboard_income4(config, alldata):
-    data = alldata[alldata.total > 0].reset_index(drop=True)
-    config.window_ind = data.Days > (data.Days.iat[-1] - 2.0)
 
     # Calculate expenditure
     if config.expend_bool:
@@ -304,8 +302,8 @@ def create_dashboard_income4(config, alldata):
     panel_income(config, ax1, alldata)
     panel_income_breakdown(config, alldata, ax2)
 
-    panel_income_window(config, ax4, data, thresh=[0, 1000])
-    panel_income_window(config, ax3, data, thresh=[1000,999999])
+    panel_income_window(config, ax4, alldata, thresh=[0, 300])
+    panel_income_window(config, ax3, alldata, thresh=[300, 999999])
 
     ############## FINISH UP
 
@@ -1298,10 +1296,8 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
         inc = data[name]
         days = data.Days
         idx = (inc>thresh[0]) * (inc<=thresh[1])
-        if sum(idx) == 0:
+        if sum(inc[idx]) == 0:
             continue
-        print("")
-        print(inc)
         # ax.vlines(days[idx], 0, inc[idx],  linewidth=0.5,  alpha=0.5)
         ax.plot(days[idx], inc[idx],
             markersize=1.5 * Config.markersize,
@@ -1328,7 +1324,7 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
         ax.set_xticklabels([])
     ax.tick_params(axis="y", labelcolor=config.colors[col])
 
-    x_min, x_max = ax.get_xlim()
+    x_max = max(data.Days)
     y_min, y_max = ax.get_ylim()
     
     ax.set_xlim(np.ceil(x_max) - 2,np.ceil(x_max))
