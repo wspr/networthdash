@@ -280,7 +280,7 @@ def create_dashboard_income4(config, alldata):
     pane_h = 0.15
 
     pane_x = [0.125, 0.575]
-    row_y = [0.7, 0.5, 0.3, 0.1]
+    row_y = [0.7, 0.5, 0.4, 0.1]
 
     fig, ax0 = plt.subplots(
         figsize=(config.figw, config.figh),
@@ -292,8 +292,8 @@ def create_dashboard_income4(config, alldata):
 
     ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
     ax2 = fig.add_axes([pane_x[1], row_y[0], pane_w, pane_h])
-    ax3 = fig.add_axes([pane_x[0], row_y[2], 0.6, pane_h])
-    ax4 = fig.add_axes([pane_x[0], row_y[3], 0.6, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], 1 - 2 * pane_x[0], 0.2])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], 1 - 2 * pane_x[0], 0.2])
 
     ######## PANELS ########
 
@@ -1308,10 +1308,10 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
         )
 
     ax.legend(
-        loc="center left",
+        loc="upper center",
         labelcolor=config.colors.label,
-        bbox_to_anchor=(1.05, 0.5),
-        ncol=1,#len(config.income_cols),
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=3,#len(config.income_cols),
         facecolor=config.colors.bg,
     )
     yticks_dollars(config, ax)
