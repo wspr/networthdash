@@ -270,12 +270,6 @@ def create_dashboard_plain8(config, alldata):
 
 def create_dashboard_income4(config, alldata):
 
-    # Calculate expenditure
-    if config.expend_bool:
-        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
-        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
-    else:
-        data_sp = alldata  # dummy data, not used, to ensure variable exists
     pane_w = 0.35
     pane_h = 0.15
 
@@ -291,7 +285,7 @@ def create_dashboard_income4(config, alldata):
     ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
 
     ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
-    ax2 = fig.add_axes([pane_x[1], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([1 - pane_x[0] - pane_w, row_y[0], pane_w, pane_h])
     ax3 = fig.add_axes([pane_x[0], row_y[2], 1 - 2 * pane_x[0], 0.2])
     ax4 = fig.add_axes([pane_x[0], row_y[3], 1 - 2 * pane_x[0], 0.2])
 
@@ -299,8 +293,9 @@ def create_dashboard_income4(config, alldata):
 
     panel_timeline(config, ax00)
 
-    panel_income(config, ax1, alldata)
+    panel_income(config, ax1, alldata, xticklabels=True)
     panel_income_breakdown(config, alldata, ax2)
+    ax2.yaxis.tick_right()
 
     panel_income_window(config, ax4, alldata, thresh=[0, 300])
     panel_income_window(config, ax3, alldata, thresh=[300, 999999])
@@ -1228,7 +1223,7 @@ def panel_cash_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
-def panel_income(config, ax4, alldata):
+def panel_income(config, ax4, alldata, xticklabels=False):
     color_axes(config, ax4)
 
     if not config.income_bool:
@@ -1269,7 +1264,8 @@ def panel_income(config, ax4, alldata):
     )
 
     ax4.axis("on")
-    ax4.set_xticklabels(())
+    if not xticklabels:
+        ax4.set_xticklabels(())
     # ax4.set_xticklabels([i for i in ax4.get_xticklabels()],rotation=90,color=config.colors.tick)
     ax4.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax4.set_ylim(0, ax4.get_ylim()[1])
@@ -1300,7 +1296,7 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
             continue
         # ax.vlines(days[idx], 0, inc[idx],  linewidth=0.5,  alpha=0.5)
         ax.plot(days[idx], inc[idx],
-            markersize=1.5 * Config.markersize,
+            markersize=2 * Config.markersize,
             linewidth=0.0,
             marker=".",
             label=name.split("_")[1],
