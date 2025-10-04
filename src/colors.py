@@ -62,4 +62,5 @@ class Colors:
 
     def __getitem__(self, key: str) -> str:
         return getattr(self, key)
+
     # allows colors["bg"] for instance
