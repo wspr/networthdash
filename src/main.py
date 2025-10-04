@@ -1,13 +1,13 @@
+import colorsys
 import os
 from datetime import datetime, timezone
-import colorsys
 
 import ausankey as sky
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.ticker import AutoMinorLocator
-import matplotlib.colors as mcolors
 
 from .config import Config
 
@@ -100,6 +100,7 @@ def dashboard(config: Config):
 
     if "income4" in config.layout:
         create_dashboard_income4(config, alldata)
+
 
 def create_dashboard_main7(config, alldata):
     data = alldata[alldata.total > 0].reset_index(drop=True)
@@ -268,8 +269,8 @@ def create_dashboard_plain8(config, alldata):
 
     ############ SUBFUNCTIONS
 
-def create_dashboard_income4(config, alldata):
 
+def create_dashboard_income4(config, alldata):
     pane_w = 0.35
     pane_h = 0.15
 
@@ -304,7 +305,6 @@ def create_dashboard_income4(config, alldata):
 
     plt.show()
     plt.close()
-
 
 
 ############ SUBFUNCTIONS
@@ -640,14 +640,11 @@ def panel_all_vs_time(config, ax, data):
             if ii < 0.85 * ax.get_ylim()[1]:
                 extrap_target(ii)
 
-def panel_window(config, ax, data, name, col, xticklabels=False):
+
+def panel_window(config, ax, data, name, col, xticklabels=False):  # noqa: FBT002
     color_axes(config, ax)
 
-    reg = np.polyfit(
-      data.Days[config.window_ind],
-      data[name][config.window_ind],
-      1
-    )
+    reg = np.polyfit(data.Days[config.window_ind], data[name][config.window_ind], 1)
     rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
     yd = rd * reg[0] + reg[1]
     ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors[col])
@@ -704,18 +701,19 @@ def panel_window(config, ax, data, name, col, xticklabels=False):
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
+def panel_total_window(config, ax, data, xticklabels=True):  # noqa: FBT002
+    panel_window(config, ax, data, "total", "total", xticklabels=xticklabels)
 
-def panel_total_window(config, ax, data, xticklabels=True):
-    panel_window(config, ax, data, "total", "total",
-        xticklabels=xticklabels)
 
-def panel_cash_window(config, ax, data, xticklabels=True):
+def panel_cash_window(config, ax, data, xticklabels=True):  # noqa: FBT002
     panel_window(config, ax, data, "totalCash", "cash", xticklabels=xticklabels)
 
-def panel_shares_window(config, ax, data, xticklabels=True):
+
+def panel_shares_window(config, ax, data, xticklabels=True):  # noqa: FBT002
     panel_window(config, ax, data, "totalShares", "shares", xticklabels=xticklabels)
 
-def panel_super_window(config, ax, data, xticklabels=True):
+
+def panel_super_window(config, ax, data, xticklabels=True):  # noqa: FBT002
     panel_window(config, ax, data, "totalSuper", "super", xticklabels=xticklabels)
 
 
@@ -895,12 +893,12 @@ def panel_total_breakdown(config, data, ax):
 
     def sankey_totals_makeup(data):
         total_by_yr = {}
-        total_cols = ["totalShares","totalSuper","totalCash"]
+        total_cols = ["totalShares", "totalSuper", "totalCash"]
         for yr in config.years_uniq:
             total_by_yr[f"f{yr}"] = total_cols
             total_by_yr[yr] = get_total_totals(data[data["Year"] == yr], total_cols).values()
         return pd.DataFrame(total_by_yr)
-    
+
     ldict = {
         "totalCash": "Cash",
         "totalShares": "Shares",
@@ -1014,8 +1012,7 @@ def panel_income_breakdown(config, data, ax):
     ax.axis("on")
 
     yticks_dollars(config, ax)
-    ax.yaxis.set_tick_params(which="both", direction="out",
-        right=True, left=True)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
     ax.set_ylim([0, ax.get_ylim()[1]])
     faux_title(config, ax, "'Other' income breakdown")
     if config.anon:
@@ -1182,7 +1179,6 @@ def panel_cash_breakdown(config, data, ax):
             total_by_yr[yr] = get_cash_totals(data[data["Year"] == yr], config.cash_cols).values()
         return pd.DataFrame(total_by_yr)
 
-    tmp = single_hue_colormap(color_to_hue(config.colors.cash),5)
     sky.sankey(
         ax=ax,
         data=sankey_cash_makeup(data),
@@ -1223,7 +1219,7 @@ def panel_cash_breakdown(config, data, ax):
         ax.set_yticklabels([])
 
 
-def panel_income(config, ax4, alldata, xticklabels=False):
+def panel_income(config, ax4, alldata, xticklabels=False):  # noqa: FBT002
     color_axes(config, ax4)
 
     if not config.income_bool:
@@ -1274,28 +1270,32 @@ def panel_income(config, ax4, alldata, xticklabels=False):
     if config.anon:
         ax4.set_yticklabels([])
 
+
 ################################
 
 
-def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
+def panel_income_window(config, ax, data, xticklabels=True, thresh=None):  # noqa: FBT002
+    if thresh is None:
+        thresh = [0, 999999]
 
     col = "income"
 
     color_axes(config, ax)
-    
+
     ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
 
     n_colors = len(config.income_cols)
-    colors = plt.cm.Set2(np.linspace(0, 1, n_colors))  
-    
+    colors = plt.cm.Set2(np.linspace(0, 1, n_colors))
     for ii, name in enumerate(config.income_cols):
         inc = data[name]
         days = data.Days
-        idx = (inc>thresh[0]) * (inc<=thresh[1])
+        idx = (inc > thresh[0]) * (inc <= thresh[1])
         if sum(inc[idx]) == 0:
             continue
         # ax.vlines(days[idx], 0, inc[idx],  linewidth=0.5,  alpha=0.5)
-        ax.plot(days[idx], inc[idx],
+        ax.plot(
+            days[idx],
+            inc[idx],
             markersize=2 * Config.markersize,
             linewidth=0.0,
             marker=".",
@@ -1307,7 +1307,7 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
         loc="upper center",
         labelcolor=config.colors.label,
         bbox_to_anchor=(0.5, 1.15),
-        ncol=3,#len(config.income_cols),
+        ncol=3,  # len(config.income_cols),
         facecolor=config.colors.bg,
     )
     yticks_dollars(config, ax)
@@ -1322,16 +1322,15 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=[0,999999]):
 
     x_max = max(data.Days)
     y_min, y_max = ax.get_ylim()
-    
-    ax.set_xlim(np.ceil(x_max) - 2,np.ceil(x_max))
+
+    ax.set_xlim(np.ceil(x_max) - 2, np.ceil(x_max))
     ax.axvline(x=np.ceil(x_max) - 1, linestyle="-", color=config.colors.dashes)
     if thresh[0] == 0:
-        ax.set_ylim(0,y_max)
+        ax.set_ylim(0, y_max)
 
     if config.anon:
         ax.set_yticklabels([])
         ax.set_ylabel("Amount", color=config.colors.text)
-
 
 
 ################################
@@ -1391,6 +1390,7 @@ def panel_shares(config, ax, alldata):
 
 
 ################################
+
 
 def color_axes(config, ax):
     ax.set_facecolor(config.colors.axis)
@@ -1509,9 +1509,10 @@ def get_inc_totals(data, income_cols):
 
 ################################
 
+
 def single_hue_colormap(
     key,
-    N=256,
+    n=256,
     lightness_range=(0.2, 0.9),
     saturation=0.9,
     mode="lightness",
@@ -1523,7 +1524,7 @@ def single_hue_colormap(
     ----------
     key : float or int
         A value in [0, 1] interpreted as the hue. (Or pass an int for deterministic hashing).
-    N : int, default=256
+    n : int, default=256
         Number of colors in the colormap.
     lightness_range : (float, float)
         Range of lightness values (0=black, 1=white).
@@ -1535,28 +1536,25 @@ def single_hue_colormap(
     """
 
     # Map integer keys into [0,1]
-    if isinstance(key, int):
-        hue = (key * 0.61803398875) % 1.0
-    else:
-        hue = float(key) % 1.0
+    hue = (key * 0.61803398875) % 1.0 if isinstance(key, int) else float(key) % 1.0
 
     if mode == "lightness":
-        lightness_values = np.linspace(lightness_range[0], lightness_range[1], N)
-        colors = [colorsys.hls_to_rgb(hue, l, saturation) for l in lightness_values]
+        lightness_values = np.linspace(lightness_range[0], lightness_range[1], n)
+        colors = [colorsys.hls_to_rgb(hue, lightness, saturation) for lightness in lightness_values]
 
     elif mode == "saturation":
         # Lightness from dark to light
-        lightness_values = np.linspace(lightness_range[0], lightness_range[1], N)
-        # Saturation ramps: dull → vivid → dull
-        sat_values = np.sin(np.linspace(0, np.pi, N))  # in [0,1]
-        colors = [
-            colorsys.hls_to_rgb(hue, l, s) for l, s in zip(lightness_values, sat_values)
-        ]
+        lightness_values = np.linspace(lightness_range[0], lightness_range[1], n)
+        # Saturation ramps: dull -> vivid -> dull
+        sat_values = np.sin(np.linspace(0, np.pi, n))  # in [0,1]
+        colors = [colorsys.hls_to_rgb(hue, lightness, s) for lightness, s in zip(lightness_values, sat_values)]
 
     else:
-        raise ValueError("mode must be 'lightness' or 'saturation'")
+        error_msg = "mode must be 'lightness' or 'saturation'"
+        raise ValueError(error_msg)
 
-    return mcolors.LinearSegmentedColormap.from_list(f"hue_{key}_{mode}", colors, N)
+    return mcolors.LinearSegmentedColormap.from_list(f"hue_{key}_{mode}", colors, n)
+
 
 def color_to_hue(color_str):
     """
@@ -1573,27 +1571,25 @@ def color_to_hue(color_str):
         Hue value in [0,1).
     """
     r, g, b, _ = mcolors.to_rgba(color_str)  # drop alpha
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
-    return h
+    hue, lightness, saturation = colorsys.rgb_to_hls(r, g, b)
+    return hue
 
 
 def rgb_to_hue(rgb):
     """
-    Convert an RGB triplet (0–1 range) into a single hue value in [0,1).
-    
+    Convert an RGB triplet (0-1 range) into a single hue value in [0,1).
+
     Parameters
     ----------
     rgb : tuple of float
         (r, g, b), each in [0,1].
-    
+
     Returns
     -------
     float
         Hue value in [0,1).
     """
-    print(rgb)
+    print(rgb)  # noqa: T201
     r, g, b = rgb
-    h, l, s = colorsys.rgb_to_hls(r, g, b)
-    return h
-
-
+    hue, lightness, saturation = colorsys.rgb_to_hls(r, g, b)
+    return hue
