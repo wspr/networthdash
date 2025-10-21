@@ -147,8 +147,6 @@ def create_dashboard_main7(config, alldata):
     ax6 = fig.add_axes([pane_x[0], row_y[0], sankey_w, sankey_h])
     ax7 = fig.add_axes([pane_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
 
-    ax8 = fig.add_axes([inset_x, inset_y, inset_w, inset_h])
-
     if config.expend_bool:
         ax33 = ax3.twinx()
         color_axes(config, ax33)
@@ -166,15 +164,7 @@ def create_dashboard_main7(config, alldata):
         data_sp = alldata  # dummy data, not used, to ensure variable exists
 
     panel_all_vs_time(config, ax1, data)
-    panel_total_window(config, ax8, data, xticklabels=False)
-
-    xx = ax8.get_xlim()
-    yy = ax8.get_ylim()
-    xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
-    yp = pd.Series([yy[1], yy[1], yy[0], yy[0]])
-    ax1.plot(xp, yp, color=config.colors.frame)
-
-    panel_cash_window_percent(config, ax2, data)
+    panel_total_window(config, ax2, data)
 
     config.profitloss = panel_shares_tot_exp(config, ax3, ax33, data, data_sp)
 
@@ -267,7 +257,113 @@ def create_dashboard_plain8(config, alldata):
     plt.show()
     plt.close()
 
-    ############ SUBFUNCTIONS
+def create_dashboard_main8(config, alldata):
+    data = alldata[alldata.total > 0].reset_index(drop=True)
+    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
+
+    # Calculate expenditure
+    if config.expend_bool:
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+    else:
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
+
+    main_wd = 0.75
+    main_ht = 0.30
+    pane_w = 0.35
+    pane_h = 0.15
+    sankey_w = 0.375
+    sankey_h = 0.15
+
+    pane_x = [0.1, 0.55]
+    row_y = [0.04, 0.43, 0.78]
+    row_gap = 0.03
+
+    inset_w = 0.25
+    inset_h = 0.11
+    inset_x = pane_x[0] + 0.15
+    inset_y = row_y[1] + main_ht / 2 + 0.025
+
+    fig, ax0 = plt.subplots(
+        figsize=(config.figw, config.figh),
+        facecolor=config.colors.bg,
+    )
+    ax0.axis("off")
+
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
+    ax1 = fig.add_axes([(1 - main_wd) / 2, row_y[1], main_wd, main_ht])
+    ax2 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[1], row_y[2], pane_w, pane_h])
+
+    ax4 = fig.add_axes([pane_x[0], row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
+    ax5 = fig.add_axes([pane_x[1] - 0.02, row_gap + row_y[0] + sankey_h, sankey_w, sankey_h])
+
+    ax6 = fig.add_axes([pane_x[0], row_y[0], sankey_w, sankey_h])
+    ax7 = fig.add_axes([pane_x[1] - 0.02, row_y[0], sankey_w, sankey_h])
+
+    ax8 = fig.add_axes([inset_x, inset_y, inset_w, inset_h])
+
+    if config.expend_bool:
+        ax33 = ax3.twinx()
+        color_axes(config, ax33)
+        ax33.tick_params(axis="y", labelcolor=config.colors.expend)
+    else:
+        ax33 = ax3
+    ######## PANELS ########
+
+    panel_timeline(config, ax00)
+    # Calculate expenditure
+    if config.expend_bool:
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+    else:
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
+
+    panel_all_vs_time(config, ax1, data)
+    panel_total_window(config, ax8, data, xticklabels=False)
+
+    xx = ax8.get_xlim()
+    yy = ax8.get_ylim()
+    xp = pd.Series([xx[1], xx[0], xx[0], xx[1]])
+    yp = pd.Series([yy[1], yy[1], yy[0], yy[0]])
+    ax1.plot(xp, yp, color=config.colors.frame)
+
+    panel_cash_window_percent(config, ax2, data)
+
+    config.profitloss = panel_shares_tot_exp(config, ax3, ax33, data, data_sp)
+
+    ######## PANEL 4-5 ########
+
+    panel_income(config, ax4, alldata)
+    panel_shares(config, ax5, alldata)
+    if config.income_bool and config.shares_bool:
+        yticks_equalise(config, ax4, ax5)
+
+    if config.income_bool:
+        faux_title(config, ax4, "Annual income")
+
+    if not config.shares_bool:
+        pass
+    elif config.anon or (not config.expend_bool):
+        faux_title(config, ax5, "Annual shares increase")
+    else:
+        faux_title(
+            config, ax5, "Annual shares increase\nAll-time profit = " + int_to_dollars(config, config.profitloss)
+        )
+
+    ######## PANEL 6-7 ########
+
+    panel_income_breakdown(config, alldata, ax6)
+    panel_shares_breakdown(config, data, ax7)
+
+    ############## FINISH UP
+
+    plt.show()
+    savefiles(config, fig)
+    plt.close()
+
+
 
 
 def create_dashboard_income4(config, alldata):
