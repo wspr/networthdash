@@ -101,6 +101,8 @@ def dashboard(config: Config):
     if "income4" in config.layout:
         create_dashboard_income4(config, alldata)
 
+    if "cash4" in config.layout:
+        create_dashboard_cash4(config, alldata)
 
 def create_dashboard_main7(config, alldata):
     data = alldata[alldata.total > 0].reset_index(drop=True)
@@ -397,10 +399,49 @@ def create_dashboard_income4(config, alldata):
     panel_income_window(config, ax4, alldata, thresh=[0, 300])
     panel_income_window(config, ax3, alldata, thresh=[300, 999999])
 
-    ############## FINISH UP
+    plt.show()
+    plt.close()
+
+
+
+def create_dashboard_cash4(config, alldata):
+    data = alldata[alldata.total > 0].reset_index(drop=True)
+    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
+
+    pane_w = 0.35
+    pane_h = 0.15
+
+    pane_x = [0.125, 0.575]
+    row_y = [0.7, 0.5, 0.4, 0.1]
+
+    fig, ax0 = plt.subplots(
+        figsize=(config.figw, config.figh),
+        facecolor=config.colors.bg,
+    )
+    ax0.axis("off")
+
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
+    ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([1 - pane_x[0] - pane_w, row_y[0], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], 1 - 2 * pane_x[0], 0.2])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], 1 - 2 * pane_x[0], 0.2])
+
+    ######## PANELS ########
+
+    panel_timeline(config, ax00)
+
+    panel_cash_window(config, ax1, data)
+    panel_cash_breakdown(config, alldata, ax2)
+    ax2.yaxis.tick_right()
+
+    panel_cash_window_percent(config, ax4, data)
+    panel_income_window(config, ax3, alldata, thresh=[300, 999999])
 
     plt.show()
     plt.close()
+
+
 
 
 ############ SUBFUNCTIONS
@@ -737,22 +778,24 @@ def panel_all_vs_time(config, ax, data):
                 extrap_target(ii)
 
 
-def panel_window(config, ax, data, name, col, xticklabels=False):  # noqa: FBT002
+def panel_window(config, ax, data, name, col, xticklabels=False, extrap=True):  # noqa: FBT002
     color_axes(config, ax)
 
-    reg = np.polyfit(data.Days[config.window_ind], data[name][config.window_ind], 1)
-    rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
-    yd = rd * reg[0] + reg[1]
-    ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors[col])
+    if extrap:
+        reg = np.polyfit(data.Days[config.window_ind], data[name][config.window_ind], 1)
+        rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
+        yd = rd * reg[0] + reg[1]
+        ax.plot(rd, yd, "-", lw=config.linewidth / 4, color=config.colors[col])
     ax.plot(data.Days[config.window_ind], data[name][config.window_ind], color=config.colors[col], **config.dotstyle)
-
-    logfit = np.polyfit(
-        data.Days[config.window_ind], np.log(data[name][config.window_ind]), 1, w=np.sqrt(data[name][config.window_ind])
-    )
-    rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
-    yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
-    infl = np.exp(logfit[0]) - 1
-    ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors[col])
+    
+    if extrap:
+        logfit = np.polyfit(
+            data.Days[config.window_ind], np.log(data[name][config.window_ind]), 1, w=np.sqrt(data[name][config.window_ind])
+        )
+        rd = np.linspace(data.Days[config.window_ind].iat[0], data.Days.iat[-1])
+        yd = np.exp(logfit[1]) * np.exp(logfit[0] * rd)
+        infl = np.exp(logfit[0]) - 1
+        ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors[col])
 
     yticks_dollars(config, ax)
 
@@ -770,7 +813,7 @@ def panel_window(config, ax, data, name, col, xticklabels=False):  # noqa: FBT00
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
 
-    if not config.anon:
+    if not config.anon and extrap:
         peryrtext = "" if config.linear_window == 1 else ("\n" + int_to_dollars(config, gain / elap) + "/yr")
         txtstr = "Δ=" + int_to_dollars(config, gain) + peryrtext
         ax.text(
@@ -802,7 +845,7 @@ def panel_total_window(config, ax, data, xticklabels=True):  # noqa: FBT002
 
 
 def panel_cash_window(config, ax, data, xticklabels=True):  # noqa: FBT002
-    panel_window(config, ax, data, "totalCash", "cash", xticklabels=xticklabels)
+    panel_window(config, ax, data, "totalCash", "cash", xticklabels=xticklabels, extrap=False)
 
 
 def panel_shares_window(config, ax, data, xticklabels=True):  # noqa: FBT002
