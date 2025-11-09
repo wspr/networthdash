@@ -431,12 +431,12 @@ def create_dashboard_cash4(config, alldata):
 
     panel_timeline(config, ax00)
 
-    panel_cash_window(config, ax1, data)
+    panel_expend_window(config, ax1, data)
     panel_cash_breakdown(config, alldata, ax2)
     ax2.yaxis.tick_right()
 
-    panel_cash_window_percent(config, ax4, data)
-    panel_income_window(config, ax3, alldata, thresh=[300, 999999])
+    panel_cash_window_detail(config, ax3, data,thresh=[30000, 999999])
+    panel_cash_window_detail(config, ax4, data,thresh=[0, 30000])
 
     plt.show()
     plt.close()
@@ -854,6 +854,9 @@ def panel_shares_window(config, ax, data, xticklabels=True):  # noqa: FBT002
 
 def panel_super_window(config, ax, data, xticklabels=True):  # noqa: FBT002
     panel_window(config, ax, data, "totalSuper", "super", xticklabels=xticklabels)
+
+def panel_expend_window(config, ax, data, xticklabels=True):  # noqa: FBT002
+    panel_window(config, ax, data, "totalExpend", "expend", xticklabels=xticklabels, extrap=False)
 
 
 def panel_cash_window_percent(config, ax, data):
@@ -1474,6 +1477,76 @@ def panel_income_window(config, ax, data, xticklabels=True, thresh=None):  # noq
 
 ################################
 
+def panel_cash_window_detail(config, ax, data, xticklabels=True, thresh=None):  # noqa: FBT002
+    if thresh is None:
+        thresh = [0, 999999]
+
+    col = "cash"
+
+    color_axes(config, ax)
+
+    ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
+
+    n_colors = len(config.cash_cols)
+    colors = plt.cm.Set2(np.linspace(0, 1, n_colors))
+    y_vals = []
+    for ii, name in enumerate(config.cash_cols):
+        inc = data[name]
+        days = data.Days
+        idx = (inc > thresh[0]) & (inc <= thresh[1]) & config.window_ind
+        if not np.any(idx):
+            continue
+        ax.plot(
+            days[idx],
+            inc[idx],
+            markersize=Config.markersize,
+            linewidth=config.linewidth,
+            marker=".",
+            label=name.split("_")[1],
+            color=colors[ii],
+        )
+        y_vals.extend(inc[idx])
+
+    ax.legend(
+        loc="upper center",
+        labelcolor=config.colors.label,
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=3,
+        facecolor=config.colors.bg,
+    )
+
+    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+    if not xticklabels:
+        ax.set_xticklabels([])
+    ax.tick_params(axis="y", labelcolor=config.colors[col])
+
+    x_max = max(data.Days)
+    y_min, y_max = ax.get_ylim()
+
+    ax.set_xlim(np.ceil(x_max) - 2, np.ceil(x_max))
+    ax.axvline(x=np.ceil(x_max) - 1, linestyle="-", color=config.colors.dashes)
+    
+    # --- after loop ---
+    if y_vals:
+        y_min, y_max = np.min(y_vals), np.max(y_vals)
+        # Give a little breathing room:
+        pad = 0.05 * (y_max - y_min if y_max > y_min else 1)
+        yymin = 0 if thresh[0] == 0 else y_min - pad
+        yymax = y_max + pad
+        print(yymin,yymax)
+        ax.set_ylim(yymin, yymax)
+
+    yticks_dollars(config, ax)
+
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
+
+
+################################
 
 def panel_shares(config, ax, alldata):
     color_axes(config, ax)
