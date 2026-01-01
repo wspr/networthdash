@@ -104,6 +104,9 @@ def dashboard(config: Config):
     if "cash4" in config.layout:
         create_dashboard_cash4(config, alldata)
 
+    if "ipad_1" in config.layout:
+        create_dashboard_ipad1(config, alldata)
+
 def create_dashboard_main7(config, alldata):
     data = alldata[alldata.total > 0].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
@@ -442,7 +445,66 @@ def create_dashboard_cash4(config, alldata):
     plt.close()
 
 
+def create_dashboard_ipad1(config, alldata):
+    
+    config.figw = 25
+    config.figh = 15
+    data = alldata[alldata.total > 0].reset_index(drop=True)
+    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
+    # Calculate expenditure
+    if config.expend_bool:
+        data_sp = alldata[alldata.totalExpend > 0].reset_index(drop=True)
+        config.win_sp_ind = data_sp.Days > (data_sp.Days.iat[-1] - config.linear_window)
+    else:
+        data_sp = alldata  # dummy data, not used, to ensure variable exists
+
+    pane_w = 0.35
+    pane_h = 0.15
+    sankey_w = 0.35
+    sankey_h = 0.15
+
+    pane_x = [0.125, 0.525]
+    row_y = [0.1, 0.3, 0.5, 0.7]
+
+    fig, ax0 = plt.subplots(
+        figsize=(config.figw, config.figh),
+        facecolor=config.colors.bg,
+    )
+    ax0.axis("off")
+
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
+    ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([pane_x[0], row_y[1], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], pane_w, pane_h])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], pane_w, pane_h])
+
+    ax5 = fig.add_axes([pane_x[1], row_y[0], sankey_w, sankey_h])
+    ax6 = fig.add_axes([pane_x[1], row_y[1], sankey_w, sankey_h])
+    ax7 = fig.add_axes([pane_x[1], row_y[2], sankey_w, sankey_h])
+    ax8 = fig.add_axes([pane_x[1], row_y[3], sankey_w, sankey_h])
+
+    ######## PANELS ########
+
+    panel_timeline(config, ax00)
+
+    panel_cash_window(config, ax1, data)
+    panel_cash_breakdown(config, data, ax5)
+
+    panel_super_window(config, ax2, data)
+    panel_super_breakdown(config, data, ax6)
+
+    panel_shares_window(config, ax3, data)
+    panel_shares_breakdown(config, data, ax7)
+
+    panel_total_window(config, ax4, data)
+    panel_total_breakdown(config, data, ax8)
+
+    ############## FINISH UP
+
+    plt.show()
+    plt.close()
 
 ############ SUBFUNCTIONS
 
