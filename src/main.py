@@ -1388,7 +1388,7 @@ def panel_cash_breakdown(config, data, ax):
         data=sankey_cash_makeup(data),
         titles=[yrlbl(i) for i in config.years_uniq],
         colormap=config.sankey_colormaps[2],
-        sort=config.sankey_sort,
+        sort="none",
         node_gap=0.00,
         label_dict=config.hdrnew,
         label_values=not (config.anon),
@@ -1598,7 +1598,6 @@ def panel_cash_window_detail(config, ax, data, xticklabels=True, thresh=None):  
         pad = 0.05 * (y_max - y_min if y_max > y_min else 1)
         yymin = 0 if thresh[0] == 0 else y_min - pad
         yymax = y_max + pad
-        print(yymin,yymax)
         ax.set_ylim(yymin, yymax)
 
     yticks_dollars(config, ax)
