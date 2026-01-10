@@ -49,7 +49,13 @@ def dashboard(config: Config):
     alldata = pd.read_csv(config.csvdir + config.csv, header=1).fillna(0)
     alldata.columns = list(config.hdrnew.keys())
     alldata["Year"] = dates_to_years(config, alldata)
-    alldata[config.expend_cols] = alldata[config.expend_cols].applymap(_expr)
+
+    expend_count_cols = [col+"_count" for col in config.expend_cols]
+    alldata[expend_count_cols] = alldata[config.expend_cols].applymap(_expr_expend_count)
+    expend_price_cols = [col+"_price" for col in config.expend_cols]
+    alldata[expend_price_cols] = alldata[config.expend_cols].applymap(_expr_expend_price)
+
+    alldata[config.expend_cols] = alldata[config.expend_cols].applymap(_expr_expend)
     alldata[config.cash_cols] = alldata[config.cash_cols].applymap(_expr)
     alldata[config.income_cols] = alldata[config.income_cols].applymap(_expr)
 
@@ -103,6 +109,9 @@ def dashboard(config: Config):
 
     if "cash4" in config.layout:
         create_dashboard_cash4(config, alldata)
+
+    if "share4" in config.layout:
+        create_dashboard_share4(config, alldata)
 
     if "ipad_1" in config.layout:
         create_dashboard_ipad1(config, alldata)
@@ -445,6 +454,70 @@ def create_dashboard_cash4(config, alldata):
     plt.close()
 
 
+def create_dashboard_share4(config, alldata):
+
+    share_col = config.share_focus["expend_col"]
+    fund = config.share_focus["fund"]
+    fund_col = share_col+"_Fund"
+    val_col = "Shares_"+fund
+    expend_col = "Expend_"+share_col
+    data = alldata[alldata[fund_col] == fund].reset_index(drop=True)
+    config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
+
+    fund_count = sum(data[expend_col+"_count"])
+    pane_w = 0.35
+    pane_h = 0.15
+
+    pane_x = [0.125, 0.575]
+    row_y = [0.7, 0.5, 0.4, 0.1]
+
+    fig, ax0 = plt.subplots(
+        figsize=(config.figw, config.figh),
+        facecolor=config.colors.bg,
+    )
+    ax0.axis("off")
+
+    ax00 = fig.add_axes([0.02, 0.93, 0.96, 0.05])
+
+    ax1 = fig.add_axes([pane_x[0], row_y[0], pane_w, pane_h])
+    ax2 = fig.add_axes([1 - pane_x[0] - pane_w, row_y[0], pane_w, pane_h])
+    ax3 = fig.add_axes([pane_x[0], row_y[2], 1 - 2 * pane_x[0], 0.2])
+    ax4 = fig.add_axes([pane_x[0], row_y[3], 1 - 2 * pane_x[0], 0.2])
+
+    ######## PANELS ########
+
+    panel_timeline(config, ax00)
+
+    panel_expend_window(config, ax1, data, yzero=True)
+    faux_title(config, ax1, fund+" purchases")
+    panel_shares_breakdown(config, alldata, ax2)
+    ax2.yaxis.tick_right()
+
+    panel_expend_share_detail(config, ax3, alldata, val_col, legend="Worth", cumsum=False, grid=True)
+    panel_expend_share_detail(config, ax3, data, expend_col, legend="Purchase", cumsum=True, grid=True)
+    yticks_dollars(config, ax3)
+    fund_profit = round(alldata[val_col].iloc[-1] - sum(data[expend_col]))
+    faux_title(config, ax3, f"{fund} profit: {int_to_dollars(config, fund_profit)}")
+    ax3.legend(
+        loc="upper center",
+        labelcolor=config.colors.label,
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=2,
+        facecolor=config.colors.bg,
+    )
+    
+    ax44 = ax4.twinx()
+    color_axes(config, ax44)
+    panel_expend_share_detail(config, ax4, data, expend_col+"_count", legend="Number", cumsum=True, grid=True)
+    faux_title(config, ax4, f"{fund} count: {fund_count}")
+    panel_expend_share_detail(config, ax44, data, expend_col+"_price", legend="Price", grid=False)
+    yticks_dollars(config, ax44)
+
+    plt.show()
+    plt.close()
+
+
+
 def create_dashboard_ipad1(config, alldata):
     
     config.figw = 25
@@ -610,6 +683,35 @@ def _expr(value):
     except (ValueError, TypeError):
         return float(value)
 
+def _expr_expend(value: str | int) -> int | float:
+    if isinstance(value, int) or isinstance(value, float):
+        return value
+    value = value.replace("$","").replace(" ","")
+    if not("x" in value):
+        return float(value)
+    vals = value.split("x")
+    assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
+    return int(vals[0])*float(vals[1])
+
+def _expr_expend_count(value: str | int) -> int | float:
+    if isinstance(value, int) or isinstance(value, float):
+        return value
+    value = value.replace("$","").replace(" ","")
+    if not("x" in value):
+        return 0
+    vals = value.split("x")
+    assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
+    return int(vals[0])
+
+def _expr_expend_price(value: str | int) -> int | float:
+    if isinstance(value, int) or isinstance(value, float):
+        return value
+    value = value.replace("$","").replace(" ","")
+    if not("x" in value):
+        return 0.0
+    vals = value.split("x")
+    assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
+    return float(vals[1])
 
 def _evaluate_multiply_divide(expr):
     """Helper function to evaluate multiplication and division."""
@@ -840,7 +942,12 @@ def panel_all_vs_time(config, ax, data):
                 extrap_target(ii)
 
 
-def panel_window(config, ax, data, name, col, xticklabels=False, extrap=True):  # noqa: FBT002
+def panel_window(
+        config, ax, data, name, col,
+        xticklabels=False,
+        extrap=True,
+        yzero=False,
+                ):  # noqa: FBT002
     color_axes(config, ax)
 
     if extrap:
@@ -859,6 +966,10 @@ def panel_window(config, ax, data, name, col, xticklabels=False, extrap=True):  
         infl = np.exp(logfit[0]) - 1
         ax.plot(rd, yd, "--", lw=config.linewidth / 4, color=config.colors[col])
 
+    y_min, y_max = ax.get_ylim()
+    if yzero:
+        ax.set_ylim(0.0, y_max)
+
     yticks_dollars(config, ax)
 
     ax.xaxis.set_minor_locator(AutoMinorLocator(3))
@@ -874,6 +985,9 @@ def panel_window(config, ax, data, name, col, xticklabels=False, extrap=True):  
 
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
+    
+    if yzero:
+        ax.set_ylim(0.0, y_max)
 
     if not config.anon and extrap:
         peryrtext = "" if config.linear_window == 1 else ("\n" + int_to_dollars(config, gain / elap) + "/yr")
@@ -917,8 +1031,8 @@ def panel_shares_window(config, ax, data, xticklabels=True):  # noqa: FBT002
 def panel_super_window(config, ax, data, xticklabels=True):  # noqa: FBT002
     panel_window(config, ax, data, "totalSuper", "super", xticklabels=xticklabels)
 
-def panel_expend_window(config, ax, data, xticklabels=True):  # noqa: FBT002
-    panel_window(config, ax, data, "totalExpend", "expend", xticklabels=xticklabels, extrap=False)
+def panel_expend_window(config, ax, data, xticklabels=True, yzero=False):  # noqa: FBT002
+    panel_window(config, ax, data, "totalExpend", "expend", xticklabels=xticklabels, extrap=False, yzero=yzero)
 
 
 def panel_cash_window_percent(config, ax, data):
@@ -1601,6 +1715,47 @@ def panel_cash_window_detail(config, ax, data, xticklabels=True, thresh=None):  
         ax.set_ylim(yymin, yymax)
 
     yticks_dollars(config, ax)
+
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
+
+def panel_expend_share_detail(config, ax, data, name, xticklabels=True, legend="", cumsum=False, yzero=True, grid=True):  # noqa: FBT002
+
+    color_axes(config, ax)
+
+    ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
+
+    fdata = data[name]
+    ind = fdata>0
+    if cumsum:
+        inc = data[name].cumsum()
+        days = data.Days
+    else:
+        inc = fdata[ind]
+        days = data.Days[ind]
+
+    ax.plot(
+        days,
+        inc,
+        markersize=Config.markersize,
+        linewidth=config.linewidth,
+        marker=".",
+        label=legend,
+    )
+
+    if grid:
+        ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+        ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+        ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+
+    y_min, y_max = ax.get_ylim()
+    if yzero:
+        ax.set_ylim(0.0, y_max)
+
+    if not xticklabels:
+        ax.set_xticklabels([])
+    ax.tick_params(axis="y", labelcolor=config.colors.tick)
 
     if config.anon:
         ax.set_yticklabels([])
