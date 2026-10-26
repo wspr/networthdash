@@ -53,13 +53,13 @@ def dashboard(config: Config):
     alldata["Year"] = dates_to_years(config, alldata)
 
     expend_count_cols = [col + "_count" for col in config.expend_cols]
-    alldata[expend_count_cols] = alldata[config.expend_cols].map(_expr_expend_count)
+    alldata[expend_count_cols] = _df_map(alldata[config.expend_cols], _expr_expend_count)
     expend_price_cols = [col + "_price" for col in config.expend_cols]
-    alldata[expend_price_cols] = alldata[config.expend_cols].map(_expr_expend_price)
+    alldata[expend_price_cols] = _df_map(alldata[config.expend_cols], _expr_expend_price)
 
-    alldata[config.expend_cols] = alldata[config.expend_cols].map(_expr_expend)
-    alldata[config.cash_cols] = alldata[config.cash_cols].map(_expr)
-    alldata[config.income_cols] = alldata[config.income_cols].map(_expr)
+    alldata[config.expend_cols] = _df_map(alldata[config.expend_cols], _expr_expend)
+    alldata[config.cash_cols] = _df_map(alldata[config.cash_cols], _expr)
+    alldata[config.income_cols] = _df_map(alldata[config.income_cols], _expr)
 
     config.retire_yr = config.born_yr + config.retire_age
     ahead_yr = datetime.now(timezone.utc).year + config.future_window
@@ -724,6 +724,13 @@ def dates_to_days(config, data):
 
 
 # from Claude:
+def _df_map(df, fn):
+    # DataFrame.map needs pandas >= 2.1, and applymap was removed in pandas 3
+    if hasattr(df, "map"):
+        return df.map(fn)
+    return df.applymap(fn)
+
+
 def _expr(value):
     try:
         # Handle math expressions like "20 x 4 + 10"
