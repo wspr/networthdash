@@ -138,10 +138,6 @@ def create_dashboard_main7(config, alldata):
     row_y = [0.04, 0.43, 0.78]
     row_gap = 0.03
 
-    inset_w = 0.25
-    inset_h = 0.11
-    inset_x = pane_x[0] + 0.15
-    inset_y = row_y[1] + main_ht / 2 + 0.025
 
     fig, ax0 = plt.subplots(
         figsize=(config.figw, config.figh),
@@ -687,7 +683,7 @@ def _expr_expend(value: str | int) -> int | float:
     if isinstance(value, int) or isinstance(value, float):
         return value
     value = value.replace("$","").replace(" ","")
-    if not("x" in value):
+    if "x" not in value:
         return float(value)
     vals = value.split("x")
     assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
@@ -697,7 +693,7 @@ def _expr_expend_count(value: str | int) -> int | float:
     if isinstance(value, int) or isinstance(value, float):
         return value
     value = value.replace("$","").replace(" ","")
-    if not("x" in value):
+    if "x" not in value:
         return 0
     vals = value.split("x")
     assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
@@ -707,7 +703,7 @@ def _expr_expend_price(value: str | int) -> int | float:
     if isinstance(value, int) or isinstance(value, float):
         return value
     value = value.replace("$","").replace(" ","")
-    if not("x" in value):
+    if "x" not in value:
         return 0.0
     vals = value.split("x")
     assert len(vals) == 2, "Can only split fund expend into '[-] count x price'"
