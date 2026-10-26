@@ -443,8 +443,8 @@ def create_dashboard_cash4(config, alldata):
 
     panel_timeline(config, ax00)
 
-    panel_expend_window(config, ax1, data)
-    panel_cash_breakdown(config, alldata, ax2)
+    panel_cash_window(config, ax1, data)
+    panel_cash_breakdown(config, data, ax2)
     ax2.yaxis.tick_right()
 
     panel_cash_window_detail(config, ax3, data,thresh=[30000, 999999])
