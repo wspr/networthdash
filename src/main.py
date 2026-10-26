@@ -470,7 +470,10 @@ def create_dashboard_share4(config, alldata):
     fund_col = share_col + "_Fund"
     val_col = "Shares_" + fund
     expend_col = "Expend_" + share_col
-    data = alldata[alldata[fund_col] == fund].reset_index(drop=True)
+    is_fund = alldata[fund_col] == fund
+    alldata["fundSpend"] = alldata[expend_col].where(is_fund, 0)
+    alldata["fundPrice"] = alldata[expend_col + "_price"].where(is_fund, 0)
+    data = alldata[is_fund].reset_index(drop=True)
     config.window_ind = data.Days > (data.Days.iat[-1] - config.linear_window)
 
     fund_count = sum(data[expend_col + "_count"])
@@ -499,42 +502,84 @@ def create_dashboard_share4(config, alldata):
 
     panel_expend_window(config, ax1, data, yzero=True)
     faux_title(config, ax1, fund + " purchases")
-    panel_shares_breakdown(config, alldata, ax2)
-    ax2.yaxis.tick_right()
+    panel_fund_breakdown(config, alldata, ax2, val_col, "fundSpend")
+    faux_title(config, ax2, fund + " breakdown")
 
-    panel_expend_share_detail(
-        config, ax3, alldata, val_col, legend="Worth", cumsum=False, grid=True
-    )
-    panel_expend_share_detail(
-        config, ax3, data, expend_col, legend="Purchase", cumsum=True, grid=True
-    )
-    yticks_dollars(config, ax3)
-    fund_profit = round(alldata[val_col].iloc[-1] - sum(data[expend_col]))
-    faux_title(config, ax3, f"{fund} profit: {int_to_dollars(config, fund_profit)}")
-    ax3.legend(
-        loc="upper center",
-        labelcolor=config.colors.label,
-        bbox_to_anchor=(0.5, 1.15),
-        ncol=2,
-        facecolor=config.colors.bg,
-    )
-
-    ax44 = ax4.twinx()
-    color_axes(config, ax44)
+    # Worth vs cost base, with purchase price on the twin axis
+    ax33 = ax3.twinx()
+    color_axes(config, ax33)
     panel_expend_share_detail(
         config,
-        ax4,
-        data,
-        expend_col + "_count",
-        legend="Number",
-        cumsum=True,
-        grid=True,
+        ax3,
+        alldata,
+        val_col,
+        legend="Worth",
+        color=config.colors.shares,
     )
-    faux_title(config, ax4, f"{fund} count: {fund_count}")
     panel_expend_share_detail(
-        config, ax44, data, expend_col + "_price", legend="Price", grid=False
+        config,
+        ax3,
+        alldata,
+        "fundSpend",
+        legend="Cost",
+        cumsum=True,
+        color=config.colors.expend,
     )
-    yticks_dollars(config, ax44)
+    panel_expend_share_detail(
+        config,
+        ax33,
+        alldata,
+        "fundPrice",
+        legend="Price",
+        yzero=False,
+        grid=False,
+        color=config.colors.total,
+    )
+    yticks_dollars(config, ax3)
+    yticks_dollars(config, ax33)
+    fund_profit = round(alldata[val_col].iloc[-1] - sum(alldata["fundSpend"]))
+    faux_title(
+        config,
+        ax3,
+        f"{fund} profit: {int_to_dollars(config, fund_profit)}\nUnits: {fund_count}",
+    )
+    legend_twin(config, ax3, ax33)
+
+    # Dividends paid by this fund
+    div_col = config.strings.incomecol + "_" + fund
+    if div_col in alldata.columns:
+        ax44 = ax4.twinx()
+        color_axes(config, ax44)
+        panel_expend_share_detail(
+            config,
+            ax4,
+            alldata,
+            div_col,
+            legend="Payment",
+            color=config.colors.income,
+        )
+        panel_expend_share_detail(
+            config,
+            ax44,
+            alldata,
+            div_col,
+            legend="Cumulative",
+            cumsum=True,
+            grid=False,
+            color=config.colors.shares,
+        )
+        yticks_dollars(config, ax4)
+        yticks_dollars(config, ax44)
+        div_total = round(sum(alldata[div_col]))
+        faux_title(
+            config, ax4, f"{fund} dividends: {int_to_dollars(config, div_total)}"
+        )
+        legend_twin(config, ax4, ax44)
+    else:
+        color_axes(config, ax4)
+        ax4.set_xticklabels([])
+        ax4.set_yticklabels([])
+        faux_title(config, ax4, f"No '{config.strings.incomecol}' column for {fund}")
 
     plt.show()
     plt.close()
@@ -1898,6 +1943,7 @@ def panel_expend_share_detail(
     cumsum=False,
     yzero=True,
     grid=True,
+    color=None,
 ):  # noqa: FBT002
     color_axes(config, ax)
 
@@ -1919,6 +1965,7 @@ def panel_expend_share_detail(
         linewidth=config.linewidth,
         marker=".",
         label=legend,
+        color=color,
     )
 
     if grid:
@@ -1937,6 +1984,75 @@ def panel_expend_share_detail(
     if config.anon:
         ax.set_yticklabels([])
         ax.set_ylabel("Amount", color=config.colors.text)
+
+
+def legend_twin(config, ax, ax_twin):
+    lines, labels = ax.get_legend_handles_labels()
+    lines_twin, labels_twin = ax_twin.get_legend_handles_labels()
+    ax.legend(
+        lines + lines_twin,
+        labels + labels_twin,
+        loc="upper center",
+        labelcolor=config.colors.label,
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=len(labels) + len(labels_twin),
+        facecolor=config.colors.bg,
+    )
+
+
+################################
+
+
+def panel_fund_breakdown(config, data, ax, val, spend):
+    color_axes(config, ax)
+
+    lbl_font = {"color": config.colors.text, "fontweight": "bold"}
+    pc_font = {
+        "color": config.colors.contrast,
+        "fontsize": 10,
+        "rotation": 90,
+        "va": "bottom",
+    }
+
+    cdict = {
+        "Bought": config.colors.expend,
+        "Growth": config.colors.shares,
+    }
+    sky.sankey(
+        ax=ax,
+        data=sankey_fund(config, data, val, spend),
+        titles=[yrlbl(i) for i in config.years_uniq],
+        sort=config.sankey_sort,
+        node_gap=0.00,
+        color_dict=cdict,
+        node_width=config.node_width,
+        label_loc=["right", "left", "left"],
+        label_largest=True,
+        label_font=lbl_font,
+        label_path_effects=config.label_path_effects,
+        value_loc=["none", "none", "none"],
+        node_alpha=config.node_alpha,
+        flow_alpha=config.flow_alpha,
+        title_side="none",
+        percent_loc="center",
+        percent_loc_ht=0.05,
+        percent_font=pc_font,
+        percent_thresh=0.1,
+        percent_thresh_ofmax=0.2,
+        label_values=not (config.anon),
+        label_thresh_ofmax=0.1,
+        value_fn=lambda x: "\n" + int_to_dollars(config, x),
+    )
+
+    ax.axis("on")
+    ax.set_ylim([0, ax.get_ylim()[1]])
+    ax.set_yticks(ax.get_yticks())
+    ax.yaxis.tick_right()
+    yticks_dollars(config, ax)
+    ax.yaxis.set_tick_params(which="both", direction="out", right=True, left=True)
+
+    if config.anon:
+        ax.set_yticklabels([])
 
 
 ################################
@@ -2072,7 +2188,7 @@ def yticks_equalise(config, ax4, ax5):
 
 
 def faux_title(config, ax, txtstr):
-    xrange = np.diff(ax.get_xlim())
+    xrange = np.diff(ax.get_xlim())[0]
     ax.text(
         ax.get_xlim()[0] + 0.04 * xrange,
         0.95 * ax.get_ylim()[1],
@@ -2102,6 +2218,18 @@ def sankey_shares(config, data):
         total_by_yr[yr] = get_totals(
             data[data["Year"] == yr], "totalShares", "totalExpend"
         ).values()
+    return pd.DataFrame(total_by_yr)
+
+
+def sankey_fund(config, data, val, spend):
+    # Year-end value of one fund split into cost base and growth
+    total_by_yr = {}
+    for yr in config.years_uniq:
+        upto = data[data["Year"] <= yr]
+        bought = sum(upto[spend])
+        worth = upto[val].iat[-1]
+        total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
+        total_by_yr[yr] = [min(bought, worth), max(worth - bought, 0)]
     return pd.DataFrame(total_by_yr)
 
 

@@ -33,3 +33,16 @@ def test_simple(csvname, anon):
         anon=anon,
     )
     nwd.dashboard(cfg)
+
+
+@pytest.mark.parametrize("fund", ["VDHG", "VAS"])
+@pytest.mark.parametrize("anon", [True, False])
+def test_share4(fund, anon):
+    cfg = nwd.Config(
+        **std,
+        csv="nwd_example_share.csv",
+        anon=anon,
+        layout="share4",
+    )
+    cfg.share_focus = {"expend_col": "Stake", "fund": fund}
+    nwd.dashboard(cfg)
