@@ -53,13 +53,9 @@ def dashboard(config: Config):
     alldata["Year"] = dates_to_years(config, alldata)
 
     expend_count_cols = [col + "_count" for col in config.expend_cols]
-    alldata[expend_count_cols] = alldata[config.expend_cols].map(
-        _expr_expend_count
-    )
+    alldata[expend_count_cols] = alldata[config.expend_cols].map(_expr_expend_count)
     expend_price_cols = [col + "_price" for col in config.expend_cols]
-    alldata[expend_price_cols] = alldata[config.expend_cols].map(
-        _expr_expend_price
-    )
+    alldata[expend_price_cols] = alldata[config.expend_cols].map(_expr_expend_price)
 
     alldata[config.expend_cols] = alldata[config.expend_cols].map(_expr_expend)
     alldata[config.cash_cols] = alldata[config.cash_cols].map(_expr)
