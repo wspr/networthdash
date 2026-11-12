@@ -46,3 +46,17 @@ def test_share4(fund, anon):
     )
     cfg.share_focus = {"expend_col": "Stake", "fund": fund}
     nwd.dashboard(cfg)
+
+
+def test_fund_irr():
+    import pandas as pd
+
+    from src.main import fund_irr
+
+    # $100 in at the start, worth $110 a year later: 10% p.a.
+    data = pd.DataFrame({"Days": [0.0, 1.0], "spend": [100, 0], "val": [100, 110]})
+    assert fund_irr(data, "val", "spend") == pytest.approx(0.10, abs=1e-6)
+
+    # plus a $5 dividend at the end: 15% p.a.
+    data["div"] = [0, 5]
+    assert fund_irr(data, "val", "spend", "div") == pytest.approx(0.15, abs=1e-6)

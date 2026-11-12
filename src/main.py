@@ -7,7 +7,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import AutoMinorLocator
+from matplotlib.ticker import AutoMinorLocator, PercentFormatter
 
 from .config import Config
 
@@ -542,16 +542,22 @@ def create_dashboard_share4(config, alldata):
     yticks_dollars(config, ax3)
     yticks_dollars(config, ax33)
     fund_profit = round(alldata[val_col].iloc[-1] - sum(alldata["fundSpend"]))
+    div_col = config.strings.incomecol + "_" + fund
+    has_div = div_col in alldata.columns
+    irr_txt = f"Return: {_pc(fund_irr(alldata, val_col, 'fundSpend'))} p.a."
+    if has_div:
+        irr_div = fund_irr(alldata, val_col, "fundSpend", div_col)
+        irr_txt += f" ({_pc(irr_div)} with dividends)"
     faux_title(
         config,
         ax3,
-        f"{fund} profit: {int_to_dollars(config, fund_profit)}\nUnits: {fund_count}",
+        f"{fund} profit: {int_to_dollars(config, fund_profit)}"
+        f" · Units: {fund_count}\n{irr_txt}",
     )
     legend_twin(config, ax3, ax33)
 
-    # Dividends paid by this fund
-    div_col = config.strings.incomecol + "_" + fund
-    if div_col in alldata.columns:
+    # Dividends paid by this fund, with trailing 12-month yield
+    if has_div:
         ax44 = ax4.twinx()
         color_axes(config, ax44)
         panel_expend_share_detail(
@@ -562,18 +568,8 @@ def create_dashboard_share4(config, alldata):
             legend="Payment",
             color=config.colors.income,
         )
-        panel_expend_share_detail(
-            config,
-            ax44,
-            alldata,
-            div_col,
-            legend="Cumulative",
-            cumsum=True,
-            grid=False,
-            color=config.colors.shares,
-        )
+        panel_fund_yield(config, ax44, alldata, val_col, "fundSpend", div_col)
         yticks_dollars(config, ax4)
-        yticks_dollars(config, ax44)
         div_total = round(sum(alldata[div_col]))
         faux_title(
             config, ax4, f"{fund} dividends: {int_to_dollars(config, div_total)}"
@@ -1997,6 +1993,38 @@ def panel_expend_share_detail(
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
+def panel_fund_yield(config, ax, data, val, spend, div):
+    # Trailing 12-month dividends against current value and against cost base;
+    # the window is a little under a year so a payment exactly one year back
+    # (365 or 366 days) is not counted twice
+    first = data.Days[data[spend] > 0].iat[0]
+    window = 0.97
+    trailing = np.array(
+        [sum(data[div][(data.Days > d - window) & (data.Days <= d)]) for d in data.Days]
+    )
+    ind = (data.Days >= first + 1).to_numpy()
+    days = data.Days[ind]
+    cost = data[spend].cumsum()[ind]
+    ax.plot(
+        days,
+        100 * trailing[ind] / data[val][ind],
+        linewidth=config.linewidth,
+        color=config.colors.shares,
+        label="Yield",
+    )
+    ax.plot(
+        days,
+        100 * trailing[ind] / cost,
+        linewidth=config.linewidth,
+        linestyle="--",
+        color=config.colors.total,
+        label="Yield on cost",
+    )
+    ax.set_ylim(0, ax.get_ylim()[1])
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=1))
+    ax.tick_params(axis="y", labelcolor=config.colors.tick)
+
+
 def legend_twin(config, ax, ax_twin):
     lines, labels = ax.get_legend_handles_labels()
     lines_twin, labels_twin = ax_twin.get_legend_handles_labels()
@@ -2242,6 +2270,35 @@ def sankey_fund(config, data, val, spend):
         total_by_yr[f"f{yr}"] = ["Bought", "Growth"]
         total_by_yr[yr] = [min(bought, worth), max(worth - bought, 0)]
     return pd.DataFrame(total_by_yr)
+
+
+def fund_irr(data, val, spend, div=None):
+    # Annualised money-weighted return (XIRR): purchases out, dividends and
+    # final value in, solved by bisection on the net present value
+    times = data.Days.to_numpy()
+    flows = -data[spend].to_numpy(dtype=float)
+    if div is not None:
+        flows = flows + data[div].to_numpy(dtype=float)
+    flows[-1] += data[val].iat[-1]
+    times = times - times[0]
+
+    def npv(rate):
+        return sum(flows / (1 + rate) ** times)
+
+    lo, hi = -0.99, 10.0
+    if npv(lo) * npv(hi) > 0:
+        return None
+    for _ in range(100):
+        mid = (lo + hi) / 2
+        if npv(lo) * npv(mid) <= 0:
+            hi = mid
+        else:
+            lo = mid
+    return (lo + hi) / 2
+
+
+def _pc(rate):
+    return "n/a" if rate is None else f"{100 * rate:.1f}%"
 
 
 def sankey_income(config, data, income_cols):
