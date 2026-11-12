@@ -60,3 +60,19 @@ def test_fund_irr():
     # plus a $5 dividend at the end: 15% p.a.
     data["div"] = [0, 5]
     assert fund_irr(data, "val", "spend", "div") == pytest.approx(0.15, abs=1e-6)
+
+
+def test_fund_yield():
+    import pandas as pd
+
+    from src.main import fund_yield
+
+    # quarterly $10 dividends on rows with no recorded value; latest value $1000
+    data = pd.DataFrame(
+        {
+            "Days": [0.0, 0.1, 0.35, 0.6, 0.85, 1.1, 1.2],
+            "val": [900, 0, 0, 0, 0, 0, 1000],
+            "div": [0, 10, 10, 10, 10, 10, 0],
+        }
+    )
+    assert fund_yield(data, "val", "div") == pytest.approx(0.04)

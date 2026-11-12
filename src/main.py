@@ -7,7 +7,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import AutoMinorLocator, PercentFormatter
+from matplotlib.ticker import AutoMinorLocator
 
 from .config import Config
 
@@ -556,25 +556,16 @@ def create_dashboard_share4(config, alldata):
     )
     legend_twin(config, ax3, ax33)
 
-    # Dividends paid by this fund, with trailing 12-month yield
+    # Dividends paid by this fund, totalled per year
     if has_div:
-        ax44 = ax4.twinx()
-        color_axes(config, ax44)
-        panel_expend_share_detail(
-            config,
-            ax4,
-            alldata,
-            div_col,
-            legend="Payment",
-            color=config.colors.income,
-        )
-        panel_fund_yield(config, ax44, alldata, val_col, "fundSpend", div_col)
-        yticks_dollars(config, ax4)
+        panel_fund_dividends(config, ax4, alldata, div_col)
         div_total = round(sum(alldata[div_col]))
         faux_title(
-            config, ax4, f"{fund} dividends: {int_to_dollars(config, div_total)}"
+            config,
+            ax4,
+            f"{fund} dividends: {int_to_dollars(config, div_total)}"
+            f" · Yield: {_pc(fund_yield(alldata, val_col, div_col))}",
         )
-        legend_twin(config, ax4, ax44)
     else:
         color_axes(config, ax4)
         ax4.set_xticklabels([])
@@ -1993,49 +1984,36 @@ def panel_expend_share_detail(
         ax.set_ylabel("Amount", color=config.colors.text)
 
 
-def panel_fund_yield(config, ax, data, val, spend, div):
-    # Trailing 12-month dividends against current value and against cost base.
-    # Only recalculated on payment dates and held flat between them, so a
-    # payment arriving a few days later than last year's does not cause a dip.
-    # The window is a little under a year so a payment exactly one year back
-    # (365 or 366 days) is not counted twice.
-    first = data.Days[data[spend] > 0].iat[0]
-    window = 0.97
-    cost = data[spend].cumsum()
-    paid = data[(data[div] > 0) & (data.Days >= first + window)]
-    if len(paid) == 0:
-        return
-    days, yld, yoc = [], [], []
-    for ii, d in zip(paid.index, paid.Days):
-        trailing = sum(data[div][(data.Days > d - window) & (data.Days <= d)])
-        days.append(d)
-        yld.append(100 * trailing / data[val][ii])
-        yoc.append(100 * trailing / cost[ii])
-    # hold the latest values out to the last data point
-    days.append(data.Days.iat[-1])
-    yld.append(yld[-1])
-    yoc.append(yoc[-1])
+def panel_fund_dividends(config, ax, data, div):
+    color_axes(config, ax)
 
-    ax.plot(
-        days,
-        yld,
-        linewidth=config.linewidth,
-        drawstyle="steps-post",
-        color=config.colors.shares,
-        label="Yield",
-    )
-    ax.plot(
-        days,
-        yoc,
-        linewidth=config.linewidth,
-        linestyle="--",
-        drawstyle="steps-post",
-        color=config.colors.total,
-        label="Yield on cost",
-    )
-    ax.set_ylim(0, ax.get_ylim()[1])
-    ax.yaxis.set_major_formatter(PercentFormatter(decimals=1))
+    by_yr = data.groupby("Year")[div].sum()
+    by_yr = by_yr[(by_yr.index >= config.since_yr) & (by_yr.index <= config.until_yr)]
+    this_yr = data["Year"].iat[-1]
+    # bars span each calendar year on the same x-axis as the other panels;
+    # the current (partial) year is drawn fainter
+    for done in (True, False):
+        yrs = by_yr[(by_yr.index != this_yr) == done]
+        ax.bar(
+            yrs.index - config.since_yr + 0.5,
+            yrs.to_numpy(),
+            width=0.8,
+            color=config.colors.income,
+            alpha=1.0 if done else 0.4,
+        )
+    ax.axvline(x=data.Days.iat[-1], linestyle="--", color=config.colors.dashes)
+
+    ax.xaxis.set_minor_locator(AutoMinorLocator(3))
+    ax.grid(which="major", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.grid(which="minor", color=config.colors.grid, linestyle="-", linewidth=0.5)
+    ax.set_axisbelow(True)
+    ax.set_ylim(0, 1.15 * ax.get_ylim()[1])
     ax.tick_params(axis="y", labelcolor=config.colors.tick)
+    yticks_dollars(config, ax)
+
+    if config.anon:
+        ax.set_yticklabels([])
+        ax.set_ylabel("Amount", color=config.colors.text)
 
 
 def legend_twin(config, ax, ax_twin):
@@ -2308,6 +2286,19 @@ def fund_irr(data, val, spend, div=None):
         else:
             lo = mid
     return (lo + hi) / 2
+
+
+def fund_yield(data, val, div):
+    # Dividends over the year up to the latest payment, against the latest value.
+    # The window is a little under a year so a payment exactly one year back
+    # (365 or 366 days) is not counted twice.
+    paid = data.Days[data[div] > 0]
+    worth = data[val][data[val] > 0]
+    if len(paid) == 0 or len(worth) == 0:
+        return None
+    last = paid.iat[-1]
+    trailing = sum(data[div][(data.Days > last - 0.97) & (data.Days <= last)])
+    return trailing / worth.iat[-1]
 
 
 def _pc(rate):
