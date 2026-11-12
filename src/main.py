@@ -1994,29 +1994,42 @@ def panel_expend_share_detail(
 
 
 def panel_fund_yield(config, ax, data, val, spend, div):
-    # Trailing 12-month dividends against current value and against cost base;
-    # the window is a little under a year so a payment exactly one year back
-    # (365 or 366 days) is not counted twice
+    # Trailing 12-month dividends against current value and against cost base.
+    # Only recalculated on payment dates and held flat between them, so a
+    # payment arriving a few days later than last year's does not cause a dip.
+    # The window is a little under a year so a payment exactly one year back
+    # (365 or 366 days) is not counted twice.
     first = data.Days[data[spend] > 0].iat[0]
     window = 0.97
-    trailing = np.array(
-        [sum(data[div][(data.Days > d - window) & (data.Days <= d)]) for d in data.Days]
-    )
-    ind = (data.Days >= first + 1).to_numpy()
-    days = data.Days[ind]
-    cost = data[spend].cumsum()[ind]
+    cost = data[spend].cumsum()
+    paid = data[(data[div] > 0) & (data.Days >= first + window)]
+    if len(paid) == 0:
+        return
+    days, yld, yoc = [], [], []
+    for ii, d in zip(paid.index, paid.Days):
+        trailing = sum(data[div][(data.Days > d - window) & (data.Days <= d)])
+        days.append(d)
+        yld.append(100 * trailing / data[val][ii])
+        yoc.append(100 * trailing / cost[ii])
+    # hold the latest values out to the last data point
+    days.append(data.Days.iat[-1])
+    yld.append(yld[-1])
+    yoc.append(yoc[-1])
+
     ax.plot(
         days,
-        100 * trailing[ind] / data[val][ind],
+        yld,
         linewidth=config.linewidth,
+        drawstyle="steps-post",
         color=config.colors.shares,
         label="Yield",
     )
     ax.plot(
         days,
-        100 * trailing[ind] / cost,
+        yoc,
         linewidth=config.linewidth,
         linestyle="--",
+        drawstyle="steps-post",
         color=config.colors.total,
         label="Yield on cost",
     )
