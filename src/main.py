@@ -559,6 +559,10 @@ def create_dashboard_share4(config, alldata):
     # Dividends paid by this fund, totalled per year
     if has_div:
         panel_fund_dividends(config, ax4, alldata, div_col)
+        # line up the time axes, extending to the end of the current year
+        xlims = [*ax3.get_xlim(), *ax4.get_xlim()]
+        ax3.set_xlim(min(xlims), max(xlims))
+        ax4.set_xlim(min(xlims), max(xlims))
         div_total = round(sum(alldata[div_col]))
         faux_title(
             config,
